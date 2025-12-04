@@ -1,0 +1,19 @@
+{
+	"name": "omnihr-integration",
+	"version": "1.0.0",
+	"main": "main.js",
+	"scripts": {
+		"start": "node src/main.js",
+		"fetch-leaves": "node src/fetchLeaves.js",
+		"update-excel": "node src/updateExcel.js",
+		"export-sheets": "node src/exportToSheets.js",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"dependencies": {
+		"dotenv": "^17.2.3",
+		"exceljs": "^4.4.0"
+	}
+}
