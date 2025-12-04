@@ -1,0 +1,5732 @@
+[
+  {
+    "user_id": 33763,
+    "employee_id": "SM0068",
+    "employee_name": "Aaron Myatt",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "20.00",
+        "taken": "13.00",
+        "remaining": "8.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "2.00",
+        "remaining": "12.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "2.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33764,
+    "employee_id": "SM0027",
+    "employee_name": "Abdelrahman Badran",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "15.00",
+        "taken": "14.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "3.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "5.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "10.00",
+        "remaining": "20.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 4,
+        "leave_type": "Paternity Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33766,
+    "employee_id": "SM0039",
+    "employee_name": "Fahmi San Ahmad",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "4.00",
+        "remaining": "4.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "5.00",
+        "remaining": "1.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33768,
+    "employee_id": "SM0043",
+    "employee_name": "Aisha Azmi",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "11.50",
+        "remaining": "5.50"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Conference/Events",
+        "entitlement": "0.00",
+        "taken": "2.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "8.00",
+        "remaining": "52.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "8.50",
+        "remaining": "5.50"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33769,
+    "employee_id": "SM0064",
+    "employee_name": "Akmal Hamzah",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "12.00",
+        "remaining": "4.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "2.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 7,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      },
+      {
+        "date": 24,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      }
+    ]
+  },
+  {
+    "user_id": 33770,
+    "employee_id": "SM0063",
+    "employee_name": "Aladdin Mohammed Al-Masabli",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "8.00",
+        "remaining": "7.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "11.00",
+        "remaining": "49.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "5.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33771,
+    "employee_id": "SM0001",
+    "employee_name": "Allen Ding",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "20.00",
+        "taken": "0.00",
+        "remaining": "20.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33772,
+    "employee_id": "SM0007",
+    "employee_name": "Aniket Dagar",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "20.00",
+        "taken": "1.00",
+        "remaining": "19.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "1.50"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33773,
+    "employee_id": "SM0016",
+    "employee_name": "Hui Cham",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "19.00",
+        "taken": "20.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "3.00",
+        "remaining": "11.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33774,
+    "employee_id": "SM0018",
+    "employee_name": "Kar Seng Chan",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "17.00",
+        "taken": "9.00",
+        "remaining": "6.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "4.50",
+        "remaining": "9.50"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 6,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33776,
+    "employee_id": "SM0048",
+    "employee_name": "Chinju James James",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "10.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "5.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "2.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 10,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33777,
+    "employee_id": "SM0003",
+    "employee_name": "Fei Chong",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "20.00",
+        "taken": "13.00",
+        "remaining": "7.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 7,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33779,
+    "employee_id": "SM0046",
+    "employee_name": "Chelaka Ilapperuma",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "11.50",
+        "remaining": "3.50"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "3.00",
+        "remaining": "11.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 24,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 25,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 26,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 27,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33780,
+    "employee_id": "SM0059",
+    "employee_name": "Elena Argyriou",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "20.00",
+        "taken": "17.00",
+        "remaining": "4.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Conference/Events",
+        "entitlement": "0.00",
+        "taken": "1.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "3.00",
+        "remaining": "11.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 24,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      }
+    ]
+  },
+  {
+    "user_id": 33782,
+    "employee_id": "SM0035",
+    "employee_name": "Faizah Chaibou Issoufou",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "15.00",
+        "taken": "8.00",
+        "remaining": "5.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "3.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "5.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "3.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33783,
+    "employee_id": "SM0042",
+    "employee_name": "Falah Alizhar",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "11.00",
+        "remaining": "4.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Conference/Events",
+        "entitlement": "0.00",
+        "taken": "1.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "6.00",
+        "remaining": "8.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "6.50",
+        "remaining": "0.50"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 17,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 18,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33784,
+    "employee_id": "SM0026",
+    "employee_name": "Farah Nur Firdaus Seet",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "15.00",
+        "taken": "13.00",
+        "remaining": "4.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "6.00",
+        "remaining": "8.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33785,
+    "employee_id": "SM0056",
+    "employee_name": "Faraz Ahmed",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "8.00",
+        "remaining": "2.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "1.00",
+        "remaining": "2.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "5.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 11,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 24,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33787,
+    "employee_id": "SM0014",
+    "employee_name": "Rohan Gya",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "19.00",
+        "taken": "9.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "3.00",
+        "remaining": "57.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "14.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "4.00",
+        "remaining": "5.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33788,
+    "employee_id": "SM0057",
+    "employee_name": "Haimanul Iman",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "11.00",
+        "remaining": "4.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "7.00",
+        "remaining": "7.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 6,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33789,
+    "employee_id": "SM0054",
+    "employee_name": "Irtaza Nasir",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "6.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "2.00",
+        "remaining": "12.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33793,
+    "employee_id": "SM0047",
+    "employee_name": "Kevin Chandra",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "12.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 17,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 18,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 19,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 20,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33794,
+    "employee_id": "SM0030",
+    "employee_name": "Kishor Balasubramaniam Maheshkumar",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "15.00",
+        "taken": "12.00",
+        "remaining": "5.50"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "6.00",
+        "remaining": "8.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33795,
+    "employee_id": "SM0045",
+    "employee_name": "Sharsi Pratheen",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "11.00",
+        "remaining": "2.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "6.00",
+        "remaining": "8.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "5.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 26,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 27,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33796,
+    "employee_id": "SM0051",
+    "employee_name": "Kheng Lim",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "7.00",
+        "remaining": "10.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "7.00",
+        "remaining": "7.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33798,
+    "employee_id": "SM0021",
+    "employee_name": "Maydeline Maydeline",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "17.00",
+        "taken": "9.00",
+        "remaining": "-1.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "3.00",
+        "remaining": "11.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 25,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33799,
+    "employee_id": "SM0019",
+    "employee_name": "Meher Ullah",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "17.00",
+        "taken": "11.00",
+        "remaining": "5.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "5.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "1.50",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 18,
+        "leave_type": "Replacement Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33800,
+    "employee_id": "SM0032",
+    "employee_name": "Mehedi Hasan",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "15.00",
+        "taken": "9.50",
+        "remaining": "7.50"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      }
+    ]
+  },
+  {
+    "user_id": 33802,
+    "employee_id": "SM0055",
+    "employee_name": "Firdaus Kasah Hamid @ Kasmidy",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "14.00",
+        "remaining": "2.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "5.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 26,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 27,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33803,
+    "employee_id": "SM0052",
+    "employee_name": "Afiq Mazli",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "14.00",
+        "remaining": "1.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "29.00",
+        "remaining": "31.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "13.00",
+        "remaining": "1.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "2.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 4,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33807,
+    "employee_id": "SM0011",
+    "employee_name": "Faris Jaafar",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "19.00",
+        "taken": "16.00",
+        "remaining": "4.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "1.00",
+        "remaining": "2.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "3.00",
+        "remaining": "11.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 12,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 26,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33808,
+    "employee_id": "SM0031",
+    "employee_name": "Ghufran Mohd Ismail",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "15.00",
+        "taken": "12.00",
+        "remaining": "5.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 26,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 27,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 21,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33811,
+    "employee_id": "SM0066",
+    "employee_name": "Nadhirah Nazarudin",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "7.00",
+        "remaining": "5.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Conference/Events",
+        "entitlement": "0.00",
+        "taken": "2.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33815,
+    "employee_id": "SM0025",
+    "employee_name": "Aieman Norris",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "15.00",
+        "taken": "13.00",
+        "remaining": "7.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "3.50",
+        "remaining": "1.50"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33816,
+    "employee_id": "SM0034",
+    "employee_name": "Atiyah Azaman",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "15.00",
+        "taken": "9.00",
+        "remaining": "1.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "3.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Conference/Events",
+        "entitlement": "0.00",
+        "taken": "2.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "2.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33817,
+    "employee_id": "SM0005",
+    "employee_name": "Azuren Othman",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "20.00",
+        "taken": "17.00",
+        "remaining": "3.50"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "7.50",
+        "remaining": "6.50"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.50"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 6,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33818,
+    "employee_id": "SM0022",
+    "employee_name": "Diyana Mohd Taib",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "17.00",
+        "taken": "15.00",
+        "remaining": "2.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Conference/Events",
+        "entitlement": "0.00",
+        "taken": "2.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "3.00",
+        "remaining": "11.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 7,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      }
+    ]
+  },
+  {
+    "user_id": 33819,
+    "employee_id": "SM0012",
+    "employee_name": "Shadza Shamsul Anuar",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "19.00",
+        "taken": "18.00",
+        "remaining": "3.50"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "5.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 24,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33821,
+    "employee_id": "SM0038",
+    "employee_name": "Owais Sultan",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "7.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "7.00",
+        "remaining": "7.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "7.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 19,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33824,
+    "employee_id": "SM0010",
+    "employee_name": "Raj Saha",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "19.00",
+        "taken": "11.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "3.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33826,
+    "employee_id": "SM0062",
+    "employee_name": "Ryan Iskandar Afrizal Anwar",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "15.50",
+        "remaining": "0.50"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "3.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "8.00",
+        "remaining": "6.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "30.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33827,
+    "employee_id": "SM0020",
+    "employee_name": "Sarah Wong",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "17.00",
+        "taken": "19.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "5.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "6.00",
+        "remaining": "44.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 26,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 27,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33828,
+    "employee_id": "SM0006",
+    "employee_name": "Zulaikha Sheikh Zuljallaly",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "20.00",
+        "taken": "15.00",
+        "remaining": "5.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 13,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 14,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33829,
+    "employee_id": "SM0058",
+    "employee_name": "Steven Wijaya",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "4.00",
+        "remaining": "4.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "2.00",
+        "remaining": "12.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "3.50",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33830,
+    "employee_id": "SM0037",
+    "employee_name": "Stevhen Stevhen",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "15.00",
+        "taken": "11.50",
+        "remaining": "5.50"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "2.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33831,
+    "employee_id": "SM0050",
+    "employee_name": "Ai Qi Teo",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "15.00",
+        "remaining": "1.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "3.00",
+        "remaining": "11.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 27,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33832,
+    "employee_id": "SM0002",
+    "employee_name": "Alvin Ting",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "20.00",
+        "taken": "0.00",
+        "remaining": "20.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33834,
+    "employee_id": "SM0028",
+    "employee_name": "Joseph Wong",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "20.00",
+        "taken": "6.50",
+        "remaining": "15.50"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 3,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 4,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33835,
+    "employee_id": "SM0060",
+    "employee_name": "Kathy Wong",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "9.00",
+        "remaining": "8.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "2.00",
+        "remaining": "12.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 5,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      },
+      {
+        "date": 6,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      },
+      {
+        "date": 10,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      },
+      {
+        "date": 12,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 20,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      },
+      {
+        "date": 21,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 24,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      },
+      {
+        "date": 27,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      }
+    ]
+  },
+  {
+    "user_id": 33836,
+    "employee_id": "SM0004",
+    "employee_name": "Stacey Wong",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "20.00",
+        "taken": "13.00",
+        "remaining": "12.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "2.00",
+        "remaining": "12.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "4.00",
+        "remaining": "5.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 17,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 20,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      },
+      {
+        "date": 21,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      },
+      {
+        "date": 24,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33837,
+    "employee_id": "SM0029",
+    "employee_name": "Benjamin Wong",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "20.00",
+        "taken": "9.00",
+        "remaining": "11.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.50",
+        "remaining": "13.50"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "11.50",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 20,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 21,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      },
+      {
+        "date": 19,
+        "leave_type": "Replacement Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33838,
+    "employee_id": "SM0049",
+    "employee_name": "Ivan Wong",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "3.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "14.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 17,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33839,
+    "employee_id": "SM0033",
+    "employee_name": "Swaglord Woon",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "15.00",
+        "taken": "3.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "3.00",
+        "remaining": "11.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 33841,
+    "employee_id": "SM0044",
+    "employee_name": "Arabelle Yong",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "11.50",
+        "remaining": "4.50"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "2.50",
+        "remaining": "11.50"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "3.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 6,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 7,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 33842,
+    "employee_id": "SM0065",
+    "employee_name": "Yunitha Selva Ratnam",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "7.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.50",
+        "remaining": "2.50"
+      },
+      {
+        "leave_type": "Conference/Events",
+        "entitlement": "0.00",
+        "taken": "1.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "6.00",
+        "remaining": "8.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 3,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 4,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 24,
+        "leave_type": "Medical Leave",
+        "is_half_day": true
+      }
+    ]
+  },
+  {
+    "user_id": 33843,
+    "employee_id": "SM0009",
+    "employee_name": "Zen Dharma",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "19.00",
+        "taken": "12.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 10,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 13,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 14,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 34522,
+    "employee_id": "SM0067",
+    "employee_name": "Saber Pourmomenkangacher",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "11.00",
+        "remaining": "2.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Conference/Events",
+        "entitlement": "0.00",
+        "taken": "1.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "8.00",
+        "remaining": "6.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 14,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 25,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 26,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 34525,
+    "employee_id": "SM0069",
+    "employee_name": "Tharmes Tamil Selvam",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "12.81",
+        "taken": "11.00",
+        "remaining": "1.81"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 34526,
+    "employee_id": "SM0070",
+    "employee_name": "Ean Lee",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "12.81",
+        "taken": "6.50",
+        "remaining": "2.31"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "7.00",
+        "remaining": "7.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 7,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 34577,
+    "employee_id": "SM0072",
+    "employee_name": "Matthieu Mertens",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "20.00",
+        "taken": "8.00",
+        "remaining": "12.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "2.00",
+        "remaining": "58.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.50",
+        "remaining": "12.50"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "2.50"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 13,
+        "leave_type": "Hospitalisation Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 14,
+        "leave_type": "Hospitalisation Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 34598,
+    "employee_id": "SM0074",
+    "employee_name": "Rubayat Hyder",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "11.74",
+        "taken": "6.00",
+        "remaining": "2.74"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "2.00",
+        "remaining": "12.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 34618,
+    "employee_id": "SM0024",
+    "employee_name": "Sagar Dave",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "10.20",
+        "taken": "7.00",
+        "remaining": "9.20"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "3.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "5.00",
+        "remaining": "1.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 34620,
+    "employee_id": "SM0017",
+    "employee_name": "Namrata Patil",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "19.00",
+        "taken": "9.00",
+        "remaining": "11.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "9.50",
+        "remaining": "4.50"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 5,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 6,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 7,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 34635,
+    "employee_id": "SM0008",
+    "employee_name": "Tingting Xiang",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "8.21",
+        "taken": "5.00",
+        "remaining": "3.21"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 34636,
+    "employee_id": "SM0023",
+    "employee_name": "Leon Thai Lai",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "15.00",
+        "taken": "2.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "2.00",
+        "remaining": "1.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "7.00",
+        "remaining": "0.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 34638,
+    "employee_id": "SM0015",
+    "employee_name": "Harry Lin",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "19.00",
+        "taken": "10.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 34639,
+    "employee_id": "SM0036",
+    "employee_name": "Humza Ahzam",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "15.00",
+        "taken": "13.00",
+        "remaining": "2.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "3.00",
+        "remaining": "11.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "7.00",
+        "remaining": "23.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 34640,
+    "employee_id": "SM0040",
+    "employee_name": "Joe Inthavong",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "14.00",
+        "taken": "14.00",
+        "remaining": "1.00"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "12.00",
+        "remaining": "2.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 3,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 10,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 35155,
+    "employee_id": "SM0071",
+    "employee_name": "Aarthi Rajarajan",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "12.81",
+        "taken": "11.00",
+        "remaining": "-0.19"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "5.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 14,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 17,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 35157,
+    "employee_id": "SM0073",
+    "employee_name": "Faizan Junani",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "12.81",
+        "taken": "13.00",
+        "remaining": "-0.19"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "2.50",
+        "remaining": "11.50"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "25.00",
+        "remaining": "25.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 10,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 35681,
+    "employee_id": null,
+    "employee_name": "Omni Support",
+    "leave_balances": [],
+    "leave_requests": []
+  },
+  {
+    "user_id": 36233,
+    "employee_id": null,
+    "employee_name": "People Culture",
+    "leave_balances": [],
+    "leave_requests": []
+  },
+  {
+    "user_id": 36561,
+    "employee_id": "SM0075",
+    "employee_name": "Kavilan Nakaswaram",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "10.55",
+        "taken": "9.00",
+        "remaining": "1.05"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "7.00",
+        "remaining": "7.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "8.00",
+        "remaining": "22.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "6.00",
+        "remaining": "44.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 26,
+        "leave_type": "Paternity Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 7,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 37718,
+    "employee_id": "SM0076",
+    "employee_name": "Saad Khan",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "10.55",
+        "taken": "10.50",
+        "remaining": "0.05"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 24,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 25,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 26,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 27,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 37719,
+    "employee_id": "SM0077",
+    "employee_name": "Usama Zubair",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "10.55",
+        "taken": "3.00",
+        "remaining": "2.55"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 38272,
+    "employee_id": "SM0078",
+    "employee_name": "Suleman Zaie",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "9.40",
+        "taken": "1.50",
+        "remaining": "-0.10"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 10,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      }
+    ]
+  },
+  {
+    "user_id": 38652,
+    "employee_id": "SM0079",
+    "employee_name": "Arun Prasanth",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "9.40",
+        "taken": "7.50",
+        "remaining": "1.90"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Conference/Events",
+        "entitlement": "0.00",
+        "taken": "2.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "0.00",
+        "remaining": "50.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 5,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 6,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 7,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 40323,
+    "employee_id": "SM0080",
+    "employee_name": "Chun Weng Tan",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "8.21",
+        "taken": "4.00",
+        "remaining": "4.21"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 40324,
+    "employee_id": "SM0081",
+    "employee_name": "Salman Siddiqui",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "8.21",
+        "taken": "2.50",
+        "remaining": "5.71"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "2.00",
+        "remaining": "12.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 40883,
+    "employee_id": "SM0082",
+    "employee_name": "Haris Hussain",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "8.21",
+        "taken": "2.00",
+        "remaining": "2.21"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "2.00",
+        "remaining": "12.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 7,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 41472,
+    "employee_id": "SM0083",
+    "employee_name": "Shahzad Iftikhar",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "8.21",
+        "taken": "2.00",
+        "remaining": "6.21"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "13.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 42424,
+    "employee_id": "SM0084",
+    "employee_name": "Rohini Krishnan",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "7.06",
+        "taken": "4.00",
+        "remaining": "3.06"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "2.00",
+        "remaining": "12.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 12,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 42425,
+    "employee_id": "SM0085",
+    "employee_name": "Khalilah Alewi",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "7.06",
+        "taken": "4.00",
+        "remaining": "2.06"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "3.00",
+        "remaining": "11.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 27,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      },
+      {
+        "date": 28,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 17,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 44884,
+    "employee_id": "SM0086",
+    "employee_name": "Refi Fauzan",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "5.87",
+        "taken": "0.00",
+        "remaining": "5.87"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 45013,
+    "employee_id": "SM0087",
+    "employee_name": "Magdy Abdelkader",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "5.87",
+        "taken": "2.00",
+        "remaining": "3.87"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 45230,
+    "employee_id": "SM0088",
+    "employee_name": "Khairul Ikhwan Bin Khamis",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "5.87",
+        "taken": "1.00",
+        "remaining": "4.87"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.50"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 45457,
+    "employee_id": "SM0089",
+    "employee_name": "Nicholas Wong En Tze",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "5.87",
+        "taken": "6.00",
+        "remaining": "-0.13"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Conference/Events",
+        "entitlement": "0.00",
+        "taken": "1.50",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Unpaid Leave",
+        "entitlement": "50.00",
+        "taken": "1.00",
+        "remaining": "49.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 11,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 12,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 13,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 14,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 17,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 18,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 19,
+        "leave_type": "Unpaid Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 45478,
+    "employee_id": "SM0090",
+    "employee_name": "SK Chin",
+    "leave_balances": [],
+    "leave_requests": []
+  },
+  {
+    "user_id": 45797,
+    "employee_id": "SM0091",
+    "employee_name": "Joyce Tan",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "5.87",
+        "taken": "1.00",
+        "remaining": "-0.13"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "5.00",
+        "remaining": "9.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 14,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 45973,
+    "employee_id": "SM0092",
+    "employee_name": "Prathik Balachandran",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "5.87",
+        "taken": "0.00",
+        "remaining": "3.87"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 46063,
+    "employee_id": "SM0093",
+    "employee_name": "Helmi Abd Majid",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "4.68",
+        "taken": "3.00",
+        "remaining": "0.68"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "3.00",
+        "remaining": "0.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "4.00",
+        "remaining": "10.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 27,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 12,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      }
+    ]
+  },
+  {
+    "user_id": 46624,
+    "employee_id": "SM0094",
+    "employee_name": "KS Teng Khai Sing",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "4.68",
+        "taken": "0.00",
+        "remaining": "2.68"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 46691,
+    "employee_id": "SM0095",
+    "employee_name": "SWENDY Hui Ming",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "4.68",
+        "taken": "0.00",
+        "remaining": "3.18"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 47133,
+    "employee_id": "SM0096",
+    "employee_name": "Fizie Bin Roselamat",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "4.68",
+        "taken": "0.50",
+        "remaining": "4.18"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "9.00",
+        "remaining": "5.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 25,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 48448,
+    "employee_id": "SM0097",
+    "employee_name": "Tim Mulhearn",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "3.53",
+        "taken": "0.00",
+        "remaining": "0.03"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 52983,
+    "employee_id": "SM0098",
+    "employee_name": "Farzana Azman",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "3.53",
+        "taken": "0.00",
+        "remaining": "3.53"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.00",
+        "remaining": "13.00"
+      },
+      {
+        "leave_type": "Replacement Leave",
+        "entitlement": "0.00",
+        "taken": "0.00",
+        "remaining": "0.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 4,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 57579,
+    "employee_id": "SM0100",
+    "employee_name": "Pavithira Selvakumaran",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "2.34",
+        "taken": "1.00",
+        "remaining": "1.34"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "1.00",
+        "remaining": "13.00"
+      }
+    ],
+    "leave_requests": [
+      {
+        "date": 13,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 21,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
+  },
+  {
+    "user_id": 57580,
+    "employee_id": "SM0101",
+    "employee_name": "Riley Ooi",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "2.34",
+        "taken": "0.00",
+        "remaining": "2.34"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Maternity Leave",
+        "entitlement": "120.00",
+        "taken": "0.00",
+        "remaining": "120.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 57581,
+    "employee_id": "SM0102",
+    "employee_name": "Ismail Ibrahim",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "2.34",
+        "taken": "0.00",
+        "remaining": "2.34"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      }
+    ],
+    "leave_requests": []
+  },
+  {
+    "user_id": 57750,
+    "employee_id": "SM0103",
+    "employee_name": "Danu Almadanu",
+    "leave_balances": [
+      {
+        "leave_type": "Annual Leave",
+        "entitlement": "1.19",
+        "taken": "0.00",
+        "remaining": "1.19"
+      },
+      {
+        "leave_type": "Compassionate Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Hospitalisation Leave",
+        "entitlement": "60.00",
+        "taken": "0.00",
+        "remaining": "60.00"
+      },
+      {
+        "leave_type": "Marriage Leave",
+        "entitlement": "3.00",
+        "taken": "0.00",
+        "remaining": "3.00"
+      },
+      {
+        "leave_type": "Medical Leave",
+        "entitlement": "14.00",
+        "taken": "0.00",
+        "remaining": "14.00"
+      },
+      {
+        "leave_type": "Paternity Leave",
+        "entitlement": "30.00",
+        "taken": "0.00",
+        "remaining": "30.00"
+      }
+    ],
+    "leave_requests": []
+  }
+]
