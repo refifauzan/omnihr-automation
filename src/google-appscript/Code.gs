@@ -760,10 +760,10 @@ function applyAttendanceHours(sheet, attendanceList, month, year) {
 		.getRange(CONFIG.FIRST_DATA_ROW, TOTAL_HOURS_COL, numRows, 3)
 		.setFormulas(formulas);
 
-	// Add conditional formatting (red for full-day leave, green for validated weeks)
-	// No half-day values yet - they will be added when leave data is synced
+	// Add conditional formatting for validated weeks only (green)
+	// Leave colors are applied directly when leave data is synced
 	Logger.log('Adding conditional formatting...');
-	addLeaveConditionalFormatting(sheet, daysInMonth, month, year, []);
+	addValidatedConditionalFormatting(sheet, month, year);
 
 	Logger.log(`Matched ${matchedCount} rows with attendance data`);
 	SpreadsheetApp.flush();
@@ -1280,46 +1280,36 @@ function updateSheetWithLeaveData(sheet, leaveData, month, year) {
 		}
 	}
 
-	// Apply full day leave (value 0)
+	// Apply full day leave (value 0 + red background)
 	if (fullDayCells.length > 0) {
 		Logger.log(
-			`Applying full-day leave to ${fullDayCells.length} cells (value 0)`
+			`Applying full-day leave to ${fullDayCells.length} cells (value 0, red)`
 		);
 		const fullDayRanges = sheet.getRangeList(fullDayCells);
 		fullDayRanges.setValue(0);
+		fullDayRanges.setBackground(CONFIG.COLORS.FULL_DAY);
+		fullDayRanges.setFontColor('#FFFFFF');
+		fullDayRanges.setFontWeight('bold');
 	}
 
-	// Apply half day leave with divided values (just set values, colors via conditional formatting)
+	// Apply half day leave with divided values (value + orange background)
 	const halfDayCellEntries = Object.entries(halfDayCellsMap);
-	const halfDayValues = new Set(); // Track unique half-day values for conditional formatting
 	if (halfDayCellEntries.length > 0) {
-		Logger.log(`Applying half-day leave to ${halfDayCellEntries.length} cells`);
-		// Group by value for batch updates
-		const valueGroups = {};
+		Logger.log(
+			`Applying half-day leave to ${halfDayCellEntries.length} cells (orange)`
+		);
+		// Apply values and colors directly to each cell
 		for (const [cellA1, value] of halfDayCellEntries) {
-			if (!valueGroups[value]) {
-				valueGroups[value] = [];
-			}
-			valueGroups[value].push(cellA1);
-			halfDayValues.add(value);
-		}
-		// Apply each value group (just set values, not colors)
-		for (const [value, cells] of Object.entries(valueGroups)) {
-			Logger.log(`Setting ${cells.length} cells to value ${value}`);
-			const ranges = sheet.getRangeList(cells);
-			ranges.setValue(parseFloat(value));
+			const range = sheet.getRange(cellA1);
+			range.setValue(parseFloat(value));
+			range.setBackground(CONFIG.COLORS.HALF_DAY);
+			range.setFontColor('#000000');
+			range.setFontWeight('bold');
 		}
 	}
 
-	// Add conditional formatting for leave colors (red for 0, orange for half-day values, green for validated)
-	// Pass the unique half-day values so we can create conditional formatting rules for them
-	addLeaveConditionalFormatting(
-		sheet,
-		daysInMonth,
-		month,
-		year,
-		Array.from(halfDayValues)
-	);
+	// Add conditional formatting for validated weeks only (green)
+	addValidatedConditionalFormatting(sheet, month, year);
 
 	// Force flush all pending changes
 	SpreadsheetApp.flush();
@@ -1332,78 +1322,30 @@ function updateSheetWithLeaveData(sheet, leaveData, month, year) {
 }
 
 /**
- * Add conditional formatting rules for the sheet
- * Priority order (first rule = highest priority):
- * 1. Full-day leave (0) = Red
- * 2. Half-day leave (dynamic values) = Orange
- * 3. Checkbox validated (TRUE) = Green for weekdays
- * @param {number[]} halfDayValues - Array of unique half-day leave values to create orange rules for
+ * Add conditional formatting for validated weeks only (green)
+ * Leave colors (red/orange) are applied directly to cells, not via conditional formatting
  */
-function addLeaveConditionalFormatting(
-	sheet,
-	daysInMonth,
-	month,
-	year,
-	halfDayValues
-) {
+function addValidatedConditionalFormatting(sheet, month, year) {
 	// Calculate the range based on month/year
 	const { dayColumns, validatedColumns } = calculateDayColumns(month, year);
 
 	const lastRow = sheet.getLastRow();
 	const firstCol = CONFIG.FIRST_DAY_COL;
-	const lastCol = Math.max(...Object.values(dayColumns), ...validatedColumns);
 
 	// Make sure we have valid dimensions
 	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
-	const numCols = lastCol - firstCol + 1;
 
-	if (numRows <= 0 || numCols <= 0) {
-		Logger.log('addLeaveConditionalFormatting: Invalid range dimensions');
+	if (numRows <= 0) {
+		Logger.log('addValidatedConditionalFormatting: Invalid range dimensions');
 		return;
 	}
-
-	// Data range for leave rules (all day columns)
-	const dataRange = sheet.getRange(
-		CONFIG.FIRST_DATA_ROW,
-		firstCol,
-		numRows,
-		numCols
-	);
 
 	// Clear ALL existing conditional formatting rules (start fresh)
 	sheet.setConditionalFormatRules([]);
 
 	const rules = [];
 
-	// 1. HIGHEST PRIORITY: Full-day leave (0 = red background)
-	const fullDayRule = SpreadsheetApp.newConditionalFormatRule()
-		.whenNumberEqualTo(0)
-		.setBackground('#FF0000')
-		.setFontColor('#FFFFFF')
-		.setBold(true)
-		.setRanges([dataRange])
-		.build();
-	rules.push(fullDayRule);
-
-	// 2. Half-day leave values (orange background)
-	// Create a rule for each unique half-day value
-	if (halfDayValues && halfDayValues.length > 0) {
-		Logger.log(
-			`Adding orange rules for half-day values: ${halfDayValues.join(', ')}`
-		);
-		for (const value of halfDayValues) {
-			const halfDayRule = SpreadsheetApp.newConditionalFormatRule()
-				.whenNumberEqualTo(value)
-				.setBackground('#FFA500')
-				.setFontColor('#000000')
-				.setBold(true)
-				.setRanges([dataRange])
-				.build();
-			rules.push(halfDayRule);
-		}
-	}
-
-	// 3. LOWEST PRIORITY: Green for validated weeks (when checkbox is TRUE)
+	// Green for validated weeks (when checkbox is TRUE)
 	// Only apply to weekdays (not weekends) + the checkbox column itself
 	let weekStartCol = firstCol;
 	for (const validatedCol of validatedColumns) {
@@ -1447,7 +1389,9 @@ function addLeaveConditionalFormatting(
 	}
 
 	sheet.setConditionalFormatRules(rules);
-	Logger.log(`Applied ${rules.length} conditional formatting rules`);
+	Logger.log(
+		`Applied ${rules.length} conditional formatting rules (validated weeks only)`
+	);
 }
 
 /**
@@ -1549,6 +1493,17 @@ function calculateDayColumns(month, year) {
 			validatedColumns.push(currentCol);
 			currentCol++;
 		}
+	}
+
+	// Add validated column after the last day if there are weekdays after the last Friday
+	const lastDayOfMonth = new Date(year, month, daysInMonth);
+	const lastDayOfWeek = lastDayOfMonth.getDay();
+
+	// Only add if last day is Mon-Thu (1-4), meaning there are weekdays not yet validated
+	// If last day is Friday (5), it was already handled in the loop
+	// If last day is Sat (6) or Sun (0), no weekdays to validate after last Friday
+	if (lastDayOfWeek >= 1 && lastDayOfWeek <= 4) {
+		validatedColumns.push(currentCol);
 	}
 
 	return { dayColumns, validatedColumns };
