@@ -212,12 +212,36 @@ class LeaveService {
 								currentDate.getMonth() === month &&
 								currentDate.getFullYear() === year
 							) {
+								// Determine if this specific day is half-day
+								// effective_date_duration: 1=full, 2=AM half, 3=PM half (for first day)
+								// end_date_duration: 1=full, 2=AM half, 3=PM half (for last day)
+								const isFirstDay =
+									currentDate.getTime() === leaveStart.getTime();
+								const isLastDay = currentDate.getTime() === leaveEnd.getTime();
+								const isSingleDay = isFirstDay && isLastDay;
+
+								let isHalfDay = false;
+								if (isSingleDay) {
+									// Single day leave - check effective_date_duration
+									isHalfDay =
+										r.effective_date_duration === 2 ||
+										r.effective_date_duration === 3;
+								} else if (isFirstDay) {
+									// First day of multi-day leave
+									isHalfDay =
+										r.effective_date_duration === 2 ||
+										r.effective_date_duration === 3;
+								} else if (isLastDay) {
+									// Last day of multi-day leave
+									isHalfDay =
+										r.end_date_duration === 2 || r.end_date_duration === 3;
+								}
+								// Middle days are always full days (isHalfDay = false)
+
 								leaveDays.push({
 									date: currentDate.getDate(),
 									leave_type: r.time_off?.name,
-									is_half_day:
-										r.effective_date_duration === 2 ||
-										r.effective_date_duration === 3,
+									is_half_day: isHalfDay,
 								});
 							}
 

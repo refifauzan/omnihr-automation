@@ -69,7 +69,7 @@ function onOpen() {
 			.addSubMenu(
 				ui
 					.createMenu('Schedule')
-					.addItem('Enable Monthly Sync (1st of month)', 'setupMonthlyTrigger')
+					.addItem('Enable Monthly Sync', 'setupMonthlyTrigger')
 					.addItem('Enable Daily Sync', 'setupDailyTrigger')
 					.addSeparator()
 					.addItem('View Current Schedule', 'viewTriggers')
@@ -86,7 +86,7 @@ function onOpen() {
 
 /**
  * Setup monthly trigger - runs on 1st of each month at 6 AM
- * Run this function ONCE to enable automatic monthly sync
+ * Creates a new sheet for each month (e.g., "December 2025")
  */
 function setupMonthlyTrigger() {
 	// Remove existing triggers
@@ -94,7 +94,7 @@ function setupMonthlyTrigger() {
 	triggers.forEach((trigger) => ScriptApp.deleteTrigger(trigger));
 
 	// Create monthly trigger - runs on day 1 of each month at 6 AM
-	ScriptApp.newTrigger('syncCurrentMonth')
+	ScriptApp.newTrigger('scheduledSync')
 		.timeBased()
 		.onMonthDay(1)
 		.atHour(6)
@@ -104,14 +104,15 @@ function setupMonthlyTrigger() {
 		'Monthly sync trigger created - will run on 1st of each month at 6 AM'
 	);
 	SpreadsheetApp.getUi().alert(
-		'Monthly sync enabled!\n\nThe script will automatically sync on the 1st of each month at 6 AM.'
+		'Monthly sync enabled!\n\n' +
+			'The script will automatically sync on the 1st of each month at 6 AM.\n\n' +
+			'• Creates a new sheet for each month (e.g., "December 2025")'
 	);
 }
 
 /**
  * Setup daily trigger - runs every day at 6 AM
- * Only syncs the CURRENT month - past months are not re-synced
- * When the month changes, it automatically starts syncing the new month
+ * Creates/updates a sheet for the current month (e.g., "December 2025")
  */
 function setupDailyTrigger() {
 	// Remove existing triggers
@@ -119,7 +120,7 @@ function setupDailyTrigger() {
 	triggers.forEach((trigger) => ScriptApp.deleteTrigger(trigger));
 
 	// Create daily trigger at 6 AM
-	ScriptApp.newTrigger('syncCurrentMonth')
+	ScriptApp.newTrigger('scheduledSync')
 		.timeBased()
 		.everyDays(1)
 		.atHour(6)
@@ -129,10 +130,34 @@ function setupDailyTrigger() {
 	SpreadsheetApp.getUi().alert(
 		'Daily sync enabled!\n\n' +
 			'The script will automatically sync every day at 6 AM.\n\n' +
-			'• Only the CURRENT month is synced\n' +
-			'• Past months will NOT be re-synced\n' +
-			'• When the month changes, the new month is synced automatically'
+			'• Creates/updates a sheet for the current month (e.g., "December 2025")\n' +
+			'• When the month changes, a new sheet is created automatically'
 	);
+}
+
+/**
+ * Scheduled sync function (called by trigger)
+ * Creates or uses a sheet named after the current month
+ */
+function scheduledSync() {
+	const now = new Date();
+	const month = now.getMonth();
+	const year = now.getFullYear();
+
+	const ss = SpreadsheetApp.getActiveSpreadsheet();
+	const sheetName = getMonthSheetName(month, year);
+
+	// Get or create the sheet for this month
+	let sheet = ss.getSheetByName(sheetName);
+	if (!sheet) {
+		sheet = ss.insertSheet(sheetName);
+		Logger.log(`Created new sheet: ${sheetName}`);
+	} else {
+		Logger.log(`Using existing sheet: ${sheetName}`);
+	}
+
+	Logger.log(`Scheduled sync to sheet: ${sheetName}`);
+	syncLeaveDataToSheet(sheet, month, year);
 }
 
 /**
@@ -520,22 +545,8 @@ function applyAttendanceHours(sheet, attendanceList, month, year) {
 		attendanceLookup[key] = att;
 	}
 
-	// Build day columns mapping with "Validated" checkbox columns after each Friday
-	const dayColumns = {};
-	const validatedColumns = [];
-	let currentCol = CONFIG.FIRST_DAY_COL;
-
-	for (let day = 1; day <= daysInMonth; day++) {
-		const date = new Date(year, month, day);
-		const dayOfWeek = date.getDay();
-		dayColumns[day] = currentCol;
-		currentCol++;
-		if (dayOfWeek === 5) {
-			// Friday
-			validatedColumns.push(currentCol);
-			currentCol++;
-		}
-	}
+	// Build day columns mapping using shared function
+	const { dayColumns, validatedColumns } = calculateDayColumns(month, year);
 
 	const lastDayCol = Math.max(
 		...Object.values(dayColumns),
@@ -771,11 +782,15 @@ function applyAttendanceHours(sheet, attendanceList, month, year) {
 }
 
 /**
- * Sync leave data for current month
+ * Sync leave data for current month to the active sheet
  */
 function syncCurrentMonth() {
 	const now = new Date();
-	syncLeaveDataForMonth(now.getMonth(), now.getFullYear());
+	const ss = SpreadsheetApp.getActiveSpreadsheet();
+	const sheet = ss.getActiveSheet();
+
+	Logger.log(`Syncing current month to active sheet: ${sheet.getName()}`);
+	syncLeaveDataToSheet(sheet, now.getMonth(), now.getFullYear());
 }
 
 /**
@@ -808,7 +823,13 @@ function syncLeaveData() {
 		return;
 	}
 
-	syncLeaveDataForMonth(month, year);
+	// Use active sheet
+	const ss = SpreadsheetApp.getActiveSpreadsheet();
+	const sheet = ss.getActiveSheet();
+	const sheetName = sheet.getName();
+
+	Logger.log(`Syncing to active sheet: ${sheetName}`);
+	syncLeaveDataToSheet(sheet, month, year);
 }
 
 /**
@@ -826,12 +847,23 @@ function syncLeaveDataForMonth(month, year) {
 	// Get or create the sheet for this month
 	let sheet = ss.getSheetByName(sheetName);
 	if (!sheet) {
-		// Create new sheet for this month
 		sheet = ss.insertSheet(sheetName);
 		Logger.log(`Created new sheet: ${sheetName}`);
 	} else {
 		Logger.log(`Using existing sheet: ${sheetName}`);
 	}
+
+	syncLeaveDataToSheet(sheet, month, year);
+}
+
+/**
+ * Sync leave data to a specific sheet
+ * @param {Sheet} sheet - The sheet to sync to
+ * @param {number} month - Month (0-11)
+ * @param {number} year - Year
+ */
+function syncLeaveDataToSheet(sheet, month, year) {
+	const sheetName = sheet.getName();
 
 	Logger.log(
 		`Syncing leave data for ${month + 1}/${year} to sheet "${sheetName}"`
@@ -871,6 +903,10 @@ function syncLeaveDataForMonth(month, year) {
 		Logger.log('Applying leave data...');
 		updateSheetWithLeaveData(sheet, leaveData, month, year);
 
+		// Ensure all changes are written
+		SpreadsheetApp.flush();
+		Logger.log('Sync complete');
+
 		SpreadsheetApp.getUi().alert(
 			`Sync complete!\n\n` +
 				`• Attendance rows: ${attendanceList ? attendanceList.length : 0}\n` +
@@ -883,6 +919,9 @@ function syncLeaveDataForMonth(month, year) {
 		SpreadsheetApp.getUi().alert(
 			'Error: ' + error.message + '\n\nCheck View > Execution Log for details.'
 		);
+	} finally {
+		// Always flush at the end to clear the "Working..." spinner
+		SpreadsheetApp.flush();
 	}
 }
 
@@ -1143,12 +1182,36 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
 						currentDate.getMonth() === month &&
 						currentDate.getFullYear() === year
 					) {
+						// Determine if this specific day is half-day
+						// effective_date_duration: 1=full, 2=AM half, 3=PM half (for first day)
+						// end_date_duration: 1=full, 2=AM half, 3=PM half (for last day)
+						const isFirstDay = currentDate.getTime() === leaveStart.getTime();
+						const isLastDay = currentDate.getTime() === leaveEnd.getTime();
+						const isSingleDay = isFirstDay && isLastDay;
+
+						let isHalfDay = false;
+						if (isSingleDay) {
+							// Single day leave - check effective_date_duration
+							isHalfDay =
+								request.effective_date_duration === 2 ||
+								request.effective_date_duration === 3;
+						} else if (isFirstDay) {
+							// First day of multi-day leave
+							isHalfDay =
+								request.effective_date_duration === 2 ||
+								request.effective_date_duration === 3;
+						} else if (isLastDay) {
+							// Last day of multi-day leave
+							isHalfDay =
+								request.end_date_duration === 2 ||
+								request.end_date_duration === 3;
+						}
+						// Middle days are always full days (isHalfDay = false)
+
 						leaveDays.push({
 							date: currentDate.getDate(),
 							leave_type: request.time_off?.name,
-							is_half_day:
-								request.effective_date_duration === 2 ||
-								request.effective_date_duration === 3,
+							is_half_day: isHalfDay,
 						});
 					}
 
@@ -1263,15 +1326,13 @@ function updateSheetWithLeaveData(sheet, leaveData, month, year) {
 				const cellA1 = columnToLetter(col) + row;
 
 				if (leave.is_half_day) {
-					// Half-day leave: divide 4 hours proportionally based on project hours
-					// e.g., Project A=1hr, B=1hr, C=6hr (total 8hr)
-					// Half-day = 4hr -> A gets 0.5, B gets 0.5, C gets 3
+					// Half-day leave: employee works half their normal hours
+					// e.g., Project A=1hr, B=7hr -> half-day means A=0.5hr, B=3.5hr
 					const projectHours = rowHoursMap[row] || 8;
-					const proportion = projectHours / rowTotalHours;
-					const halfDayHoursForProject = 4 * proportion;
+					const halfDayHoursForProject = projectHours / 2;
 					halfDayCellsMap[cellA1] = halfDayHoursForProject;
 					Logger.log(
-						`Half-day for row ${row}: ${projectHours}/${rowTotalHours} * 4 = ${halfDayHoursForProject}`
+						`Half-day for row ${row}: ${projectHours} / 2 = ${halfDayHoursForProject}`
 					);
 				} else {
 					fullDayCells.push(cellA1);
@@ -1280,7 +1341,7 @@ function updateSheetWithLeaveData(sheet, leaveData, month, year) {
 		}
 	}
 
-	// Apply full day leave (value 0 + red background)
+	// Apply leave values and colors
 	if (fullDayCells.length > 0) {
 		Logger.log(
 			`Applying full-day leave to ${fullDayCells.length} cells (value 0, red)`
@@ -1292,13 +1353,11 @@ function updateSheetWithLeaveData(sheet, leaveData, month, year) {
 		fullDayRanges.setFontWeight('bold');
 	}
 
-	// Apply half day leave with divided values (value + orange background)
 	const halfDayCellEntries = Object.entries(halfDayCellsMap);
 	if (halfDayCellEntries.length > 0) {
 		Logger.log(
 			`Applying half-day leave to ${halfDayCellEntries.length} cells (orange)`
 		);
-		// Apply values and colors directly to each cell
 		for (const [cellA1, value] of halfDayCellEntries) {
 			const range = sheet.getRange(cellA1);
 			range.setValue(parseFloat(value));
@@ -1308,10 +1367,12 @@ function updateSheetWithLeaveData(sheet, leaveData, month, year) {
 		}
 	}
 
-	// Add conditional formatting for validated weeks only (green)
-	addValidatedConditionalFormatting(sheet, month, year);
+	// Add conditional formatting for validated weeks (green)
+	// Pass leave cells so they are EXCLUDED from green formatting
+	const leaveCells = [...fullDayCells, ...Object.keys(halfDayCellsMap)];
+	addValidatedConditionalFormatting(sheet, month, year, leaveCells);
 
-	// Force flush all pending changes
+	// Final flush
 	SpreadsheetApp.flush();
 
 	Logger.log(
@@ -1323,9 +1384,18 @@ function updateSheetWithLeaveData(sheet, leaveData, month, year) {
 
 /**
  * Add conditional formatting for validated weeks only (green)
- * Leave colors (red/orange) are applied directly to cells, not via conditional formatting
+ * Leave cells are excluded by building ranges that skip them
+ * @param {Sheet} sheet - The sheet
+ * @param {number} month - Month (0-11)
+ * @param {number} year - Year
+ * @param {string[]} leaveCells - Array of cell A1 notations to exclude from green
  */
-function addValidatedConditionalFormatting(sheet, month, year) {
+function addValidatedConditionalFormatting(
+	sheet,
+	month,
+	year,
+	leaveCells = []
+) {
 	// Calculate the range based on month/year
 	const { dayColumns, validatedColumns } = calculateDayColumns(month, year);
 
@@ -1340,13 +1410,26 @@ function addValidatedConditionalFormatting(sheet, month, year) {
 		return;
 	}
 
+	// Build a Set of leave cells for fast lookup
+	const leaveCellSet = new Set(leaveCells.map((c) => c.toUpperCase()));
+	Logger.log(
+		`Excluding ${leaveCellSet.size} leave cells from green formatting`
+	);
+	if (leaveCellSet.size > 0) {
+		Logger.log(
+			`Leave cells: ${Array.from(leaveCellSet).slice(0, 10).join(', ')}${
+				leaveCellSet.size > 10 ? '...' : ''
+			}`
+		);
+	}
+
 	// Clear ALL existing conditional formatting rules (start fresh)
 	sheet.setConditionalFormatRules([]);
 
 	const rules = [];
 
 	// Green for validated weeks (when checkbox is TRUE)
-	// Only apply to weekdays (not weekends) + the checkbox column itself
+	// Build ranges that exclude leave cells by grouping consecutive non-leave rows
 	let weekStartCol = firstCol;
 	for (const validatedCol of validatedColumns) {
 		if (validatedCol >= weekStartCol) {
@@ -1361,20 +1444,42 @@ function addValidatedConditionalFormatting(sheet, month, year) {
 					const dayOfWeek = date.getDay();
 					// Only include weekdays (Mon-Fri: 1-5)
 					if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-						weekdayRanges.push(
-							sheet.getRange(CONFIG.FIRST_DATA_ROW, col, numRows, 1)
-						);
+						const colLetter = columnToLetter(col);
+						// Group consecutive rows that are NOT leave cells
+						let rangeStart = null;
+						for (let row = CONFIG.FIRST_DATA_ROW; row <= lastRow + 1; row++) {
+							const cellA1 = `${colLetter}${row}`;
+							const isLeave = leaveCellSet.has(cellA1.toUpperCase());
+							const isLastRow = row > lastRow;
+
+							if (!isLeave && !isLastRow) {
+								if (rangeStart === null) rangeStart = row;
+							} else {
+								if (rangeStart !== null) {
+									// End of consecutive range, add it
+									const rangeEnd = row - 1;
+									weekdayRanges.push(
+										sheet.getRange(
+											rangeStart,
+											col,
+											rangeEnd - rangeStart + 1,
+											1
+										)
+									);
+									rangeStart = null;
+								}
+							}
+						}
 					}
 				}
 			}
 
-			// Also include the checkbox column itself
+			// Also include the checkbox column itself (all rows)
 			weekdayRanges.push(
 				sheet.getRange(CONFIG.FIRST_DATA_ROW, validatedCol, numRows, 1)
 			);
 
 			if (weekdayRanges.length > 0) {
-				// Custom formula: apply green when checkbox is TRUE
 				const greenRule = SpreadsheetApp.newConditionalFormatRule()
 					.whenFormulaSatisfied(
 						`=$${checkboxColLetter}${CONFIG.FIRST_DATA_ROW}=TRUE`

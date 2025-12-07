@@ -4,7 +4,7 @@
  */
 module.exports = {
 	// Month is 0-indexed: 0=Jan, 1=Feb, ..., 11=Dec
-	month: 10,
+	month: 11,
 	year: 2025,
 
 	// Google Sheets configuration
