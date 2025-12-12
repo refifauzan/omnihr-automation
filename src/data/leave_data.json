@@ -8,7 +8,7 @@
         "leave_type": "Annual Leave",
         "entitlement": "20.00",
         "taken": "13.00",
-        "remaining": "8.00"
+        "remaining": "7.00"
       },
       {
         "leave_type": "Compassionate Leave",
@@ -47,7 +47,13 @@
         "remaining": "50.00"
       }
     ],
-    "leave_requests": []
+    "leave_requests": [
+      {
+        "date": 18,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
   },
   {
     "user_id": 33764,
@@ -815,8 +821,8 @@
       {
         "leave_type": "Medical Leave",
         "entitlement": "14.00",
-        "taken": "3.00",
-        "remaining": "11.00"
+        "taken": "3.50",
+        "remaining": "10.50"
       },
       {
         "leave_type": "Replacement Leave",
@@ -836,6 +842,11 @@
         "date": 26,
         "leave_type": "Annual Leave",
         "is_half_day": false
+      },
+      {
+        "date": 1,
+        "leave_type": "Medical Leave",
+        "is_half_day": true
       }
     ]
   },
@@ -902,7 +913,7 @@
       {
         "date": 24,
         "leave_type": "Replacement Leave",
-        "is_half_day": true
+        "is_half_day": false
       },
       {
         "date": 26,
@@ -1399,8 +1410,8 @@
       {
         "leave_type": "Annual Leave",
         "entitlement": "15.00",
-        "taken": "12.00",
-        "remaining": "5.50"
+        "taken": "14.00",
+        "remaining": "3.50"
       },
       {
         "leave_type": "Compassionate Leave",
@@ -1524,7 +1535,7 @@
       {
         "date": 24,
         "leave_type": "Replacement Leave",
-        "is_half_day": true
+        "is_half_day": false
       }
     ]
   },
@@ -1657,32 +1668,32 @@
       {
         "date": 24,
         "leave_type": "Annual Leave",
-        "is_half_day": true
+        "is_half_day": false
       },
       {
         "date": 25,
         "leave_type": "Annual Leave",
-        "is_half_day": true
+        "is_half_day": false
       },
       {
         "date": 26,
         "leave_type": "Annual Leave",
-        "is_half_day": true
+        "is_half_day": false
       },
       {
         "date": 29,
         "leave_type": "Annual Leave",
-        "is_half_day": true
+        "is_half_day": false
       },
       {
         "date": 30,
         "leave_type": "Annual Leave",
-        "is_half_day": true
+        "is_half_day": false
       },
       {
         "date": 31,
         "leave_type": "Annual Leave",
-        "is_half_day": true
+        "is_half_day": false
       }
     ]
   },
@@ -2227,8 +2238,8 @@
       {
         "leave_type": "Replacement Leave",
         "entitlement": "0.00",
-        "taken": "3.50",
-        "remaining": "1.50"
+        "taken": "4.00",
+        "remaining": "1.00"
       },
       {
         "leave_type": "Unpaid Leave",
@@ -2237,7 +2248,13 @@
         "remaining": "50.00"
       }
     ],
-    "leave_requests": []
+    "leave_requests": [
+      {
+        "date": 8,
+        "leave_type": "Replacement Leave",
+        "is_half_day": true
+      }
+    ]
   },
   {
     "user_id": 33816,
@@ -2395,8 +2412,8 @@
       {
         "leave_type": "Medical Leave",
         "entitlement": "14.00",
-        "taken": "7.50",
-        "remaining": "6.50"
+        "taken": "8.50",
+        "remaining": "5.50"
       },
       {
         "leave_type": "Replacement Leave",
@@ -2411,7 +2428,13 @@
         "remaining": "50.00"
       }
     ],
-    "leave_requests": []
+    "leave_requests": [
+      {
+        "date": 8,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
   },
   {
     "user_id": 33818,
@@ -2799,7 +2822,7 @@
         "leave_type": "Annual Leave",
         "entitlement": "20.00",
         "taken": "15.00",
-        "remaining": "5.00"
+        "remaining": "1.00"
       },
       {
         "leave_type": "Compassionate Leave",
@@ -2844,7 +2867,33 @@
         "remaining": "50.00"
       }
     ],
-    "leave_requests": []
+    "leave_requests": [
+      {
+        "date": 18,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 19,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 24,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 25,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 26,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
   },
   {
     "user_id": 33829,
@@ -3232,8 +3281,8 @@
       {
         "leave_type": "Annual Leave",
         "entitlement": "14.00",
-        "taken": "9.00",
-        "remaining": "8.00"
+        "taken": "9.50",
+        "remaining": "7.50"
       },
       {
         "leave_type": "Compassionate Leave",
@@ -3278,7 +3327,13 @@
         "remaining": "50.00"
       }
     ],
-    "leave_requests": []
+    "leave_requests": [
+      {
+        "date": 4,
+        "leave_type": "Annual Leave",
+        "is_half_day": true
+      }
+    ]
   },
   {
     "user_id": 33836,
@@ -3288,8 +3343,8 @@
       {
         "leave_type": "Annual Leave",
         "entitlement": "20.00",
-        "taken": "13.00",
-        "remaining": "12.00"
+        "taken": "14.00",
+        "remaining": "11.00"
       },
       {
         "leave_type": "Compassionate Leave",
@@ -3325,7 +3380,7 @@
         "leave_type": "Replacement Leave",
         "entitlement": "0.00",
         "taken": "4.00",
-        "remaining": "5.00"
+        "remaining": "4.00"
       },
       {
         "leave_type": "Unpaid Leave",
@@ -3334,7 +3389,18 @@
         "remaining": "50.00"
       }
     ],
-    "leave_requests": []
+    "leave_requests": [
+      {
+        "date": 12,
+        "leave_type": "Replacement Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 3,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
   },
   {
     "user_id": 33837,
@@ -3615,8 +3681,8 @@
       {
         "leave_type": "Medical Leave",
         "entitlement": "14.00",
-        "taken": "6.00",
-        "remaining": "8.00"
+        "taken": "9.00",
+        "remaining": "5.00"
       },
       {
         "leave_type": "Replacement Leave",
@@ -3660,6 +3726,21 @@
       {
         "date": 29,
         "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 2,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 3,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 4,
+        "leave_type": "Medical Leave",
         "is_half_day": false
       }
     ]
@@ -3719,93 +3800,6 @@
       }
     ],
     "leave_requests": []
-  },
-  {
-    "user_id": 34522,
-    "employee_id": "SM0067",
-    "employee_name": "Saber Pourmomenkangacher",
-    "leave_balances": [
-      {
-        "leave_type": "Annual Leave",
-        "entitlement": "14.00",
-        "taken": "11.00",
-        "remaining": "2.00"
-      },
-      {
-        "leave_type": "Compassionate Leave",
-        "entitlement": "3.00",
-        "taken": "0.00",
-        "remaining": "3.00"
-      },
-      {
-        "leave_type": "Conference/Events",
-        "entitlement": "0.00",
-        "taken": "1.00",
-        "remaining": "0.00"
-      },
-      {
-        "leave_type": "Hospitalisation Leave",
-        "entitlement": "60.00",
-        "taken": "0.00",
-        "remaining": "60.00"
-      },
-      {
-        "leave_type": "Medical Leave",
-        "entitlement": "14.00",
-        "taken": "8.00",
-        "remaining": "6.00"
-      },
-      {
-        "leave_type": "Paternity Leave",
-        "entitlement": "30.00",
-        "taken": "0.00",
-        "remaining": "30.00"
-      },
-      {
-        "leave_type": "Replacement Leave",
-        "entitlement": "0.00",
-        "taken": "0.00",
-        "remaining": "0.00"
-      },
-      {
-        "leave_type": "Unpaid Leave",
-        "entitlement": "50.00",
-        "taken": "0.00",
-        "remaining": "50.00"
-      }
-    ],
-    "leave_requests": [
-      {
-        "date": 1,
-        "leave_type": "Annual Leave",
-        "is_half_day": false
-      },
-      {
-        "date": 2,
-        "leave_type": "Annual Leave",
-        "is_half_day": false
-      },
-      {
-        "date": 3,
-        "leave_type": "Annual Leave",
-        "is_half_day": false
-      },
-      {
-        "date": 4,
-        "leave_type": "Annual Leave",
-        "is_half_day": false
-      },
-      {
-        "date": 5,
-        "leave_type": "Annual Leave",
-        "is_half_day": false
-      },
-      {
-        "date": 26,
-        "leave_type": "Annual Leave",
-        "is_half_day": false
-      }
-    ]
   },
   {
     "user_id": 34525,
@@ -4037,8 +4031,8 @@
       {
         "leave_type": "Medical Leave",
         "entitlement": "14.00",
-        "taken": "2.00",
-        "remaining": "12.00"
+        "taken": "4.00",
+        "remaining": "10.00"
       },
       {
         "leave_type": "Paternity Leave",
@@ -4074,6 +4068,16 @@
         "date": 31,
         "leave_type": "Annual Leave",
         "is_half_day": false
+      },
+      {
+        "date": 4,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 5,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
       }
     ]
   },
@@ -4085,8 +4089,8 @@
       {
         "leave_type": "Annual Leave",
         "entitlement": "10.20",
-        "taken": "7.00",
-        "remaining": "9.20"
+        "taken": "6.00",
+        "remaining": "10.20"
       },
       {
         "leave_type": "Compassionate Leave",
@@ -4148,11 +4152,6 @@
       },
       {
         "date": 5,
-        "leave_type": "Annual Leave",
-        "is_half_day": false
-      },
-      {
-        "date": 8,
         "leave_type": "Annual Leave",
         "is_half_day": false
       },
@@ -4409,7 +4408,7 @@
       {
         "leave_type": "Annual Leave",
         "entitlement": "14.00",
-        "taken": "14.00",
+        "taken": "15.00",
         "remaining": "1.00"
       },
       {
@@ -5012,8 +5011,8 @@
       {
         "leave_type": "Medical Leave",
         "entitlement": "14.00",
-        "taken": "0.00",
-        "remaining": "14.00"
+        "taken": "1.00",
+        "remaining": "13.00"
       },
       {
         "leave_type": "Paternity Leave",
@@ -5028,7 +5027,13 @@
         "remaining": "0.00"
       }
     ],
-    "leave_requests": []
+    "leave_requests": [
+      {
+        "date": 5,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
   },
   {
     "user_id": 40324,
@@ -5153,8 +5158,8 @@
       {
         "leave_type": "Annual Leave",
         "entitlement": "8.21",
-        "taken": "2.00",
-        "remaining": "6.21"
+        "taken": "3.00",
+        "remaining": "5.21"
       },
       {
         "leave_type": "Compassionate Leave",
@@ -5183,11 +5188,41 @@
       {
         "leave_type": "Paternity Leave",
         "entitlement": "30.00",
-        "taken": "0.00",
-        "remaining": "13.00"
+        "taken": "24.00",
+        "remaining": "6.00"
       }
     ],
     "leave_requests": [
+      {
+        "date": 5,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 8,
+        "leave_type": "Paternity Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 9,
+        "leave_type": "Paternity Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 10,
+        "leave_type": "Paternity Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 11,
+        "leave_type": "Paternity Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 12,
+        "leave_type": "Paternity Leave",
+        "is_half_day": false
+      },
       {
         "date": 15,
         "leave_type": "Paternity Leave",
@@ -5358,7 +5393,7 @@
         "leave_type": "Annual Leave",
         "entitlement": "5.87",
         "taken": "0.00",
-        "remaining": "5.87"
+        "remaining": "1.87"
       },
       {
         "leave_type": "Compassionate Leave",
@@ -5391,7 +5426,28 @@
         "remaining": "30.00"
       }
     ],
-    "leave_requests": []
+    "leave_requests": [
+      {
+        "date": 26,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 29,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 30,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      },
+      {
+        "date": 31,
+        "leave_type": "Annual Leave",
+        "is_half_day": false
+      }
+    ]
   },
   {
     "user_id": 45013,
@@ -5799,7 +5855,7 @@
   {
     "user_id": 46691,
     "employee_id": "SM0095",
-    "employee_name": "SWENDY Hui Ming",
+    "employee_name": "Swendy Hui Ming",
     "leave_balances": [
       {
         "leave_type": "Annual Leave",
@@ -5961,7 +6017,7 @@
       {
         "date": 31,
         "leave_type": "Annual Leave",
-        "is_half_day": false
+        "is_half_day": true
       }
     ]
   },
@@ -6003,8 +6059,8 @@
       {
         "leave_type": "Medical Leave",
         "entitlement": "14.00",
-        "taken": "1.00",
-        "remaining": "13.00"
+        "taken": "2.00",
+        "remaining": "12.00"
       },
       {
         "leave_type": "Replacement Leave",
@@ -6013,7 +6069,13 @@
         "remaining": "0.00"
       }
     ],
-    "leave_requests": []
+    "leave_requests": [
+      {
+        "date": 4,
+        "leave_type": "Medical Leave",
+        "is_half_day": false
+      }
+    ]
   },
   {
     "user_id": 57579,

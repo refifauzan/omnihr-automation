@@ -3,3 +3,8 @@ node_modules/
 
 # Environment variables
 .env
+
+# Clasp credentials (DO NOT COMMIT)
+.clasprc.json
+src/google-appscript/.clasp.json
+client_secret.json

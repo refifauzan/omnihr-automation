@@ -56,6 +56,7 @@ function onOpen() {
 		ui.createMenu('OmniHR')
 			.addItem('Sync Leave Data', 'syncLeaveData')
 			.addItem('Sync Current Month', 'syncCurrentMonth')
+			.addItem('Sync Leave Only (Keep Hours)', 'syncLeaveOnly')
 			.addSeparator()
 			.addSubMenu(
 				ui
@@ -105,8 +106,7 @@ function setupMonthlyTrigger() {
 	);
 	SpreadsheetApp.getUi().alert(
 		'Monthly sync enabled!\n\n' +
-			'The script will automatically sync on the 1st of each month at 6 AM.\n\n' +
-			'• Creates a new sheet for each month (e.g., "December 2025")'
+			'The script will automatically sync the active sheet on the 1st of each month at 6 AM.'
 	);
 }
 
@@ -129,15 +129,13 @@ function setupDailyTrigger() {
 	Logger.log('Daily sync trigger created for 6 AM');
 	SpreadsheetApp.getUi().alert(
 		'Daily sync enabled!\n\n' +
-			'The script will automatically sync every day at 6 AM.\n\n' +
-			'• Creates/updates a sheet for the current month (e.g., "December 2025")\n' +
-			'• When the month changes, a new sheet is created automatically'
+			'The script will automatically sync the active sheet every day at 6 AM.'
 	);
 }
 
 /**
  * Scheduled sync function (called by trigger)
- * Creates or uses a sheet named after the current month
+ * Syncs the active sheet with current month's leave data
  */
 function scheduledSync() {
 	const now = new Date();
@@ -145,18 +143,9 @@ function scheduledSync() {
 	const year = now.getFullYear();
 
 	const ss = SpreadsheetApp.getActiveSpreadsheet();
-	const sheetName = getMonthSheetName(month, year);
+	const sheet = ss.getActiveSheet();
 
-	// Get or create the sheet for this month
-	let sheet = ss.getSheetByName(sheetName);
-	if (!sheet) {
-		sheet = ss.insertSheet(sheetName);
-		Logger.log(`Created new sheet: ${sheetName}`);
-	} else {
-		Logger.log(`Using existing sheet: ${sheetName}`);
-	}
-
-	Logger.log(`Scheduled sync to sheet: ${sheetName}`);
+	Logger.log(`Scheduled sync to active sheet: ${sheet.getName()}`);
 	syncLeaveDataToSheet(sheet, month, year);
 }
 
@@ -545,12 +534,14 @@ function applyAttendanceHours(sheet, attendanceList, month, year) {
 		attendanceLookup[key] = att;
 	}
 
-	// Build day columns mapping using shared function
-	const { dayColumns, validatedColumns } = calculateDayColumns(month, year);
+	// Build day columns mapping using shared function (now includes week override columns)
+	const { dayColumns, validatedColumns, weekOverrideColumns } =
+		calculateDayColumns(month, year);
 
 	const lastDayCol = Math.max(
 		...Object.values(dayColumns),
-		...validatedColumns
+		...validatedColumns,
+		...weekOverrideColumns
 	);
 	const totalCols = lastDayCol - CONFIG.FIRST_DAY_COL + 1;
 
@@ -565,9 +556,97 @@ function applyAttendanceHours(sheet, attendanceList, month, year) {
 		.getRange(CONFIG.FIRST_DATA_ROW, 1, numRows, CONFIG.PROJECT_COL)
 		.getValues();
 
+	// STEP 0: Save Override checkbox states AND hour values before reformatting
+	// This preserves manual corrections across syncs
+	const savedOverrideStates = {};
+	const savedHourValues = {}; // Save hour values for overridden weeks
+	const sheetLastCol = sheet.getLastColumn();
+
+	if (sheetLastCol >= CONFIG.FIRST_DAY_COL) {
+		// Find existing Override columns and day columns by looking at headers
+		const headerRange = sheet.getRange(
+			CONFIG.HEADER_ROW,
+			CONFIG.FIRST_DAY_COL,
+			1,
+			sheetLastCol - CONFIG.FIRST_DAY_COL + 1
+		);
+		const headerValues = headerRange.getValues()[0];
+
+		// First pass: find Override columns and which rows have them checked
+		// Check for both old "Override" and new "Time off Override" headers
+		const overrideColIndices = [];
+		for (let i = 0; i < headerValues.length; i++) {
+			if (
+				headerValues[i] === 'Override' ||
+				headerValues[i] === 'Time off Override'
+			) {
+				overrideColIndices.push(i);
+				const overrideCol = CONFIG.FIRST_DAY_COL + i;
+
+				// Save override states for each row
+				for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
+					const empId = String(employeeData[rowIdx][0] || '')
+						.trim()
+						.toUpperCase();
+					const project = String(
+						employeeData[rowIdx][CONFIG.PROJECT_COL - 1] || ''
+					)
+						.trim()
+						.toUpperCase();
+					if (empId) {
+						const overrideValue = sheet
+							.getRange(CONFIG.FIRST_DATA_ROW + rowIdx, overrideCol)
+							.getValue();
+						if (overrideValue === true) {
+							const weekKey = `${empId}|${project}|${i}`;
+							savedOverrideStates[weekKey] = true;
+							Logger.log(`Saved override state for ${weekKey}`);
+
+							// Save hour values for this week (find the week's day columns)
+							// Look backwards from Override column to find day values
+							for (let dayOffset = 1; dayOffset <= 7; dayOffset++) {
+								const dayColIdx = i - dayOffset;
+								if (dayColIdx >= 0) {
+									const dayHeader = headerValues[dayColIdx];
+									// Check if it's a day number (1-31) or Validated column
+									if (
+										typeof dayHeader === 'number' ||
+										(typeof dayHeader === 'string' && /^\d+$/.test(dayHeader))
+									) {
+										const dayCol = CONFIG.FIRST_DAY_COL + dayColIdx;
+										const cellValue = sheet
+											.getRange(CONFIG.FIRST_DATA_ROW + rowIdx, dayCol)
+											.getValue();
+										const cellBg = sheet
+											.getRange(CONFIG.FIRST_DATA_ROW + rowIdx, dayCol)
+											.getBackground();
+										const hourKey = `${empId}|${project}|${dayColIdx}`;
+										savedHourValues[hourKey] = {
+											value: cellValue,
+											background: cellBg,
+										};
+									} else if (dayHeader === 'Validated') {
+										break; // Stop at previous week's Validated column
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		Logger.log(
+			`Saved ${Object.keys(savedOverrideStates).length} override states`
+		);
+		Logger.log(
+			`Saved ${
+				Object.keys(savedHourValues).length
+			} hour values for overridden weeks`
+		);
+	}
+
 	// STEP 1: Delete ALL columns from K onwards (completely removes checkboxes and old data)
 	Logger.log('Deleting existing columns from K onwards...');
-	const sheetLastCol = sheet.getLastColumn();
 
 	if (sheetLastCol >= CONFIG.FIRST_DAY_COL) {
 		const numColsToDelete = sheetLastCol - CONFIG.FIRST_DAY_COL + 1;
@@ -622,6 +701,10 @@ function applyAttendanceHours(sheet, attendanceList, month, year) {
 			headerRow1.push('');
 			headerRow2.push('Validated');
 			headerBgColors.push('#356854'); // Validated column same as weekday
+		} else if (weekOverrideColumns.includes(col)) {
+			headerRow1.push('');
+			headerRow2.push('Time off Override');
+			headerBgColors.push('#efefef'); // Same as weekend background
 		} else {
 			headerRow1.push('');
 			headerRow2.push('');
@@ -647,16 +730,25 @@ function applyAttendanceHours(sheet, attendanceList, month, year) {
 	);
 	headerRange2.setBackgrounds([headerBgColors]);
 
-	// Set font color to white for weekday headers (#356854), black for weekend (#efefef)
+	// Set font color to white for dark headers (weekday #356854), black for light backgrounds (weekend #efefef)
 	const fontColors = headerBgColors.map((bg) =>
 		bg === '#356854' ? '#FFFFFF' : '#000000'
 	);
 	headerRange2.setFontColors([fontColors]);
 
+	// Also set row 1 (day abbreviations) font color to white for dark backgrounds
+	const headerRange1 = sheet.getRange(
+		CONFIG.DAY_NAME_ROW,
+		CONFIG.FIRST_DAY_COL,
+		1,
+		totalCols
+	);
+	headerRange1.setFontColors([fontColors]);
+
 	// Set column widths: day columns = 46, validated columns = 105
 	Logger.log('Setting column widths...');
 	for (let col = CONFIG.FIRST_DAY_COL; col <= lastDayCol; col++) {
-		if (validatedColumns.includes(col)) {
+		if (validatedColumns.includes(col) || weekOverrideColumns.includes(col)) {
 			sheet.setColumnWidth(col, 105);
 		} else {
 			sheet.setColumnWidth(col, 46);
@@ -710,7 +802,10 @@ function applyAttendanceHours(sheet, attendanceList, month, year) {
 					rowColors.push(null);
 				}
 			} else if (validatedColumns.includes(col)) {
-				rowValues.push(true); // Checkbox checked
+				rowValues.push(true); // Validated checkbox checked by default
+				rowColors.push(null);
+			} else if (weekOverrideColumns.includes(col)) {
+				rowValues.push(false); // Override checkbox unchecked by default
 				rowColors.push(null);
 			} else {
 				rowValues.push('');
@@ -748,7 +843,7 @@ function applyAttendanceHours(sheet, attendanceList, month, year) {
 	dataRange.setBackgrounds(backgroundColors);
 
 	// Insert checkboxes in validated columns (batch)
-	Logger.log('Setting up checkboxes...');
+	Logger.log('Setting up checkboxes for Validated columns...');
 	for (const col of validatedColumns) {
 		try {
 			const checkboxRange = sheet.getRange(
@@ -761,7 +856,77 @@ function applyAttendanceHours(sheet, attendanceList, month, year) {
 			checkboxRange.setValue(true);
 		} catch (e) {
 			// Checkboxes might already exist
-			Logger.log(`Checkbox column ${col}: ${e.message}`);
+			Logger.log(`Validated checkbox column ${col}: ${e.message}`);
+		}
+	}
+
+	// Insert checkboxes in week override columns (batch) - default to false (unchecked)
+	// Then restore any previously saved override states
+	Logger.log('Setting up checkboxes for Week Override columns...');
+	for (let weekIdx = 0; weekIdx < weekOverrideColumns.length; weekIdx++) {
+		const col = weekOverrideColumns[weekIdx];
+		try {
+			const checkboxRange = sheet.getRange(
+				CONFIG.FIRST_DATA_ROW,
+				col,
+				numRows,
+				1
+			);
+			checkboxRange.insertCheckboxes();
+			checkboxRange.setValue(false); // Default to unchecked
+
+			// Restore saved override states for this week
+			// Calculate the column index relative to FIRST_DAY_COL for matching saved keys
+			const colIndex = col - CONFIG.FIRST_DAY_COL;
+			for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
+				const empId = String(employeeData[rowIdx][0] || '')
+					.trim()
+					.toUpperCase();
+				const project = String(
+					employeeData[rowIdx][CONFIG.PROJECT_COL - 1] || ''
+				)
+					.trim()
+					.toUpperCase();
+				if (empId) {
+					const weekKey = `${empId}|${project}|${colIndex}`;
+					if (savedOverrideStates[weekKey]) {
+						sheet.getRange(CONFIG.FIRST_DATA_ROW + rowIdx, col).setValue(true);
+						Logger.log(`Restored override state for ${weekKey}`);
+					}
+				}
+			}
+		} catch (e) {
+			Logger.log(`Override checkbox column ${col}: ${e.message}`);
+		}
+	}
+
+	// Restore saved hour values for overridden weeks
+	if (Object.keys(savedHourValues).length > 0) {
+		Logger.log('Restoring hour values for overridden weeks...');
+		for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
+			const empId = String(employeeData[rowIdx][0] || '')
+				.trim()
+				.toUpperCase();
+			const project = String(employeeData[rowIdx][CONFIG.PROJECT_COL - 1] || '')
+				.trim()
+				.toUpperCase();
+			if (empId) {
+				// Check each day column
+				for (let colIdx = 0; colIdx < totalCols; colIdx++) {
+					const hourKey = `${empId}|${project}|${colIdx}`;
+					if (savedHourValues[hourKey]) {
+						const col = CONFIG.FIRST_DAY_COL + colIdx;
+						const cell = sheet.getRange(CONFIG.FIRST_DATA_ROW + rowIdx, col);
+						cell.setValue(savedHourValues[hourKey].value);
+						if (savedHourValues[hourKey].background) {
+							cell.setBackground(savedHourValues[hourKey].background);
+						}
+						Logger.log(
+							`Restored hour value for ${hourKey}: ${savedHourValues[hourKey].value}`
+						);
+					}
+				}
+			}
 		}
 	}
 
@@ -830,6 +995,82 @@ function syncLeaveData() {
 
 	Logger.log(`Syncing to active sheet: ${sheetName}`);
 	syncLeaveDataToSheet(sheet, month, year);
+}
+
+/**
+ * Sync leave only - applies leave colors/values without reformatting attendance hours
+ * Keeps existing employee working hours intact
+ */
+function syncLeaveOnly() {
+	const ui = SpreadsheetApp.getUi();
+	const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+	const monthResponse = ui.prompt(
+		'Sync Leave Only',
+		'Enter month number (1-12):',
+		ui.ButtonSet.OK_CANCEL
+	);
+
+	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const yearResponse = ui.prompt(
+		'Sync Leave Only',
+		'Enter year (e.g., 2025):',
+		ui.ButtonSet.OK_CANCEL
+	);
+
+	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const month = parseInt(monthResponse.getResponseText()) - 1; // 0-indexed
+	const year = parseInt(yearResponse.getResponseText());
+
+	if (isNaN(month) || month < 0 || month > 11 || isNaN(year)) {
+		ui.alert('Invalid month or year');
+		return;
+	}
+
+	try {
+		Logger.log(
+			`Syncing leave only for ${
+				month + 1
+			}/${year} to active sheet (keeping hours)`
+		);
+
+		// Get access token
+		const token = getAccessToken();
+		if (!token) {
+			ui.alert('Failed to get API token. Check your credentials.');
+			return;
+		}
+
+		// Fetch employees
+		const employees = fetchAllEmployees(token);
+		if (!employees || employees.length === 0) {
+			ui.alert('No employees found');
+			return;
+		}
+
+		// Fetch leave data
+		const leaveData = fetchLeaveDataForMonth(token, employees, month, year);
+		if (!leaveData || Object.keys(leaveData).length === 0) {
+			ui.alert('No leave data found for this month');
+			return;
+		}
+
+		// Apply leave colors and values only (no attendance reformatting)
+		// Pass useSheetHours=true to read hours from current sheet values instead of attendance data
+		updateSheetWithLeaveData(sheet, leaveData, month, year, true);
+
+		SpreadsheetApp.flush();
+		ui.alert(
+			`Leave synced successfully!\n\n` +
+				`Processed ${Object.keys(leaveData).length} employees with leave.\n` +
+				`Employee working hours were NOT changed.`
+		);
+	} catch (error) {
+		Logger.log('Error syncing leave only: ' + error.message);
+		ui.alert('Error: ' + error.message);
+	}
 }
 
 /**
@@ -923,6 +1164,256 @@ function syncLeaveDataToSheet(sheet, month, year) {
 		// Always flush at the end to clear the "Working..." spinner
 		SpreadsheetApp.flush();
 	}
+}
+
+/**
+ * Apply leave colors only to the active sheet without syncing attendance
+ * This finds matching employees and dates, then applies red/orange colors
+ * Does not reformat or touch attendance data
+ * Splits leave evenly across multiple project rows for same employee
+ */
+function applyLeaveColorsOnly() {
+	const ui = SpreadsheetApp.getUi();
+	const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+	// Prompt for month/year
+	const monthResponse = ui.prompt(
+		'Apply Leave Colors',
+		'Enter month (1-12):',
+		ui.ButtonSet.OK_CANCEL
+	);
+	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const yearResponse = ui.prompt(
+		'Apply Leave Colors',
+		'Enter year (e.g., 2025):',
+		ui.ButtonSet.OK_CANCEL
+	);
+	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const month = parseInt(monthResponse.getResponseText()) - 1; // 0-indexed
+	const year = parseInt(yearResponse.getResponseText());
+
+	if (isNaN(month) || month < 0 || month > 11 || isNaN(year)) {
+		ui.alert('Invalid month or year');
+		return;
+	}
+
+	try {
+		Logger.log(
+			`Applying leave colors for ${month + 1}/${year} to active sheet`
+		);
+
+		// Fetch leave data from API
+		const leaveData = fetchLeaveDataFromAPI(month, year);
+		if (!leaveData || Object.keys(leaveData).length === 0) {
+			ui.alert('No leave data found for this month');
+			return;
+		}
+
+		// Apply leave colors only (no attendance sync, no reformatting)
+		applyLeaveColorsToSheet(sheet, leaveData, month, year);
+
+		SpreadsheetApp.flush();
+		ui.alert(
+			`Leave colors applied successfully!\n\nProcessed ${
+				Object.keys(leaveData).length
+			} employees with leave.`
+		);
+	} catch (error) {
+		Logger.log('Error applying leave colors: ' + error.message);
+		ui.alert('Error: ' + error.message);
+	} finally {
+		SpreadsheetApp.flush();
+	}
+}
+
+/**
+ * Apply leave colors to sheet without modifying attendance data
+ * Only colors cells for employees/dates that have leave
+ * Half-day: deduct 4 hours total, starting from smallest projects first
+ * Respects Week Override column - skips updates for rows with override checked
+ */
+function applyLeaveColorsToSheet(sheet, leaveData, month, year) {
+	const { dayColumns, weekRanges } = calculateDayColumns(month, year);
+
+	// Build a map of day -> week override column for quick lookup
+	const dayToOverrideCol = {};
+	for (const weekRange of weekRanges) {
+		for (const [dayStr, col] of Object.entries(dayColumns)) {
+			if (col >= weekRange.startCol && col <= weekRange.endCol) {
+				dayToOverrideCol[dayStr] = weekRange.overrideCol;
+			}
+		}
+	}
+
+	// Build employee lookup from sheet
+	const lastRow = sheet.getLastRow();
+	const employeeLookup = {};
+
+	// Read employee data (columns A-C: Employee ID, Name, Project)
+	if (lastRow >= CONFIG.FIRST_DATA_ROW) {
+		const employeeRange = sheet.getRange(
+			CONFIG.FIRST_DATA_ROW,
+			1,
+			lastRow - CONFIG.FIRST_DATA_ROW + 1,
+			3
+		);
+		const employeeValues = employeeRange.getValues();
+
+		for (let i = 0; i < employeeValues.length; i++) {
+			const row = CONFIG.FIRST_DATA_ROW + i;
+			const empId = String(employeeValues[i][0] || '')
+				.trim()
+				.toUpperCase();
+			const empName = String(employeeValues[i][1] || '')
+				.trim()
+				.toUpperCase();
+
+			if (empId) {
+				if (!employeeLookup[empId]) employeeLookup[empId] = [];
+				employeeLookup[empId].push(row);
+			}
+			if (empName) {
+				if (!employeeLookup[empName]) employeeLookup[empName] = [];
+				if (!employeeLookup[empName].includes(row)) {
+					employeeLookup[empName].push(row);
+				}
+			}
+		}
+	}
+
+	// Collect cells to color
+	const fullDayCells = [];
+	const halfDayCells = [];
+	let matchedEmployees = 0;
+
+	for (const [key, empData] of Object.entries(leaveData)) {
+		const { employee_id, employee_name, leave_requests } = empData;
+
+		// Find employee rows
+		const rows = findEmployeeRows(employeeLookup, employee_id, employee_name);
+		if (rows.length === 0) {
+			Logger.log(`Employee not found: ${employee_name} (${employee_id})`);
+			continue;
+		}
+
+		matchedEmployees++;
+		const numRows = rows.length;
+		Logger.log(`Found ${numRows} rows for ${employee_name}`);
+
+		// Build row -> hours mapping
+		// Try to find a column with a valid hour value (not 0, not empty)
+		// This avoids reading from columns that already have leave applied
+		const rowHoursMap = {};
+		const allDayCols = Object.values(dayColumns);
+
+		for (const row of rows) {
+			let foundHours = null;
+
+			// Scan through day columns to find a non-zero, non-leave value
+			for (const col of allDayCols) {
+				const cellValue = sheet.getRange(row, col).getValue();
+				const numValue = parseFloat(cellValue);
+
+				// Valid hours should be > 0 and typically <= 8
+				// Skip 0 (full-day leave) and values that look like half-day leave
+				if (!isNaN(numValue) && numValue > 0) {
+					foundHours = numValue;
+					break;
+				}
+			}
+
+			// If no hours found or 0, default to 8 (leave booked before hours allocated)
+			rowHoursMap[row] = foundHours || CONFIG.DEFAULT_HOURS;
+			Logger.log(`Row ${row}: found ${rowHoursMap[row]} hours`);
+		}
+
+		// Apply leaves to all rows for this employee
+		// Full-day: all rows get 0
+		// Half-day: deduct 4 hours total, starting from smallest projects first
+		for (const leave of leave_requests) {
+			const col = dayColumns[leave.date];
+			if (!col) continue;
+
+			// Check Week Override for each row - skip rows where override is checked
+			const overrideCol = dayToOverrideCol[leave.date];
+
+			// Filter rows that don't have Week Override checked
+			const activeRows = rows.filter((row) => {
+				if (!overrideCol) return true; // No override column for this week
+				const overrideValue = sheet.getRange(row, overrideCol).getValue();
+				if (overrideValue === true) {
+					Logger.log(
+						`Skipping row ${row} for day ${leave.date} - Week Override is checked`
+					);
+					return false;
+				}
+				return true;
+			});
+
+			if (activeRows.length === 0) {
+				Logger.log(
+					`All rows have Week Override checked for day ${leave.date}, skipping`
+				);
+				continue;
+			}
+
+			if (leave.is_half_day) {
+				// Half-day leave = 4 hours of work remaining
+				// Divide the REMAINING 4 hours EQUALLY across all projects
+				const totalRemainingHours = CONFIG.HALF_DAY_HOURS; // 4 hours
+				const hoursPerProject = totalRemainingHours / activeRows.length;
+
+				Logger.log(
+					`Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each (${totalRemainingHours}hr total remaining)`
+				);
+
+				// Apply equal remaining hours to each row - all half-day = ORANGE
+				for (const row of activeRows) {
+					const cellA1 = columnToLetter(col) + row;
+
+					// Half-day leave always gets ORANGE color with equal hours
+					halfDayCells.push({ cell: cellA1, value: hoursPerProject });
+					Logger.log(`Row ${row}: ${hoursPerProject}hr (ORANGE)`);
+				}
+			} else {
+				// Full-day: all active rows get 0
+				for (const row of activeRows) {
+					const cellA1 = columnToLetter(col) + row;
+					fullDayCells.push(cellA1);
+				}
+			}
+		}
+	}
+
+	// Apply colors to full-day leave cells (red)
+	if (fullDayCells.length > 0) {
+		Logger.log(`Applying red to ${fullDayCells.length} full-day leave cells`);
+		const fullDayRanges = sheet.getRangeList(fullDayCells);
+		fullDayRanges.setValue(0);
+		fullDayRanges.setBackground(CONFIG.COLORS.FULL_DAY);
+		fullDayRanges.setFontColor('#FFFFFF');
+		fullDayRanges.setFontWeight('bold');
+	}
+
+	// Apply colors to half-day leave cells (orange)
+	if (halfDayCells.length > 0) {
+		Logger.log(
+			`Applying orange to ${halfDayCells.length} half-day leave cells`
+		);
+		for (const { cell, value } of halfDayCells) {
+			const range = sheet.getRange(cell);
+			range.setValue(value);
+			range.setBackground(CONFIG.COLORS.HALF_DAY);
+			range.setFontColor('#000000');
+			range.setFontWeight('bold');
+		}
+	}
+
+	Logger.log(
+		`Applied leave colors: ${matchedEmployees} employees, ${fullDayCells.length} full-day, ${halfDayCells.length} half-day`
+	);
 }
 
 /**
@@ -1189,24 +1680,28 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
 						const isLastDay = currentDate.getTime() === leaveEnd.getTime();
 						const isSingleDay = isFirstDay && isLastDay;
 
+						// Parse duration values (API may return string or number)
+						const effectiveDuration =
+							parseInt(request.effective_date_duration) || 1;
+						const endDuration = parseInt(request.end_date_duration) || 1;
+
 						let isHalfDay = false;
 						if (isSingleDay) {
 							// Single day leave - check effective_date_duration
-							isHalfDay =
-								request.effective_date_duration === 2 ||
-								request.effective_date_duration === 3;
+							// 1 = full day, 2 = AM half, 3 = PM half
+							isHalfDay = effectiveDuration === 2 || effectiveDuration === 3;
 						} else if (isFirstDay) {
 							// First day of multi-day leave
-							isHalfDay =
-								request.effective_date_duration === 2 ||
-								request.effective_date_duration === 3;
+							isHalfDay = effectiveDuration === 2 || effectiveDuration === 3;
 						} else if (isLastDay) {
 							// Last day of multi-day leave
-							isHalfDay =
-								request.end_date_duration === 2 ||
-								request.end_date_duration === 3;
+							isHalfDay = endDuration === 2 || endDuration === 3;
 						}
 						// Middle days are always full days (isHalfDay = false)
+
+						Logger.log(
+							`Leave for ${empName} on day ${currentDate.getDate()}: effectiveDuration=${effectiveDuration}, endDuration=${endDuration}, isHalfDay=${isHalfDay}`
+						);
 
 						leaveDays.push({
 							date: currentDate.getDate(),
@@ -1250,31 +1745,51 @@ function parseDateDMY(dateStr) {
  * Update sheet with leave data
  * Uses conditional formatting for leave colors (red for full day, orange for half day)
  * Applies leave to ALL rows for an employee (multiple projects)
- * Half-day leave is divided proportionally based on each project's hours
+ * Half-day leave: deduct 4 hours total, starting from smallest projects first
+ * Respects Week Override column - skips updates for rows with override checked
+ * @param {boolean} useSheetHours - If true, read hours from sheet cells instead of attendance data
  */
-function updateSheetWithLeaveData(sheet, leaveData, month, year) {
+function updateSheetWithLeaveData(
+	sheet,
+	leaveData,
+	month,
+	year,
+	useSheetHours = false
+) {
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
 
 	// Build employee lookup from sheet (now includes hours per row)
 	const employeeLookup = buildEmployeeLookup(sheet);
 
-	// Get attendance data to get hours per project
-	const attendanceList = getAttendanceData() || [];
-	// Build lookup: empId -> [{row, project, hours}, ...]
-	const attendanceByEmployee = {};
-	for (const att of attendanceList) {
-		const key = att.empId;
-		if (!attendanceByEmployee[key]) {
-			attendanceByEmployee[key] = [];
+	// Get attendance data to get hours per project (only if not using sheet hours)
+	let attendanceByEmployee = {};
+	if (!useSheetHours) {
+		const attendanceList = getAttendanceData() || [];
+		// Build lookup: empId -> [{row, project, hours}, ...]
+		for (const att of attendanceList) {
+			const key = att.empId;
+			if (!attendanceByEmployee[key]) {
+				attendanceByEmployee[key] = [];
+			}
+			attendanceByEmployee[key].push({
+				project: att.project,
+				hours: att.hours,
+			});
 		}
-		attendanceByEmployee[key].push({
-			project: att.project,
-			hours: att.hours,
-		});
 	}
 
-	// Get day columns mapping (calculated based on month/year)
-	const dayColumns = getDayColumns(sheet, daysInMonth, month, year);
+	// Get day columns, validated columns, and week override columns
+	const { dayColumns, weekRanges } = calculateDayColumns(month, year);
+
+	// Build a map of day -> week override column for quick lookup
+	const dayToOverrideCol = {};
+	for (const weekRange of weekRanges) {
+		for (const [dayStr, col] of Object.entries(dayColumns)) {
+			if (col >= weekRange.startCol && col <= weekRange.endCol) {
+				dayToOverrideCol[dayStr] = weekRange.overrideCol;
+			}
+		}
+	}
 
 	// Collect cells to update - store cell and value pairs for half-day
 	const fullDayCells = []; // Will have value 0
@@ -1293,48 +1808,144 @@ function updateSheetWithLeaveData(sheet, leaveData, month, year) {
 
 		matchedEmployees++;
 		Logger.log(
-			`Found ${rows.length} rows for ${employee_name} (${employee_id})`
+			`Found ${
+				rows.length
+			} rows for ${employee_name} (ID: ${employee_id}) at rows: ${rows.join(
+				', '
+			)}`
 		);
 
-		// Get attendance info for this employee to calculate proportional hours
-		const empAttendance = attendanceByEmployee[employee_id.toUpperCase()] || [];
-		const totalHours =
-			empAttendance.reduce((sum, att) => sum + att.hours, 0) || 8;
-
-		// Build row -> hours mapping by reading from sheet
+		// Build row -> hours mapping
+		// If useSheetHours is true, read from sheet cells (for "Sync Leave Only")
+		// Otherwise, read from attendance data
 		const rowHoursMap = {};
-		for (const row of rows) {
-			// Get the hours from the first weekday column for this row
-			const firstWeekdayCol = Object.values(dayColumns)[0];
-			if (firstWeekdayCol) {
-				const cellValue = sheet.getRange(row, firstWeekdayCol).getValue();
-				rowHoursMap[row] = parseFloat(cellValue) || 8;
-			} else {
-				rowHoursMap[row] = 8;
+
+		if (useSheetHours) {
+			// Read hours from the first weekday column in the sheet for each row
+			// Find first weekday column (Monday = day 1 or first day of month that's a weekday)
+			const firstDayCol = Object.values(dayColumns)[0];
+
+			for (const row of rows) {
+				// Scan the first few day columns to find a valid hour value
+				let foundHours = null;
+				for (const [dayStr, col] of Object.entries(dayColumns)) {
+					const cellValue = sheet.getRange(row, col).getValue();
+					// Check if it's a number and not 0 (which could be leave)
+					if (typeof cellValue === 'number' && cellValue > 0) {
+						foundHours = cellValue;
+						break;
+					}
+				}
+
+				if (foundHours) {
+					rowHoursMap[row] = foundHours;
+					Logger.log(`Row ${row}: ${foundHours} hours from sheet`);
+				} else {
+					rowHoursMap[row] = CONFIG.DEFAULT_HOURS;
+					Logger.log(
+						`Row ${row}: defaulting to ${CONFIG.DEFAULT_HOURS} hours (no valid hours found in sheet)`
+					);
+				}
+			}
+		} else {
+			// Read from attendance data
+			const empAttendance =
+				attendanceByEmployee[employee_id.toUpperCase()] || [];
+
+			for (const row of rows) {
+				// Get project name from column C (index 3)
+				const projectName = String(sheet.getRange(row, 3).getValue() || '')
+					.trim()
+					.toUpperCase();
+
+				// Find matching attendance entry
+				const matchingAtt = empAttendance.find(
+					(att) =>
+						String(att.project || '')
+							.trim()
+							.toUpperCase() === projectName
+				);
+
+				if (matchingAtt && matchingAtt.hours > 0) {
+					rowHoursMap[row] = matchingAtt.hours;
+					Logger.log(
+						`Row ${row} (${projectName}): ${matchingAtt.hours} hours from attendance`
+					);
+				} else {
+					// If hours is 0 or no attendance match, default to 8 hours
+					// (leave is usually booked in advance before hours are allocated)
+					rowHoursMap[row] = CONFIG.DEFAULT_HOURS;
+					Logger.log(
+						`Row ${row} (${projectName}): defaulting to ${CONFIG.DEFAULT_HOURS} hours (no hours allocated yet)`
+					);
+				}
 			}
 		}
-		const rowTotalHours =
-			Object.values(rowHoursMap).reduce((sum, h) => sum + h, 0) || 8;
 
-		// Collect cells by leave type - apply to ALL rows for this employee
+		// Apply leaves to all rows for this employee
+		// Full-day: all rows get 0
+		// Half-day: deduct 4 hours total, divided equally across projects
 		for (const leave of leave_requests) {
 			const col = dayColumns[leave.date];
 			if (!col) continue;
 
-			// Apply to each row (each project) for this employee
-			for (const row of rows) {
-				const cellA1 = columnToLetter(col) + row;
+			Logger.log(
+				`Processing leave for ${employee_name} on day ${leave.date}, is_half_day: ${leave.is_half_day}`
+			);
 
-				if (leave.is_half_day) {
-					// Half-day leave: employee works half their normal hours
-					// e.g., Project A=1hr, B=7hr -> half-day means A=0.5hr, B=3.5hr
-					const projectHours = rowHoursMap[row] || 8;
-					const halfDayHoursForProject = projectHours / 2;
-					halfDayCellsMap[cellA1] = halfDayHoursForProject;
+			// Check Week Override for each row - skip rows where override is checked
+			const overrideCol = dayToOverrideCol[leave.date];
+
+			// Filter rows that don't have Week Override checked
+			const activeRows = rows.filter((row) => {
+				if (!overrideCol) {
 					Logger.log(
-						`Half-day for row ${row}: ${projectHours} / 2 = ${halfDayHoursForProject}`
+						`Row ${row}: No override column for day ${leave.date}, will update`
 					);
-				} else {
+					return true;
+				}
+				const overrideValue = sheet.getRange(row, overrideCol).getValue();
+				Logger.log(
+					`Row ${row}: Override col ${overrideCol}, value="${overrideValue}" (type: ${typeof overrideValue})`
+				);
+				if (overrideValue === true) {
+					Logger.log(
+						`Skipping row ${row} for day ${leave.date} - Week Override is checked`
+					);
+					return false;
+				}
+				return true;
+			});
+
+			if (activeRows.length === 0) {
+				Logger.log(
+					`All rows have Week Override checked for day ${leave.date}, skipping`
+				);
+				continue;
+			}
+
+			if (leave.is_half_day) {
+				// Half-day leave = 4 hours of work remaining
+				// Divide the REMAINING 4 hours EQUALLY across all projects
+				const totalRemainingHours = CONFIG.HALF_DAY_HOURS; // 4 hours
+				const hoursPerProject = totalRemainingHours / activeRows.length;
+
+				Logger.log(
+					`Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each (${totalRemainingHours}hr total remaining)`
+				);
+
+				// Apply equal remaining hours to each row - all half-day = ORANGE
+				for (const row of activeRows) {
+					const cellA1 = columnToLetter(col) + row;
+
+					// Half-day leave always gets ORANGE color with equal hours
+					halfDayCellsMap[cellA1] = hoursPerProject;
+					Logger.log(`Row ${row}: ${hoursPerProject}hr (ORANGE)`);
+				}
+			} else {
+				// Full-day: all active rows get 0
+				for (const row of activeRows) {
+					const cellA1 = columnToLetter(col) + row;
 					fullDayCells.push(cellA1);
 				}
 			}
@@ -1369,8 +1980,14 @@ function updateSheetWithLeaveData(sheet, leaveData, month, year) {
 
 	// Add conditional formatting for validated weeks (green)
 	// Pass leave cells so they are EXCLUDED from green formatting
-	const leaveCells = [...fullDayCells, ...Object.keys(halfDayCellsMap)];
-	addValidatedConditionalFormatting(sheet, month, year, leaveCells);
+	// Also scan sheet for existing leave cells (red/orange backgrounds only) to preserve them
+	const newLeaveCells = [...fullDayCells, ...Object.keys(halfDayCellsMap)];
+	const existingLeaveCells = scanForLeaveCells(sheet, dayColumns);
+	const allLeaveCells = [...new Set([...newLeaveCells, ...existingLeaveCells])];
+	Logger.log(
+		`Total leave cells to exclude: ${allLeaveCells.length} (${newLeaveCells.length} new, ${existingLeaveCells.length} existing)`
+	);
+	addValidatedConditionalFormatting(sheet, month, year, allLeaveCells);
 
 	// Final flush
 	SpreadsheetApp.flush();
@@ -1396,11 +2013,10 @@ function addValidatedConditionalFormatting(
 	year,
 	leaveCells = []
 ) {
-	// Calculate the range based on month/year
-	const { dayColumns, validatedColumns } = calculateDayColumns(month, year);
+	// Calculate the range based on month/year (use weekRanges for proper column tracking)
+	const { dayColumns, weekRanges } = calculateDayColumns(month, year);
 
 	const lastRow = sheet.getLastRow();
-	const firstCol = CONFIG.FIRST_DAY_COL;
 
 	// Make sure we have valid dimensions
 	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
@@ -1430,73 +2046,112 @@ function addValidatedConditionalFormatting(
 
 	// Green for validated weeks (when checkbox is TRUE)
 	// Build ranges that exclude leave cells by grouping consecutive non-leave rows
-	let weekStartCol = firstCol;
-	for (const validatedCol of validatedColumns) {
-		if (validatedCol >= weekStartCol) {
-			const checkboxColLetter = columnToLetter(validatedCol);
-			const weekdayRanges = [];
+	for (const weekRange of weekRanges) {
+		const { startCol, endCol, validatedCol } = weekRange;
+		const checkboxColLetter = columnToLetter(validatedCol);
+		const weekdayRanges = [];
 
-			// Find weekday columns in this week (exclude weekends)
-			for (const [dayStr, col] of Object.entries(dayColumns)) {
-				if (col >= weekStartCol && col < validatedCol) {
-					const day = parseInt(dayStr);
-					const date = new Date(year, month, day);
-					const dayOfWeek = date.getDay();
-					// Only include weekdays (Mon-Fri: 1-5)
-					if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-						const colLetter = columnToLetter(col);
-						// Group consecutive rows that are NOT leave cells
-						let rangeStart = null;
-						for (let row = CONFIG.FIRST_DATA_ROW; row <= lastRow + 1; row++) {
-							const cellA1 = `${colLetter}${row}`;
-							const isLeave = leaveCellSet.has(cellA1.toUpperCase());
-							const isLastRow = row > lastRow;
+		// Find weekday columns in this week (exclude weekends)
+		for (const [dayStr, col] of Object.entries(dayColumns)) {
+			if (col >= startCol && col <= endCol) {
+				const day = parseInt(dayStr);
+				const date = new Date(year, month, day);
+				const dayOfWeek = date.getDay();
+				// Only include weekdays (Mon-Fri: 1-5)
+				if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+					const colLetter = columnToLetter(col);
+					// Group consecutive rows that are NOT leave cells
+					let rangeStart = null;
+					for (let row = CONFIG.FIRST_DATA_ROW; row <= lastRow + 1; row++) {
+						const cellA1 = `${colLetter}${row}`;
+						const isLeave = leaveCellSet.has(cellA1.toUpperCase());
+						const isLastRow = row > lastRow;
 
-							if (!isLeave && !isLastRow) {
-								if (rangeStart === null) rangeStart = row;
-							} else {
-								if (rangeStart !== null) {
-									// End of consecutive range, add it
-									const rangeEnd = row - 1;
-									weekdayRanges.push(
-										sheet.getRange(
-											rangeStart,
-											col,
-											rangeEnd - rangeStart + 1,
-											1
-										)
-									);
-									rangeStart = null;
-								}
+						if (!isLeave && !isLastRow) {
+							if (rangeStart === null) rangeStart = row;
+						} else {
+							if (rangeStart !== null) {
+								// End of consecutive range, add it
+								const rangeEnd = row - 1;
+								weekdayRanges.push(
+									sheet.getRange(rangeStart, col, rangeEnd - rangeStart + 1, 1)
+								);
+								rangeStart = null;
 							}
 						}
 					}
 				}
 			}
-
-			// Also include the checkbox column itself (all rows)
-			weekdayRanges.push(
-				sheet.getRange(CONFIG.FIRST_DATA_ROW, validatedCol, numRows, 1)
-			);
-
-			if (weekdayRanges.length > 0) {
-				const greenRule = SpreadsheetApp.newConditionalFormatRule()
-					.whenFormulaSatisfied(
-						`=$${checkboxColLetter}${CONFIG.FIRST_DATA_ROW}=TRUE`
-					)
-					.setBackground('#B8E1CD')
-					.setRanges(weekdayRanges)
-					.build();
-				rules.push(greenRule);
-			}
 		}
-		weekStartCol = validatedCol + 1;
+
+		// Also include the checkbox column itself (all rows)
+		weekdayRanges.push(
+			sheet.getRange(CONFIG.FIRST_DATA_ROW, validatedCol, numRows, 1)
+		);
+
+		if (weekdayRanges.length > 0) {
+			const greenRule = SpreadsheetApp.newConditionalFormatRule()
+				.whenFormulaSatisfied(
+					`=$${checkboxColLetter}${CONFIG.FIRST_DATA_ROW}=TRUE`
+				)
+				.setBackground('#B8E1CD')
+				.setRanges(weekdayRanges)
+				.build();
+			rules.push(greenRule);
+		}
 	}
 
 	sheet.setConditionalFormatRules(rules);
 	Logger.log(
 		`Applied ${rules.length} conditional formatting rules (validated weeks only)`
 	);
+}
+
+/**
+ * Scan sheet for existing leave cells
+ * Detects leave ONLY by red/orange background color (not by value)
+ * This ensures only API-sourced leave is detected, not manual 0 values
+ * Returns array of cell A1 notations
+ */
+function scanForLeaveCells(sheet, dayColumns) {
+	const leaveCells = [];
+	const lastRow = sheet.getLastRow();
+	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
+
+	if (numRows <= 0) return leaveCells;
+
+	// Get all day columns
+	const cols = Object.values(dayColumns);
+	if (cols.length === 0) return leaveCells;
+
+	const minCol = Math.min(...cols);
+	const maxCol = Math.max(...cols);
+	const numCols = maxCol - minCol + 1;
+
+	// Read all backgrounds in one batch
+	const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
+	const backgrounds = range.getBackgrounds();
+
+	// Leave colors (normalize to uppercase for comparison)
+	const fullDayColor = CONFIG.COLORS.FULL_DAY.toUpperCase();
+	const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
+
+	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
+		for (let colIdx = 0; colIdx < numCols; colIdx++) {
+			const bg = backgrounds[rowIdx][colIdx].toUpperCase();
+
+			// Detect leave ONLY by background color (red or orange)
+			if (bg === fullDayColor || bg === halfDayColor) {
+				const col = minCol + colIdx;
+				const row = CONFIG.FIRST_DATA_ROW + rowIdx;
+				const cellA1 = columnToLetter(col) + row;
+				leaveCells.push(cellA1);
+			}
+		}
+	}
+
+	Logger.log(`Found ${leaveCells.length} existing leave cells in sheet`);
+	return leaveCells;
 }
 
 /**
@@ -1576,17 +2231,20 @@ function findEmployeeRows(lookup, employeeId, employeeName) {
 }
 
 /**
- * Calculate day columns mapping based on month/year
- * Accounts for "Validated" checkbox columns after each Friday
+ * Calculate day columns, validated columns, and week override columns for a given month/year
+ * Layout: [days...] [Validated] [Week Override] [days...] [Validated] [Week Override] ...
  * @param {number} month - Month (0-11)
  * @param {number} year - Year
- * @returns {Object} { dayColumns: {day: col}, validatedColumns: [cols] }
+ * @returns {Object} { dayColumns: {day: col}, validatedColumns: [cols], weekOverrideColumns: [cols], weekRanges: [{startCol, endCol, validatedCol, overrideCol}] }
  */
 function calculateDayColumns(month, year) {
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
 	const dayColumns = {};
 	const validatedColumns = [];
+	const weekOverrideColumns = [];
+	const weekRanges = [];
 	let currentCol = CONFIG.FIRST_DAY_COL;
+	let weekStartCol = CONFIG.FIRST_DAY_COL;
 
 	for (let day = 1; day <= daysInMonth; day++) {
 		const date = new Date(year, month, day);
@@ -1594,24 +2252,46 @@ function calculateDayColumns(month, year) {
 		dayColumns[day] = currentCol;
 		currentCol++;
 		if (dayOfWeek === 5) {
-			// Friday - add validated column after
-			validatedColumns.push(currentCol);
+			// Friday - add validated column and week override column after
+			const validatedCol = currentCol;
+			validatedColumns.push(validatedCol);
 			currentCol++;
+			const overrideCol = currentCol;
+			weekOverrideColumns.push(overrideCol);
+			currentCol++;
+
+			// Track week range
+			weekRanges.push({
+				startCol: weekStartCol,
+				endCol: validatedCol - 1,
+				validatedCol: validatedCol,
+				overrideCol: overrideCol,
+			});
+			weekStartCol = currentCol;
 		}
 	}
 
-	// Add validated column after the last day if there are weekdays after the last Friday
+	// Add validated and override columns after the last day if there are weekdays after the last Friday
 	const lastDayOfMonth = new Date(year, month, daysInMonth);
 	const lastDayOfWeek = lastDayOfMonth.getDay();
 
 	// Only add if last day is Mon-Thu (1-4), meaning there are weekdays not yet validated
-	// If last day is Friday (5), it was already handled in the loop
-	// If last day is Sat (6) or Sun (0), no weekdays to validate after last Friday
 	if (lastDayOfWeek >= 1 && lastDayOfWeek <= 4) {
-		validatedColumns.push(currentCol);
+		const validatedCol = currentCol;
+		validatedColumns.push(validatedCol);
+		currentCol++;
+		const overrideCol = currentCol;
+		weekOverrideColumns.push(overrideCol);
+
+		weekRanges.push({
+			startCol: weekStartCol,
+			endCol: validatedCol - 1,
+			validatedCol: validatedCol,
+			overrideCol: overrideCol,
+		});
 	}
 
-	return { dayColumns, validatedColumns };
+	return { dayColumns, validatedColumns, weekOverrideColumns, weekRanges };
 }
 
 /**
