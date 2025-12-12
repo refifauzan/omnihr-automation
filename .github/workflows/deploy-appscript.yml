@@ -25,14 +25,28 @@ jobs:
         run: npm install -g @google/clasp
 
       - name: Create clasp credentials
+        env:
+          CLASP_CREDENTIALS: ${{ secrets.CLASP_CREDENTIALS }}
         run: |
-          echo '${{ secrets.CLASP_CREDENTIALS }}' > ~/.clasprc.json
+          echo "$CLASP_CREDENTIALS" > ~/.clasprc.json
           chmod 600 ~/.clasprc.json
+          echo "Credentials file created"
 
       - name: Update script ID
+        env:
+          SCRIPT_ID: ${{ secrets.SCRIPT_ID }}
         run: |
           cd src/google-appscript
-          echo '{"scriptId":"${{ secrets.SCRIPT_ID }}","rootDir":"."}' > .clasp.json
+          echo "{\"scriptId\":\"$SCRIPT_ID\",\"rootDir\":\".\"}" > .clasp.json
+          echo "Script ID configured"
+
+      - name: Verify config files
+        run: |
+          echo "Checking .clasprc.json..."
+          cat ~/.clasprc.json | head -c 50
+          echo "..."
+          echo "Checking .clasp.json..."
+          cat src/google-appscript/.clasp.json
 
       - name: Push to Apps Script
         run: |
