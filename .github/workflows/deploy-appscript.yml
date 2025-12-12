@@ -28,9 +28,14 @@ jobs:
         env:
           CLASP_CREDENTIALS: ${{ secrets.CLASP_CREDENTIALS }}
         run: |
-          echo "$CLASP_CREDENTIALS" > ~/.clasprc.json
+          echo "Secret length: ${#CLASP_CREDENTIALS}"
+          if [ -z "$CLASP_CREDENTIALS" ]; then
+            echo "ERROR: CLASP_CREDENTIALS secret is empty!"
+            exit 1
+          fi
+          printf '%s' "$CLASP_CREDENTIALS" > ~/.clasprc.json
           chmod 600 ~/.clasprc.json
-          echo "Credentials file created"
+          echo "Credentials file size: $(wc -c < ~/.clasprc.json) bytes"
 
       - name: Update script ID
         env:
