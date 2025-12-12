@@ -1,16 +1,89 @@
 const OmniHRAPIClient = require('./apiClient');
 
+// OmniHR API status codes
+const LEAVE_STATUS_APPROVED = 3;
+
+// OmniHR duration types: 1=full day, 2=half AM, 3=half PM
+const DURATION_HALF_AM = 2;
+const DURATION_HALF_PM = 3;
+
+/**
+ * Service for fetching and processing leave data from OmniHR API
+ */
 class LeaveService {
 	constructor() {
 		this.apiClient = new OmniHRAPIClient();
 	}
 
 	/**
-	 * Get all employees from the API with pagination
-	 * @returns {Promise<Array>} Array of all employee objects
+	 * @param {Date} date
+	 * @returns {string} Date in DD/MM/YYYY format
+	 */
+	formatDateDMY(date) {
+		const day = String(date.getDate()).padStart(2, '0');
+		const month = String(date.getMonth() + 1).padStart(2, '0');
+		const year = date.getFullYear();
+		return `${day}/${month}/${year}`;
+	}
+
+	/**
+	 * @param {string} dateStr - Date string in DD/MM/YYYY format
+	 * @returns {Date|null}
+	 */
+	parseDateDMY(dateStr) {
+		if (!dateStr) return null;
+		const parts = dateStr.split('/');
+		if (parts.length !== 3) return null;
+		return new Date(
+			parseInt(parts[2]),
+			parseInt(parts[1]) - 1,
+			parseInt(parts[0])
+		);
+	}
+
+	/**
+	 * @param {Date} date
+	 * @returns {boolean}
+	 */
+	isWeekend(date) {
+		const day = date.getDay();
+		return day === 0 || day === 6;
+	}
+
+	/**
+	 * @param {number} duration - OmniHR duration type
+	 * @returns {boolean}
+	 */
+	isHalfDayDuration(duration) {
+		return duration === DURATION_HALF_AM || duration === DURATION_HALF_PM;
+	}
+
+	/**
+	 * @param {Object} employee
+	 * @returns {string}
+	 */
+	getEmployeeName(employee) {
+		return (
+			employee.full_name ||
+			employee.name ||
+			`User ${employee.id || employee.user_id}`
+		);
+	}
+
+	/**
+	 * @param {Object} employee
+	 * @returns {number}
+	 */
+	getUserId(employee) {
+		return employee.id || employee.user_id;
+	}
+
+	/**
+	 * Fetches all employees with pagination
+	 * @returns {Promise<Array>}
 	 */
 	async getAllEmployees() {
-		let allEmployees = [];
+		const allEmployees = [];
 		let page = 1;
 		let hasMore = true;
 
@@ -20,8 +93,8 @@ class LeaveService {
 				page_size: 100,
 			});
 			const results = response.results || response;
-			allEmployees = allEmployees.concat(results);
-			hasMore = response.next !== null && response.next !== undefined;
+			allEmployees.push(...results);
+			hasMore = response.next != null;
 			page++;
 		}
 
@@ -29,9 +102,8 @@ class LeaveService {
 	}
 
 	/**
-	 * Get employee base data including employee_id (e.g., SM0068)
-	 * @param {number} userId - User ID
-	 * @returns {Promise<Object>} Base data object with employee_id
+	 * @param {number} userId
+	 * @returns {Promise<Object>} Base data including employee_id (e.g., SM0068)
 	 */
 	async getEmployeeBaseData(userId) {
 		const response = await this.apiClient.get(
@@ -41,8 +113,7 @@ class LeaveService {
 	}
 
 	/**
-	 * Get leave balances for a specific employee
-	 * @param {string} userId - The user ID to fetch leave balances for
+	 * @param {number} userId
 	 * @returns {Promise<Array>} Array of leave balance objects
 	 */
 	async getEmployeeLeaveBalances(userId) {
@@ -59,45 +130,30 @@ class LeaveService {
 	}
 
 	/**
-	 * Get time-off calendar events for a user in a date range
-	 * @param {number} userId - User ID
-	 * @param {Date} startDate - Start date
-	 * @param {Date} endDate - End date
-	 * @returns {Promise<Array>} Array of time-off calendar events
+	 * @param {number} userId
+	 * @param {Date} startDate
+	 * @param {Date} endDate
+	 * @returns {Promise<Object>} Calendar response with time_off_request array
 	 */
 	async getUserTimeOffCalendar(userId, startDate, endDate) {
-		// Format: DD/MM/YYYY as required by the API
-		const formatDate = (d) => {
-			const day = String(d.getDate()).padStart(2, '0');
-			const month = String(d.getMonth() + 1).padStart(2, '0');
-			const year = d.getFullYear();
-			return `${day}/${month}/${year}`;
-		};
-
-		const start = formatDate(startDate);
-		const end = formatDate(endDate);
-
-		const response = await this.apiClient.get(
-			`/employee/1.1/${userId}/time-off-calendar/`,
-			{ start_date: start, end_date: end }
-		);
-
-		return response;
+		return this.apiClient.get(`/employee/1.1/${userId}/time-off-calendar/`, {
+			start_date: this.formatDateDMY(startDate),
+			end_date: this.formatDateDMY(endDate),
+		});
 	}
 
 	/**
-	 * Get all leave events for all employees in a date range
-	 * @param {Date} startDate - Start date
-	 * @param {Date} endDate - End date
-	 * @returns {Promise<Array>} Array of leave events with employee info
+	 * @param {Date} startDate
+	 * @param {Date} endDate
+	 * @returns {Promise<Array>} All leave events with employee info
 	 */
 	async getAllLeaveEvents(startDate, endDate) {
 		const employees = await this.getAllEmployees();
 		const allLeaveEvents = [];
 
 		for (const emp of employees) {
-			const userId = emp.id || emp.user_id;
-			const empName = emp.full_name || emp.name || `User ${userId}`;
+			const userId = this.getUserId(emp);
+			const empName = this.getEmployeeName(emp);
 
 			try {
 				const events = await this.getUserTimeOffCalendar(
@@ -105,17 +161,15 @@ class LeaveService {
 					startDate,
 					endDate
 				);
-
-				if (events && events.length > 0) {
-					events.forEach((event) => {
-						allLeaveEvents.push({
-							...event,
-							user_id: userId,
-							employee_name: empName,
-						});
-					});
+				if (events?.length > 0) {
+					const eventsWithUser = events.map((event) => ({
+						...event,
+						user_id: userId,
+						employee_name: empName,
+					}));
+					allLeaveEvents.push(...eventsWithUser);
 				}
-			} catch (err) {
+			} catch {
 				// Skip errors for individual users
 			}
 		}
@@ -124,162 +178,187 @@ class LeaveService {
 	}
 
 	/**
-	 * Get all employee leave data with optional monthly leave requests
-	 * Uses parallel requests for faster fetching
-	 * @param {Object} options - Configuration options
-	 * @param {Function} options.onProgress - Callback function for progress updates
-	 * @param {number} options.month - Month (0-11) to fetch leave requests for
-	 * @param {number} options.year - Year to fetch leave requests for
-	 * @param {number} options.concurrency - Number of parallel requests (default: 5)
-	 * @returns {Promise<Array>} Array of employee leave data objects
+	 * First/last day uses effective_date_duration/end_date_duration, middle days are always full
+	 * @param {Object} request - Leave request object
+	 * @param {Date} currentDate
+	 * @param {Date} leaveStart
+	 * @param {Date} leaveEnd
+	 * @returns {boolean}
+	 */
+	determineHalfDay(request, currentDate, leaveStart, leaveEnd) {
+		const isFirstDay = currentDate.getTime() === leaveStart.getTime();
+		const isLastDay = currentDate.getTime() === leaveEnd.getTime();
+
+		if (isFirstDay) {
+			return this.isHalfDayDuration(request.effective_date_duration);
+		}
+
+		if (isLastDay) {
+			return this.isHalfDayDuration(request.end_date_duration);
+		}
+
+		return false;
+	}
+
+	/**
+	 * @param {Date} date
+	 * @param {number} month - 0-indexed month
+	 * @param {number} year
+	 * @returns {boolean}
+	 */
+	isInTargetMonth(date, month, year) {
+		return date.getMonth() === month && date.getFullYear() === year;
+	}
+
+	/**
+	 * @param {Object} request - Leave request from API
+	 * @param {number} month - 0-indexed month
+	 * @param {number} year
+	 * @returns {Array} Array of leave day objects
+	 */
+	processLeaveRequest(request, month, year) {
+		const leaveStart = this.parseDateDMY(request.effective_date);
+		if (!leaveStart) return [];
+
+		const leaveEnd = request.end_date
+			? this.parseDateDMY(request.end_date)
+			: leaveStart;
+
+		const leaveDays = [];
+		const currentDate = new Date(leaveStart);
+
+		while (currentDate <= leaveEnd) {
+			const shouldInclude =
+				!this.isWeekend(currentDate) &&
+				this.isInTargetMonth(currentDate, month, year);
+
+			if (shouldInclude) {
+				leaveDays.push({
+					date: currentDate.getDate(),
+					leave_type: request.time_off?.name,
+					is_half_day: this.determineHalfDay(
+						request,
+						currentDate,
+						leaveStart,
+						leaveEnd
+					),
+				});
+			}
+
+			currentDate.setDate(currentDate.getDate() + 1);
+		}
+
+		return leaveDays;
+	}
+
+	/**
+	 * Only process approved leave requests (status=3)
+	 * @param {Object} calendarResponse
+	 * @param {number} month - 0-indexed month
+	 * @param {number} year
+	 * @returns {Array}
+	 */
+	processCalendarResponse(calendarResponse, month, year) {
+		const timeOffRequests = calendarResponse?.time_off_request || [];
+		const approvedRequests = timeOffRequests.filter(
+			(r) => r.status === LEAVE_STATUS_APPROVED
+		);
+
+		return approvedRequests.flatMap((request) =>
+			this.processLeaveRequest(request, month, year)
+		);
+	}
+
+	/**
+	 * Fetch base data, leave balances, and calendar in parallel for performance
+	 * @param {Object} employee
+	 * @param {Date|null} startDate
+	 * @param {Date|null} endDate
+	 * @param {number} month
+	 * @param {number} year
+	 * @returns {Promise<Object>} Employee leave data
+	 */
+	async processEmployee(employee, startDate, endDate, month, year) {
+		const userId = this.getUserId(employee);
+		const employeeName = this.getEmployeeName(employee);
+
+		try {
+			const promises = [
+				this.getEmployeeBaseData(userId),
+				this.getEmployeeLeaveBalances(userId),
+			];
+
+			if (startDate && endDate) {
+				promises.push(this.getUserTimeOffCalendar(userId, startDate, endDate));
+			}
+
+			const [baseData, leaveBalances, calendarResponse] = await Promise.all(
+				promises
+			);
+
+			const employeeData = {
+				user_id: userId,
+				employee_id: baseData?.employee_id,
+				employee_name: employeeName,
+				leave_balances: leaveBalances,
+			};
+
+			if (calendarResponse) {
+				employeeData.leave_requests = this.processCalendarResponse(
+					calendarResponse,
+					month,
+					year
+				);
+			}
+
+			return employeeData;
+		} catch (err) {
+			return {
+				user_id: userId,
+				employee_name: employeeName,
+				leave_balances: [],
+				leave_requests: [],
+				error: err.message,
+			};
+		}
+	}
+
+	/**
+	 * Main entry point: fetches all employees and processes in batches
+	 * @param {Object} options
+	 * @param {Function} [options.onProgress] - Progress callback (completed, total, lastEmployeeName)
+	 * @param {number} [options.month] - 0-indexed month
+	 * @param {number} [options.year]
+	 * @param {number} [options.concurrency=5] - Number of parallel requests
+	 * @returns {Promise<Array>} Array of employee leave data
 	 */
 	async getAllLeaveData(options = {}) {
 		const { onProgress, month, year, concurrency = 5 } = options;
 
 		const employees = await this.getAllEmployees();
 
-		// Determine date range for monthly leave requests
-		let startDate = null;
-		let endDate = null;
-		if (month !== undefined && year !== undefined) {
-			startDate = new Date(year, month, 1);
-			endDate = new Date(year, month + 1, 0); // Last day of month
-		}
+		const hasDateRange = month !== undefined && year !== undefined;
+		const startDate = hasDateRange ? new Date(year, month, 1) : null;
+		const endDate = hasDateRange ? new Date(year, month + 1, 0) : null;
 
-		// Helper to parse DD/MM/YYYY to Date
-		const parseDateDMY = (dateStr) => {
-			if (!dateStr) return null;
-			const parts = dateStr.split('/');
-			if (parts.length !== 3) return null;
-			return new Date(
-				parseInt(parts[2]),
-				parseInt(parts[1]) - 1,
-				parseInt(parts[0])
-			);
-		};
-
-		// Process a single employee
-		const processEmployee = async (employee) => {
-			const userId = employee.id || employee.user_id;
-			const employeeName =
-				employee.full_name || employee.name || `User ${userId}`;
-
-			try {
-				// Fetch base data, leave balances, and calendar in parallel
-				const promises = [
-					this.getEmployeeBaseData(userId),
-					this.getEmployeeLeaveBalances(userId),
-				];
-				if (startDate && endDate) {
-					promises.push(
-						this.getUserTimeOffCalendar(userId, startDate, endDate)
-					);
-				}
-
-				const results = await Promise.all(promises);
-				const baseData = results[0];
-				const leaveBalances = results[1];
-				const calendarResponse = results[2];
-
-				const employeeData = {
-					user_id: userId,
-					employee_id: baseData?.employee_id,
-					employee_name: employeeName,
-					leave_balances: leaveBalances,
-				};
-
-				// Process leave requests if calendar was fetched
-				if (calendarResponse) {
-					const leaveDays = [];
-					const approvedRequests = (
-						calendarResponse.time_off_request || []
-					).filter((r) => r.status === 3);
-
-					for (const r of approvedRequests) {
-						const leaveStart = parseDateDMY(r.effective_date);
-						const leaveEnd = r.end_date ? parseDateDMY(r.end_date) : leaveStart;
-
-						if (!leaveStart) continue;
-
-						// Iterate through each day in the leave range
-						const currentDate = new Date(leaveStart);
-						while (currentDate <= leaveEnd) {
-							const dayOfWeek = currentDate.getDay();
-							const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-							if (
-								!isWeekend &&
-								currentDate.getMonth() === month &&
-								currentDate.getFullYear() === year
-							) {
-								// Determine if this specific day is half-day
-								// effective_date_duration: 1=full, 2=AM half, 3=PM half (for first day)
-								// end_date_duration: 1=full, 2=AM half, 3=PM half (for last day)
-								const isFirstDay =
-									currentDate.getTime() === leaveStart.getTime();
-								const isLastDay = currentDate.getTime() === leaveEnd.getTime();
-								const isSingleDay = isFirstDay && isLastDay;
-
-								let isHalfDay = false;
-								if (isSingleDay) {
-									// Single day leave - check effective_date_duration
-									isHalfDay =
-										r.effective_date_duration === 2 ||
-										r.effective_date_duration === 3;
-								} else if (isFirstDay) {
-									// First day of multi-day leave
-									isHalfDay =
-										r.effective_date_duration === 2 ||
-										r.effective_date_duration === 3;
-								} else if (isLastDay) {
-									// Last day of multi-day leave
-									isHalfDay =
-										r.end_date_duration === 2 || r.end_date_duration === 3;
-								}
-								// Middle days are always full days (isHalfDay = false)
-
-								leaveDays.push({
-									date: currentDate.getDate(),
-									leave_type: r.time_off?.name,
-									is_half_day: isHalfDay,
-								});
-							}
-
-							// Move to next day
-							currentDate.setDate(currentDate.getDate() + 1);
-						}
-					}
-					employeeData.leave_requests = leaveDays;
-				}
-
-				return employeeData;
-			} catch (err) {
-				return {
-					user_id: userId,
-					employee_name: employeeName,
-					leave_balances: [],
-					leave_requests: [],
-					error: err.message,
-				};
-			}
-		};
-
-		// Process employees in batches for parallel execution
 		const allLeaveData = [];
 		let completed = 0;
 
 		for (let i = 0; i < employees.length; i += concurrency) {
 			const batch = employees.slice(i, i + concurrency);
-			const results = await Promise.all(batch.map(processEmployee));
-			allLeaveData.push(...results);
 
+			const results = await Promise.all(
+				batch.map((emp) =>
+					this.processEmployee(emp, startDate, endDate, month, year)
+				)
+			);
+
+			allLeaveData.push(...results);
 			completed += batch.length;
+
 			if (onProgress) {
-				onProgress(
-					completed,
-					employees.length,
-					batch[batch.length - 1]?.full_name || ''
-				);
+				const lastEmployee = batch[batch.length - 1];
+				onProgress(completed, employees.length, lastEmployee?.full_name || '');
 			}
 		}
 
