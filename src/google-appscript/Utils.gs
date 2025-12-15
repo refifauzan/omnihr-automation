@@ -286,3 +286,282 @@ function scanForLeaveCells(sheet, dayColumns) {
 	Logger.log(`Found ${leaveCells.length} existing leave cells in sheet`);
 	return leaveCells;
 }
+
+/**
+ * Determine if a leave day is half-day based on duration codes
+ * @param {boolean} isSingleDay - Is single day leave
+ * @param {boolean} isFirstDay - Is first day of leave range
+ * @param {boolean} isLastDay - Is last day of leave range
+ * @param {number} effectiveDuration - Duration code for first day (1=full, 2=half AM, 3=half PM)
+ * @param {number} endDuration - Duration code for last day
+ * @returns {boolean} True if half-day
+ */
+function determineHalfDay(
+	isSingleDay,
+	isFirstDay,
+	isLastDay,
+	effectiveDuration,
+	endDuration
+) {
+	const isHalfDuration = (d) => d === 2 || d === 3;
+
+	if (isSingleDay) return isHalfDuration(effectiveDuration);
+	if (isFirstDay) return isHalfDuration(effectiveDuration);
+	if (isLastDay) return isHalfDuration(endDuration);
+	return false;
+}
+
+/**
+ * Build row hours mapping from sheet cells
+ * @param {Sheet} sheet - The sheet
+ * @param {Array} rows - Row numbers
+ * @param {Object} dayColumns - Day to column mapping
+ * @returns {Object} Row to hours mapping
+ */
+function buildRowHoursFromSheet(sheet, rows, dayColumns) {
+	const rowHoursMap = {};
+
+	for (const row of rows) {
+		let foundHours = null;
+
+		for (const col of Object.values(dayColumns)) {
+			const cellValue = sheet.getRange(row, col).getValue();
+			if (typeof cellValue === 'number' && cellValue > 0) {
+				foundHours = cellValue;
+				break;
+			}
+		}
+
+		rowHoursMap[row] = foundHours || CONFIG.DEFAULT_HOURS;
+		Logger.log(`Row ${row}: ${rowHoursMap[row]} hours from sheet`);
+	}
+
+	return rowHoursMap;
+}
+
+/**
+ * Build row hours mapping from attendance data
+ * @param {Sheet} sheet - The sheet
+ * @param {Array} rows - Row numbers
+ * @param {Array} empAttendance - Employee attendance records
+ * @returns {Object} Row to hours mapping
+ */
+function buildRowHoursFromAttendance(sheet, rows, empAttendance) {
+	const rowHoursMap = {};
+
+	for (const row of rows) {
+		const projectName = String(sheet.getRange(row, 3).getValue() || '')
+			.trim()
+			.toUpperCase();
+
+		const matchingAtt = empAttendance.find(
+			(att) =>
+				String(att.project || '')
+					.trim()
+					.toUpperCase() === projectName
+		);
+
+		const hours =
+			matchingAtt && matchingAtt.hours > 0
+				? matchingAtt.hours
+				: CONFIG.DEFAULT_HOURS;
+
+		rowHoursMap[row] = hours;
+		Logger.log(`Row ${row} (${projectName}): ${hours} hours`);
+	}
+
+	return rowHoursMap;
+}
+
+/**
+ * Get active rows (not overridden) for a leave day
+ * @param {Sheet} sheet - The sheet
+ * @param {Array} rows - All employee rows
+ * @param {number|null} overrideCol - Override column number
+ * @param {number} leaveDate - Leave date (day of month)
+ * @returns {Array} Active row numbers
+ */
+function getActiveRows(sheet, rows, overrideCol, leaveDate) {
+	if (!overrideCol) {
+		Logger.log(`No override column for day ${leaveDate}, all rows active`);
+		return rows;
+	}
+
+	return rows.filter((row) => {
+		const overrideValue = sheet.getRange(row, overrideCol).getValue();
+		if (overrideValue === true) {
+			Logger.log(
+				`Skipping row ${row} for day ${leaveDate} - Week Override checked`
+			);
+			return false;
+		}
+		return true;
+	});
+}
+
+/**
+ * Assign leave cells to full-day or half-day collections
+ * @param {Object} leave - Leave object with is_half_day flag
+ * @param {Array} activeRows - Active row numbers
+ * @param {number} col - Column number
+ * @param {Array} fullDayCells - Full-day cells array (mutated)
+ * @param {Object} halfDayCellsMap - Half-day cells map (mutated)
+ */
+function assignLeaveCells(
+	leave,
+	activeRows,
+	col,
+	fullDayCells,
+	halfDayCellsMap
+) {
+	if (!leave.is_half_day) {
+		for (const row of activeRows) {
+			fullDayCells.push(columnToLetter(col) + row);
+		}
+		return;
+	}
+
+	const hoursPerProject = CONFIG.HALF_DAY_HOURS / activeRows.length;
+	Logger.log(
+		`Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each`
+	);
+
+	for (const row of activeRows) {
+		const cellA1 = columnToLetter(col) + row;
+		halfDayCellsMap[cellA1] = hoursPerProject;
+		Logger.log(`Row ${row}: ${hoursPerProject}hr (ORANGE)`);
+	}
+}
+
+/**
+ * Assign leave cells with object format for half-day cells
+ * @param {Object} leave - Leave object
+ * @param {Array} activeRows - Active row numbers
+ * @param {number} col - Column number
+ * @param {Array} fullDayCells - Full-day cells array (mutated)
+ * @param {Array} halfDayCells - Half-day cells array with {cell, value} (mutated)
+ */
+function assignLeaveCellsWithObjects(
+	leave,
+	activeRows,
+	col,
+	fullDayCells,
+	halfDayCells
+) {
+	if (!leave.is_half_day) {
+		for (const row of activeRows) {
+			fullDayCells.push(columnToLetter(col) + row);
+		}
+		return;
+	}
+
+	const hoursPerProject = CONFIG.HALF_DAY_HOURS / activeRows.length;
+	Logger.log(
+		`Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each`
+	);
+
+	for (const row of activeRows) {
+		halfDayCells.push({
+			cell: columnToLetter(col) + row,
+			value: hoursPerProject,
+		});
+		Logger.log(`Row ${row}: ${hoursPerProject}hr (ORANGE)`);
+	}
+}
+
+/**
+ * Build conditional formatting rule for a week range
+ * @param {Sheet} sheet - The sheet
+ * @param {Object} weekRange - Week range object
+ * @param {Object} dayColumns - Day to column mapping
+ * @param {number} month - Month (0-11)
+ * @param {number} year - Year
+ * @param {number} lastRow - Last row number
+ * @param {number} numRows - Number of data rows
+ * @param {Set} leaveCellSet - Set of leave cell A1 notations
+ * @returns {ConditionalFormatRule|null} Rule or null
+ */
+function buildWeekConditionalRule(
+	sheet,
+	weekRange,
+	dayColumns,
+	month,
+	year,
+	lastRow,
+	numRows,
+	leaveCellSet
+) {
+	const { startCol, endCol, validatedCol } = weekRange;
+	const checkboxColLetter = columnToLetter(validatedCol);
+	const weekdayRanges = [];
+
+	for (const [dayStr, col] of Object.entries(dayColumns)) {
+		if (col < startCol || col > endCol) continue;
+
+		const day = parseInt(dayStr);
+		const date = new Date(year, month, day);
+		const dayOfWeek = date.getDay();
+
+		if (dayOfWeek < 1 || dayOfWeek > 5) continue;
+
+		const colLetter = columnToLetter(col);
+		const ranges = buildNonLeaveRanges(
+			sheet,
+			col,
+			colLetter,
+			lastRow,
+			leaveCellSet
+		);
+		weekdayRanges.push(...ranges);
+	}
+
+	weekdayRanges.push(
+		sheet.getRange(CONFIG.FIRST_DATA_ROW, validatedCol, numRows, 1)
+	);
+
+	if (weekdayRanges.length === 0) return null;
+
+	return SpreadsheetApp.newConditionalFormatRule()
+		.whenFormulaSatisfied(`=$${checkboxColLetter}${CONFIG.FIRST_DATA_ROW}=TRUE`)
+		.setBackground('#B8E1CD')
+		.setRanges(weekdayRanges)
+		.build();
+}
+
+/**
+ * Build ranges excluding leave cells for conditional formatting
+ * @param {Sheet} sheet - The sheet
+ * @param {number} col - Column number
+ * @param {string} colLetter - Column letter
+ * @param {number} lastRow - Last row number
+ * @param {Set} leaveCellSet - Set of leave cell A1 notations
+ * @returns {Array} Array of Range objects
+ */
+function buildNonLeaveRanges(sheet, col, colLetter, lastRow, leaveCellSet) {
+	const ranges = [];
+	let rangeStart = null;
+
+	for (let row = CONFIG.FIRST_DATA_ROW; row <= lastRow + 1; row++) {
+		const cellA1 = `${colLetter}${row}`;
+		const isLeave = leaveCellSet.has(cellA1.toUpperCase());
+		const isLastRow = row > lastRow;
+
+		const shouldEndRange = isLeave || isLastRow;
+		const shouldStartRange = !isLeave && !isLastRow && rangeStart === null;
+
+		if (shouldStartRange) {
+			rangeStart = row;
+			continue;
+		}
+
+		if (shouldEndRange && rangeStart !== null) {
+			const rangeEnd = row - 1;
+			ranges.push(
+				sheet.getRange(rangeStart, col, rangeEnd - rangeStart + 1, 1)
+			);
+			rangeStart = null;
+		}
+	}
+
+	return ranges;
+}

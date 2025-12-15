@@ -15,18 +15,11 @@ function onOpen() {
 			.addSeparator()
 			.addSubMenu(
 				ui
-					.createMenu('Attendance')
-					.addItem('Create Attendance Sheet', 'createAttendanceSheet')
-					.addItem(
-						'Apply Attendance to Current Sheet',
-						'applyAttendanceToCurrentSheet'
-					)
-			)
-			.addSubMenu(
-				ui
 					.createMenu('Schedule')
-					.addItem('Enable Monthly Sync', 'setupMonthlyTrigger')
-					.addItem('Enable Daily Sync', 'setupDailyTrigger')
+					.addItem(
+						'Enable Daily Sync (Leave Only)',
+						'setupDailyLeaveOnlyTrigger'
+					)
 					.addSeparator()
 					.addItem('View Current Schedule', 'viewTriggers')
 					.addItem('Disable Automation', 'removeTriggers')
@@ -41,51 +34,30 @@ function onOpen() {
 }
 
 /**
- * Setup monthly trigger - runs on 1st of each month at 6 AM
+ * Setup daily trigger for leave-only sync - runs every day at 6 AM
  */
-function setupMonthlyTrigger() {
+function setupDailyLeaveOnlyTrigger() {
 	const triggers = ScriptApp.getProjectTriggers();
 	triggers.forEach((trigger) => ScriptApp.deleteTrigger(trigger));
 
-	ScriptApp.newTrigger('scheduledSync')
-		.timeBased()
-		.onMonthDay(1)
-		.atHour(6)
-		.create();
-
-	Logger.log(
-		'Monthly sync trigger created - will run on 1st of each month at 6 AM'
-	);
-	SpreadsheetApp.getUi().alert(
-		'Monthly sync enabled!\n\n' +
-			'The script will automatically sync the active sheet on the 1st of each month at 6 AM.'
-	);
-}
-
-/**
- * Setup daily trigger - runs every day at 6 AM
- */
-function setupDailyTrigger() {
-	const triggers = ScriptApp.getProjectTriggers();
-	triggers.forEach((trigger) => ScriptApp.deleteTrigger(trigger));
-
-	ScriptApp.newTrigger('scheduledSync')
+	ScriptApp.newTrigger('scheduledLeaveOnlySync')
 		.timeBased()
 		.everyDays(1)
 		.atHour(6)
 		.create();
 
-	Logger.log('Daily sync trigger created for 6 AM');
+	Logger.log('Daily leave-only sync trigger created for 6 AM');
 	SpreadsheetApp.getUi().alert(
-		'Daily sync enabled!\n\n' +
-			'The script will automatically sync the active sheet every day at 6 AM.'
+		'Daily leave-only sync enabled!\n\n' +
+			'The script will automatically sync leave data (keeping hours) every day at 6 AM.'
 	);
 }
 
 /**
- * Scheduled sync function (called by trigger)
+ * Scheduled leave-only sync function (called by trigger)
+ * Syncs leave data while keeping existing hours
  */
-function scheduledSync() {
+function scheduledLeaveOnlySync() {
 	const now = new Date();
 	const month = now.getMonth();
 	const year = now.getFullYear();
@@ -93,8 +65,37 @@ function scheduledSync() {
 	const ss = SpreadsheetApp.getActiveSpreadsheet();
 	const sheet = ss.getActiveSheet();
 
-	Logger.log(`Scheduled sync to active sheet: ${sheet.getName()}`);
-	syncLeaveDataToSheet(sheet, month, year);
+	Logger.log(`Scheduled leave-only sync to active sheet: ${sheet.getName()}`);
+
+	try {
+		const token = getAccessToken();
+		if (!token) {
+			Logger.log('Failed to get API token');
+			return;
+		}
+
+		const employees = fetchAllEmployees(token);
+		if (!employees || employees.length === 0) {
+			Logger.log('No employees found');
+			return;
+		}
+
+		const leaveData = fetchLeaveDataForMonth(token, employees, month, year);
+		if (!leaveData || Object.keys(leaveData).length === 0) {
+			Logger.log('No leave data found for this month');
+			return;
+		}
+
+		updateSheetWithLeaveData(sheet, leaveData, month, year, true);
+		SpreadsheetApp.flush();
+		Logger.log(
+			`Leave-only sync complete: ${
+				Object.keys(leaveData).length
+			} employees with leave`
+		);
+	} catch (error) {
+		Logger.log('Error in scheduled leave-only sync: ' + error.message);
+	}
 }
 
 /**

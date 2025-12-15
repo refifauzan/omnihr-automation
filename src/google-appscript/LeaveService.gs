@@ -104,41 +104,39 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
 				while (currentDate <= leaveEnd) {
 					const dayOfWeek = currentDate.getDay();
 					const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-
-					if (
-						!isWeekend &&
-						currentDate.getMonth() === month &&
-						currentDate.getFullYear() === year
-					) {
-						const isFirstDay = currentDate.getTime() === leaveStart.getTime();
-						const isLastDay = currentDate.getTime() === leaveEnd.getTime();
-						const isSingleDay = isFirstDay && isLastDay;
-
-						const effectiveDuration =
-							parseInt(request.effective_date_duration) || 1;
-						const endDuration = parseInt(request.end_date_duration) || 1;
-
-						let isHalfDay = false;
-						if (isSingleDay) {
-							isHalfDay = effectiveDuration === 2 || effectiveDuration === 3;
-						} else if (isFirstDay) {
-							isHalfDay = effectiveDuration === 2 || effectiveDuration === 3;
-						} else if (isLastDay) {
-							isHalfDay = endDuration === 2 || endDuration === 3;
-						}
-
-						Logger.log(
-							`Leave for ${empName} on day ${currentDate.getDate()}: effectiveDuration=${effectiveDuration}, endDuration=${endDuration}, isHalfDay=${isHalfDay}`
-						);
-
-						leaveDays.push({
-							date: currentDate.getDate(),
-							leave_type: request.time_off?.name,
-							is_half_day: isHalfDay,
-						});
-					}
+					const dateToProcess = new Date(currentDate);
 
 					currentDate.setDate(currentDate.getDate() + 1);
+
+					if (isWeekend) continue;
+					if (dateToProcess.getMonth() !== month) continue;
+					if (dateToProcess.getFullYear() !== year) continue;
+
+					const isFirstDay = dateToProcess.getTime() === leaveStart.getTime();
+					const isLastDay = dateToProcess.getTime() === leaveEnd.getTime();
+					const isSingleDay = isFirstDay && isLastDay;
+
+					const effectiveDuration =
+						parseInt(request.effective_date_duration) || 1;
+					const endDuration = parseInt(request.end_date_duration) || 1;
+
+					const isHalfDay = determineHalfDay(
+						isSingleDay,
+						isFirstDay,
+						isLastDay,
+						effectiveDuration,
+						endDuration
+					);
+
+					Logger.log(
+						`Leave for ${empName} on day ${dateToProcess.getDate()}: effectiveDuration=${effectiveDuration}, endDuration=${endDuration}, isHalfDay=${isHalfDay}`
+					);
+
+					leaveDays.push({
+						date: dateToProcess.getDate(),
+						leave_type: request.time_off?.name,
+						is_half_day: isHalfDay,
+					});
 				}
 			}
 
@@ -225,55 +223,16 @@ function updateSheetWithLeaveData(
 		// Build row -> hours mapping
 		const rowHoursMap = {};
 
-		if (useSheetHours) {
-			const firstDayCol = Object.values(dayColumns)[0];
+		const rowHoursSource = useSheetHours
+			? buildRowHoursFromSheet(sheet, rows, dayColumns)
+			: buildRowHoursFromAttendance(
+					sheet,
+					rows,
+					attendanceByEmployee[employee_id.toUpperCase()] || []
+			  );
 
-			for (const row of rows) {
-				let foundHours = null;
-				for (const [dayStr, col] of Object.entries(dayColumns)) {
-					const cellValue = sheet.getRange(row, col).getValue();
-					if (typeof cellValue === 'number' && cellValue > 0) {
-						foundHours = cellValue;
-						break;
-					}
-				}
-
-				if (foundHours) {
-					rowHoursMap[row] = foundHours;
-					Logger.log(`Row ${row}: ${foundHours} hours from sheet`);
-				} else {
-					rowHoursMap[row] = CONFIG.DEFAULT_HOURS;
-					Logger.log(`Row ${row}: defaulting to ${CONFIG.DEFAULT_HOURS} hours`);
-				}
-			}
-		} else {
-			const empAttendance =
-				attendanceByEmployee[employee_id.toUpperCase()] || [];
-
-			for (const row of rows) {
-				const projectName = String(sheet.getRange(row, 3).getValue() || '')
-					.trim()
-					.toUpperCase();
-
-				const matchingAtt = empAttendance.find(
-					(att) =>
-						String(att.project || '')
-							.trim()
-							.toUpperCase() === projectName
-				);
-
-				if (matchingAtt && matchingAtt.hours > 0) {
-					rowHoursMap[row] = matchingAtt.hours;
-					Logger.log(
-						`Row ${row} (${projectName}): ${matchingAtt.hours} hours from attendance`
-					);
-				} else {
-					rowHoursMap[row] = CONFIG.DEFAULT_HOURS;
-					Logger.log(
-						`Row ${row} (${projectName}): defaulting to ${CONFIG.DEFAULT_HOURS} hours`
-					);
-				}
-			}
+		for (const [row, hours] of Object.entries(rowHoursSource)) {
+			rowHoursMap[row] = hours;
 		}
 
 		// Apply leaves
@@ -287,25 +246,7 @@ function updateSheetWithLeaveData(
 
 			const overrideCol = dayToOverrideCol[leave.date];
 
-			const activeRows = rows.filter((row) => {
-				if (!overrideCol) {
-					Logger.log(
-						`Row ${row}: No override column for day ${leave.date}, will update`
-					);
-					return true;
-				}
-				const overrideValue = sheet.getRange(row, overrideCol).getValue();
-				Logger.log(
-					`Row ${row}: Override col ${overrideCol}, value="${overrideValue}"`
-				);
-				if (overrideValue === true) {
-					Logger.log(
-						`Skipping row ${row} for day ${leave.date} - Week Override is checked`
-					);
-					return false;
-				}
-				return true;
-			});
+			const activeRows = getActiveRows(sheet, rows, overrideCol, leave.date);
 
 			if (activeRows.length === 0) {
 				Logger.log(
@@ -314,25 +255,7 @@ function updateSheetWithLeaveData(
 				continue;
 			}
 
-			if (leave.is_half_day) {
-				const totalRemainingHours = CONFIG.HALF_DAY_HOURS;
-				const hoursPerProject = totalRemainingHours / activeRows.length;
-
-				Logger.log(
-					`Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each`
-				);
-
-				for (const row of activeRows) {
-					const cellA1 = columnToLetter(col) + row;
-					halfDayCellsMap[cellA1] = hoursPerProject;
-					Logger.log(`Row ${row}: ${hoursPerProject}hr (ORANGE)`);
-				}
-			} else {
-				for (const row of activeRows) {
-					const cellA1 = columnToLetter(col) + row;
-					fullDayCells.push(cellA1);
-				}
-			}
+			assignLeaveCells(leave, activeRows, col, fullDayCells, halfDayCellsMap);
 		}
 	}
 
@@ -476,44 +399,16 @@ function applyLeaveColorsToSheet(sheet, leaveData, month, year) {
 
 			const overrideCol = dayToOverrideCol[leave.date];
 
-			const activeRows = rows.filter((row) => {
-				if (!overrideCol) return true;
-				const overrideValue = sheet.getRange(row, overrideCol).getValue();
-				if (overrideValue === true) {
-					Logger.log(
-						`Skipping row ${row} for day ${leave.date} - Week Override is checked`
-					);
-					return false;
-				}
-				return true;
-			});
+			const activeRows = getActiveRows(sheet, rows, overrideCol, leave.date);
+			if (activeRows.length === 0) continue;
 
-			if (activeRows.length === 0) {
-				Logger.log(
-					`All rows have Week Override checked for day ${leave.date}, skipping`
-				);
-				continue;
-			}
-
-			if (leave.is_half_day) {
-				const totalRemainingHours = CONFIG.HALF_DAY_HOURS;
-				const hoursPerProject = totalRemainingHours / activeRows.length;
-
-				Logger.log(
-					`Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each`
-				);
-
-				for (const row of activeRows) {
-					const cellA1 = columnToLetter(col) + row;
-					halfDayCells.push({ cell: cellA1, value: hoursPerProject });
-					Logger.log(`Row ${row}: ${hoursPerProject}hr (ORANGE)`);
-				}
-			} else {
-				for (const row of activeRows) {
-					const cellA1 = columnToLetter(col) + row;
-					fullDayCells.push(cellA1);
-				}
-			}
+			assignLeaveCellsWithObjects(
+				leave,
+				activeRows,
+				col,
+				fullDayCells,
+				halfDayCells
+			);
 		}
 	}
 
@@ -576,55 +471,17 @@ function addValidatedConditionalFormatting(
 	const rules = [];
 
 	for (const weekRange of weekRanges) {
-		const { startCol, endCol, validatedCol } = weekRange;
-		const checkboxColLetter = columnToLetter(validatedCol);
-		const weekdayRanges = [];
-
-		for (const [dayStr, col] of Object.entries(dayColumns)) {
-			if (col >= startCol && col <= endCol) {
-				const day = parseInt(dayStr);
-				const date = new Date(year, month, day);
-				const dayOfWeek = date.getDay();
-
-				if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-					const colLetter = columnToLetter(col);
-					let rangeStart = null;
-
-					for (let row = CONFIG.FIRST_DATA_ROW; row <= lastRow + 1; row++) {
-						const cellA1 = `${colLetter}${row}`;
-						const isLeave = leaveCellSet.has(cellA1.toUpperCase());
-						const isLastRow = row > lastRow;
-
-						if (!isLeave && !isLastRow) {
-							if (rangeStart === null) rangeStart = row;
-						} else {
-							if (rangeStart !== null) {
-								const rangeEnd = row - 1;
-								weekdayRanges.push(
-									sheet.getRange(rangeStart, col, rangeEnd - rangeStart + 1, 1)
-								);
-								rangeStart = null;
-							}
-						}
-					}
-				}
-			}
-		}
-
-		weekdayRanges.push(
-			sheet.getRange(CONFIG.FIRST_DATA_ROW, validatedCol, numRows, 1)
+		const rule = buildWeekConditionalRule(
+			sheet,
+			weekRange,
+			dayColumns,
+			month,
+			year,
+			lastRow,
+			numRows,
+			leaveCellSet
 		);
-
-		if (weekdayRanges.length > 0) {
-			const greenRule = SpreadsheetApp.newConditionalFormatRule()
-				.whenFormulaSatisfied(
-					`=$${checkboxColLetter}${CONFIG.FIRST_DATA_ROW}=TRUE`
-				)
-				.setBackground('#B8E1CD')
-				.setRanges(weekdayRanges)
-				.build();
-			rules.push(greenRule);
-		}
+		if (rule) rules.push(rule);
 	}
 
 	sheet.setConditionalFormatRules(rules);
