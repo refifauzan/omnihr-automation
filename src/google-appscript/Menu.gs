@@ -30,6 +30,8 @@ function onOpen() {
 					.createMenu('Protection')
 					.addItem('Enable Edit Protection', 'installOnEditTrigger')
 					.addItem('Disable Edit Protection', 'removeOnEditTrigger')
+					.addSeparator()
+					.addItem('Test Protection Setup', 'testProtectionSetup')
 			)
 			.addSeparator()
 			.addItem('Setup API Credentials', 'showCredentialsDialog')
