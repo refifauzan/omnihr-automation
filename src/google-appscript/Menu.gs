@@ -25,6 +25,13 @@ function onOpen() {
 					.addItem('Disable Automation', 'removeTriggers')
 			)
 			.addSeparator()
+			.addSubMenu(
+				ui
+					.createMenu('Protection')
+					.addItem('Enable Edit Protection', 'installOnEditTrigger')
+					.addItem('Disable Edit Protection', 'removeOnEditTrigger')
+			)
+			.addSeparator()
 			.addItem('Setup API Credentials', 'showCredentialsDialog')
 			.addToUi();
 	} catch (e) {
