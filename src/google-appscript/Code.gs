@@ -61,38 +61,37 @@ function syncLeaveData() {
 
 	Logger.log(`Syncing to active sheet: ${sheetName}`);
 	syncLeaveDataToSheet(sheet, month, year);
+
+	// Auto-enable protection and daily sync
+	installOnEditTriggerSilent();
+	setupDailyLeaveOnlyTrigger(month, year, sheetName);
+
+	ui.alert(
+		`Sync complete!\n\n` +
+			`• Edit protection: Enabled\n` +
+			`• Daily sync: Enabled for ${month + 1}/${year} at 6 AM`
+	);
 }
 
 /**
- * Sync leave only - applies leave colors/values without reformatting attendance hours
+ * Sync leave only - applies leave colors/values for current month
  */
 function syncLeaveOnly() {
 	const ui = SpreadsheetApp.getUi();
-	const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+	const ss = SpreadsheetApp.getActiveSpreadsheet();
+	const sheet = ss.getActiveSheet();
+	const sheetName = sheet.getName();
 
-	const monthResponse = ui.prompt(
-		'Sync Leave Only',
-		'Enter month number (1-12):',
-		ui.ButtonSet.OK_CANCEL
+	// Use current month/year automatically
+	const now = new Date();
+	const month = now.getMonth();
+	const year = now.getFullYear();
+
+	Logger.log(
+		`Syncing leave only for current month ${
+			month + 1
+		}/${year} to sheet "${sheetName}"`
 	);
-
-	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
-
-	const yearResponse = ui.prompt(
-		'Sync Leave Only',
-		'Enter year (e.g., 2025):',
-		ui.ButtonSet.OK_CANCEL
-	);
-
-	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
-
-	const month = parseInt(monthResponse.getResponseText()) - 1;
-	const year = parseInt(yearResponse.getResponseText());
-
-	if (isNaN(month) || month < 0 || month > 11 || isNaN(year)) {
-		ui.alert('Invalid month or year');
-		return;
-	}
 
 	try {
 		Logger.log(
@@ -122,10 +121,17 @@ function syncLeaveOnly() {
 		updateSheetWithLeaveData(sheet, leaveData, month, year, true);
 
 		SpreadsheetApp.flush();
+
+		// Auto-enable protection and daily sync
+		installOnEditTriggerSilent();
+		setupDailyLeaveOnlyTrigger(month, year, sheetName);
+
 		ui.alert(
 			`Leave synced successfully!\n\n` +
 				`Processed ${Object.keys(leaveData).length} employees with leave.\n` +
-				`Employee working hours were NOT changed.`
+				`Employee working hours were NOT changed.\n\n` +
+				`• Edit protection: Enabled\n` +
+				`• Daily sync: Enabled for ${month + 1}/${year} at 6 AM`
 		);
 	} catch (error) {
 		Logger.log('Error syncing leave only: ' + error.message);
@@ -167,16 +173,6 @@ function syncLeaveDataToSheet(sheet, month, year) {
 	);
 
 	try {
-		// Apply attendance data first
-		const attendanceList = getAttendanceData();
-		if (attendanceList && attendanceList.length > 0) {
-			Logger.log('Applying attendance data...');
-			applyAttendanceHours(sheet, attendanceList, month, year);
-			Logger.log('Attendance data applied');
-		} else {
-			Logger.log('No attendance sheet found, using default hours (8)');
-		}
-
 		// Get access token
 		const token = getAccessToken();
 		if (!token) {
@@ -198,14 +194,13 @@ function syncLeaveDataToSheet(sheet, month, year) {
 
 		// Apply leave data
 		Logger.log('Applying leave data...');
-		updateSheetWithLeaveData(sheet, leaveData, month, year);
+		updateSheetWithLeaveData(sheet, leaveData, month, year, true);
 
 		SpreadsheetApp.flush();
 		Logger.log('Sync complete');
 
 		SpreadsheetApp.getUi().alert(
 			`Sync complete!\n\n` +
-				`• Attendance rows: ${attendanceList ? attendanceList.length : 0}\n` +
 				`• Leave requests: ${Object.keys(leaveData).length} employees\n` +
 				`• Total employees processed: ${employees.length}`
 		);

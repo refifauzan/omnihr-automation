@@ -258,8 +258,15 @@ function applyAttendanceToCurrentSheet() {
  * @param {Array} attendanceList - Attendance data
  * @param {number} month - Month (0-11)
  * @param {number} year - Year
+ * @param {boolean} autoValidate - Whether to automatically set Validated checkboxes to true (default: true)
  */
-function applyAttendanceHours(sheet, attendanceList, month, year) {
+function applyAttendanceHours(
+	sheet,
+	attendanceList,
+	month,
+	year,
+	autoValidate = true
+) {
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
 	const lastRow = sheet.getLastRow();
 	const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -585,7 +592,11 @@ function applyAttendanceHours(sheet, attendanceList, month, year) {
 				1
 			);
 			checkboxRange.insertCheckboxes();
-			checkboxRange.setValue(true);
+			if (autoValidate) {
+				checkboxRange.setValue(true);
+			} else {
+				checkboxRange.setValue(false);
+			}
 		} catch (e) {
 			Logger.log(`Validated checkbox column ${col}: ${e.message}`);
 		}

@@ -9,18 +9,12 @@ function onOpen() {
 	try {
 		const ui = SpreadsheetApp.getUi();
 		ui.createMenu('OmniHR')
-			.addItem('Sync Leave Data', 'syncLeaveData')
-			.addItem('Sync Current Month', 'syncCurrentMonth')
-			.addItem('Sync Leave Only (Keep Hours)', 'syncLeaveOnly')
+			.addItem('Sync Leave Data (Custom Month)', 'syncLeaveData')
+			.addItem('Sync Leave Only (Current Month)', 'syncLeaveOnly')
 			.addSeparator()
 			.addSubMenu(
 				ui
 					.createMenu('Schedule')
-					.addItem(
-						'Enable Daily Sync (Leave Only)',
-						'setupDailyLeaveOnlyTrigger'
-					)
-					.addSeparator()
 					.addItem('View Current Schedule', 'viewTriggers')
 					.addItem('Disable Automation', 'removeTriggers')
 			)
@@ -43,11 +37,25 @@ function onOpen() {
 }
 
 /**
- * Setup daily trigger for leave-only sync - runs every day at 6 AM
+ * Setup daily trigger for leave-only sync for a specific month/year
+ * @param {number} month - Month (0-11)
+ * @param {number} year - Year
+ * @param {string} sheetName - Sheet name to sync to
  */
-function setupDailyLeaveOnlyTrigger() {
+function setupDailyLeaveOnlyTrigger(month, year, sheetName) {
+	// Remove existing daily sync triggers (but keep protection triggers)
 	const triggers = ScriptApp.getProjectTriggers();
-	triggers.forEach((trigger) => ScriptApp.deleteTrigger(trigger));
+	triggers.forEach((trigger) => {
+		if (trigger.getHandlerFunction() === 'scheduledLeaveOnlySync') {
+			ScriptApp.deleteTrigger(trigger);
+		}
+	});
+
+	// Store the target month/year/sheet in script properties
+	const props = PropertiesService.getScriptProperties();
+	props.setProperty('DAILY_SYNC_MONTH', String(month));
+	props.setProperty('DAILY_SYNC_YEAR', String(year));
+	props.setProperty('DAILY_SYNC_SHEET', sheetName);
 
 	ScriptApp.newTrigger('scheduledLeaveOnlySync')
 		.timeBased()
@@ -55,26 +63,66 @@ function setupDailyLeaveOnlyTrigger() {
 		.atHour(6)
 		.create();
 
-	Logger.log('Daily leave-only sync trigger created for 6 AM');
-	SpreadsheetApp.getUi().alert(
-		'Daily leave-only sync enabled!\n\n' +
-			'The script will automatically sync leave data (keeping hours) every day at 6 AM.'
+	Logger.log(
+		`Daily leave-only sync trigger created for ${
+			month + 1
+		}/${year} on sheet "${sheetName}"`
 	);
 }
 
 /**
  * Scheduled leave-only sync function (called by trigger)
  * Syncs leave data while keeping existing hours
+ * Uses stored month/year/sheet from script properties
+ * Automatically stops when month/year has passed
  */
 function scheduledLeaveOnlySync() {
+	const props = PropertiesService.getScriptProperties();
+	const month = parseInt(props.getProperty('DAILY_SYNC_MONTH'));
+	const year = parseInt(props.getProperty('DAILY_SYNC_YEAR'));
+	const sheetName = props.getProperty('DAILY_SYNC_SHEET');
+
+	if (isNaN(month) || isNaN(year) || !sheetName) {
+		Logger.log('Scheduled sync: No valid month/year/sheet configured');
+		return;
+	}
+
+	// Check if the configured month/year has passed
 	const now = new Date();
-	const month = now.getMonth();
-	const year = now.getFullYear();
+	const currentYear = now.getFullYear();
+	const currentMonth = now.getMonth();
+
+	// If configured year is less than current year, stop sync
+	if (year < currentYear) {
+		Logger.log(
+			`Scheduled sync: Stopping - configured year ${year} has passed (current: ${currentYear})`
+		);
+		removeDailySyncTrigger();
+		return;
+	}
+
+	// If same year but configured month is less than current month, stop sync
+	if (year === currentYear && month < currentMonth) {
+		Logger.log(
+			`Scheduled sync: Stopping - configured month ${
+				month + 1
+			}/${year} has passed (current: ${currentMonth + 1}/${currentYear})`
+		);
+		removeDailySyncTrigger();
+		return;
+	}
 
 	const ss = SpreadsheetApp.getActiveSpreadsheet();
-	const sheet = ss.getActiveSheet();
+	const sheet = ss.getSheetByName(sheetName);
 
-	Logger.log(`Scheduled leave-only sync to active sheet: ${sheet.getName()}`);
+	if (!sheet) {
+		Logger.log(`Scheduled sync: Sheet "${sheetName}" not found`);
+		return;
+	}
+
+	Logger.log(
+		`Scheduled leave-only sync for ${month + 1}/${year} to sheet: ${sheetName}`
+	);
 
 	try {
 		const token = getAccessToken();
@@ -105,6 +153,25 @@ function scheduledLeaveOnlySync() {
 	} catch (error) {
 		Logger.log('Error in scheduled leave-only sync: ' + error.message);
 	}
+}
+
+/**
+ * Remove only the daily sync trigger (keeps protection triggers)
+ */
+function removeDailySyncTrigger() {
+	const triggers = ScriptApp.getProjectTriggers();
+	triggers.forEach((trigger) => {
+		if (trigger.getHandlerFunction() === 'scheduledLeaveOnlySync') {
+			ScriptApp.deleteTrigger(trigger);
+			Logger.log('Daily sync trigger removed - month/year has passed');
+		}
+	});
+
+	// Clear the stored properties
+	const props = PropertiesService.getScriptProperties();
+	props.deleteProperty('DAILY_SYNC_MONTH');
+	props.deleteProperty('DAILY_SYNC_YEAR');
+	props.deleteProperty('DAILY_SYNC_SHEET');
 }
 
 /**

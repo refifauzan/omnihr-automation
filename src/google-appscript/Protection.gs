@@ -239,6 +239,31 @@ function findWeekInfoFromHeader(sheet, editedCol) {
 }
 
 /**
+ * Install the onEdit trigger programmatically (silent version - no UI alert)
+ * Used by sync functions to auto-enable protection
+ */
+function installOnEditTriggerSilent() {
+	const ss = SpreadsheetApp.getActiveSpreadsheet();
+
+	// Check if trigger already exists
+	const triggers = ScriptApp.getUserTriggers(ss);
+	for (const trigger of triggers) {
+		if (trigger.getHandlerFunction() === 'onEditInstallable') {
+			Logger.log('Edit protection trigger already installed');
+			return;
+		}
+	}
+
+	// Create new trigger
+	ScriptApp.newTrigger('onEditInstallable')
+		.forSpreadsheet(ss)
+		.onEdit()
+		.create();
+
+	Logger.log('Edit protection trigger installed silently');
+}
+
+/**
  * Install the onEdit trigger programmatically
  * Run this once to set up the installable trigger
  */
