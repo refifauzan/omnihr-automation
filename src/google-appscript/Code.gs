@@ -403,6 +403,9 @@ function createEmptyTableStructure() {
 
 		sheet.getRange(CONFIG.FIRST_DATA_ROW, 7, numRows, 3).setFormulas(formulas);
 
+		// Add conditional formatting (inactive since validated is FALSE)
+		addValidatedConditionalFormatting(sheet, month, year);
+
 		SpreadsheetApp.flush();
 
 		ui.alert(
