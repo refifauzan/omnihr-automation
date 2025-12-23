@@ -343,18 +343,41 @@ function createEmptyTableStructure() {
 
 		// Fill data with 0 for hours and FALSE for validated
 		const dataValues = [];
+		const dataBackgrounds = [];
+
 		for (let i = 0; i < numRows; i++) {
 			const rowValues = [];
+			const rowBackgrounds = [];
 			for (let col = CONFIG.FIRST_DAY_COL; col <= lastDayCol; col++) {
-				if (validatedColumns.includes(col)) {
+				const dayForCol = Object.keys(dayColumns).find(
+					(d) => dayColumns[d] === col
+				);
+
+				if (dayForCol) {
+					const date = new Date(year, month, parseInt(dayForCol));
+					const dayOfWeek = date.getDay();
+
+					if (dayOfWeek === 0 || dayOfWeek === 6) {
+						// Sunday or Saturday
+						rowValues.push(''); // Empty value for weekends
+						rowBackgrounds.push('#efefef'); // Gray background
+					} else {
+						rowValues.push(0); // 0 for weekdays
+						rowBackgrounds.push(null); // Default background
+					}
+				} else if (validatedColumns.includes(col)) {
 					rowValues.push(false); // FALSE for validated
+					rowBackgrounds.push(null);
 				} else if (weekOverrideColumns.includes(col)) {
 					rowValues.push(false); // FALSE for override
+					rowBackgrounds.push(null);
 				} else {
-					rowValues.push(0); // 0 for hours
+					rowValues.push(0);
+					rowBackgrounds.push(null);
 				}
 			}
 			dataValues.push(rowValues);
+			dataBackgrounds.push(rowBackgrounds);
 		}
 
 		// Apply data
@@ -365,6 +388,7 @@ function createEmptyTableStructure() {
 			totalCols
 		);
 		dataRange.setValues(dataValues);
+		dataRange.setBackgrounds(dataBackgrounds);
 
 		// Setup checkboxes
 		for (const col of validatedColumns) {
