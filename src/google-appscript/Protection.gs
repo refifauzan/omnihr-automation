@@ -110,10 +110,19 @@ function onEditInstallable(e) {
 			.getValue();
 
 		if (validatedValue === true) {
-			// Revert the change
+			// Revert the change - use oldValue if available, otherwise get current value and revert
 			let oldValue = '';
+
+			// Try to use the old value from the event
 			if (e.oldValue !== undefined) {
 				oldValue = e.oldValue;
+			} else {
+				const currentValue = e.range.getValue();
+				if (typeof currentValue === 'number') {
+					oldValue = 0;
+				} else {
+					oldValue = '';
+				}
 			}
 
 			e.range.setValue(oldValue);
