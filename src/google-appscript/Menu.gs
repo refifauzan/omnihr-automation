@@ -9,6 +9,8 @@ function onOpen() {
 	try {
 		const ui = SpreadsheetApp.getUi();
 		ui.createMenu('OmniHR')
+			.addItem('Create Empty Table', 'createEmptyTableStructure')
+			.addSeparator()
 			.addItem('Sync Leave Data (Custom Month)', 'syncLeaveData')
 			.addItem('Sync Leave Only (Current Month)', 'syncLeaveOnly')
 			.addSeparator()

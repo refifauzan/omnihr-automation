@@ -216,6 +216,210 @@ function syncLeaveDataToSheet(sheet, month, year) {
 }
 
 /**
+ * Create empty table structure from column K onwards
+ * Sets all hours to 0 and Validated checkboxes to FALSE
+ */
+function createEmptyTableStructure() {
+	const ui = SpreadsheetApp.getUi();
+	const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+	const monthResponse = ui.prompt(
+		'Create Empty Table',
+		'Enter month (1-12):',
+		ui.ButtonSet.OK_CANCEL
+	);
+	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const yearResponse = ui.prompt(
+		'Create Empty Table',
+		'Enter year (e.g., 2025):',
+		ui.ButtonSet.OK_CANCEL
+	);
+	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const month = parseInt(monthResponse.getResponseText()) - 1;
+	const year = parseInt(yearResponse.getResponseText());
+
+	if (isNaN(month) || month < 0 || month > 11 || isNaN(year)) {
+		ui.alert('Invalid month or year');
+		return;
+	}
+
+	try {
+		const daysInMonth = new Date(year, month + 1, 0).getDate();
+		const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+
+		// Calculate day columns
+		const { dayColumns, validatedColumns, weekOverrideColumns } =
+			calculateDayColumns(month, year);
+		const lastDayCol = Math.max(
+			...Object.values(dayColumns),
+			...validatedColumns,
+			...weekOverrideColumns
+		);
+		const totalCols = lastDayCol - CONFIG.FIRST_DAY_COL + 1;
+
+		// Get number of employee rows
+		const lastRow = sheet.getLastRow();
+		const numRows = Math.max(lastRow - CONFIG.FIRST_DATA_ROW + 1, 0);
+
+		if (numRows === 0) {
+			ui.alert(
+				'No employee data found. Please ensure employee data exists in columns A-D.'
+			);
+			return;
+		}
+
+		// Delete existing columns from K onwards
+		if (sheet.getLastColumn() >= CONFIG.FIRST_DAY_COL) {
+			const numColsToDelete = sheet.getLastColumn() - CONFIG.FIRST_DAY_COL + 1;
+			sheet.deleteColumns(CONFIG.FIRST_DAY_COL, numColsToDelete);
+		}
+
+		// Insert new columns
+		sheet.insertColumnsAfter(CONFIG.FIRST_DAY_COL - 1, totalCols);
+
+		// Build headers
+		const headerRow1 = [];
+		const headerRow2 = [];
+		const headerBgColors = [];
+
+		for (let col = CONFIG.FIRST_DAY_COL; col <= lastDayCol; col++) {
+			const dayForCol = Object.keys(dayColumns).find(
+				(d) => dayColumns[d] === col
+			);
+			if (dayForCol) {
+				const date = new Date(year, month, parseInt(dayForCol));
+				const dayOfWeek = date.getDay();
+				headerRow1.push(dayNames[dayOfWeek]);
+				headerRow2.push(parseInt(dayForCol));
+				headerBgColors.push(
+					dayOfWeek >= 1 && dayOfWeek <= 5 ? '#356854' : '#efefef'
+				);
+			} else if (validatedColumns.includes(col)) {
+				headerRow1.push('');
+				headerRow2.push('Validated');
+				headerBgColors.push('#356854');
+			} else if (weekOverrideColumns.includes(col)) {
+				headerRow1.push('');
+				headerRow2.push('Time off Override');
+				headerBgColors.push('#efefef');
+			} else {
+				headerRow1.push('');
+				headerRow2.push('');
+				headerBgColors.push(null);
+			}
+		}
+
+		// Apply headers
+		sheet
+			.getRange(CONFIG.DAY_NAME_ROW, CONFIG.FIRST_DAY_COL, 1, totalCols)
+			.setValues([headerRow1]);
+		sheet
+			.getRange(CONFIG.HEADER_ROW, CONFIG.FIRST_DAY_COL, 1, totalCols)
+			.setValues([headerRow2]);
+
+		const headerRange2 = sheet.getRange(
+			CONFIG.HEADER_ROW,
+			CONFIG.FIRST_DAY_COL,
+			1,
+			totalCols
+		);
+		headerRange2.setBackgrounds([headerBgColors]);
+
+		const fontColors = headerBgColors.map((bg) =>
+			bg === '#356854' ? '#FFFFFF' : '#000000'
+		);
+		headerRange2.setFontColors([fontColors]);
+
+		// Set column widths
+		for (let col = CONFIG.FIRST_DAY_COL; col <= lastDayCol; col++) {
+			if (validatedColumns.includes(col) || weekOverrideColumns.includes(col)) {
+				sheet.setColumnWidth(col, 105);
+			} else {
+				sheet.setColumnWidth(col, 46);
+			}
+		}
+
+		// Fill data with 0 for hours and FALSE for validated
+		const dataValues = [];
+		for (let i = 0; i < numRows; i++) {
+			const rowValues = [];
+			for (let col = CONFIG.FIRST_DAY_COL; col <= lastDayCol; col++) {
+				if (validatedColumns.includes(col)) {
+					rowValues.push(false); // FALSE for validated
+				} else if (weekOverrideColumns.includes(col)) {
+					rowValues.push(false); // FALSE for override
+				} else {
+					rowValues.push(0); // 0 for hours
+				}
+			}
+			dataValues.push(rowValues);
+		}
+
+		// Apply data
+		const dataRange = sheet.getRange(
+			CONFIG.FIRST_DATA_ROW,
+			CONFIG.FIRST_DAY_COL,
+			numRows,
+			totalCols
+		);
+		dataRange.setValues(dataValues);
+
+		// Setup checkboxes
+		for (const col of validatedColumns) {
+			const checkboxRange = sheet.getRange(
+				CONFIG.FIRST_DATA_ROW,
+				col,
+				numRows,
+				1
+			);
+			checkboxRange.insertCheckboxes();
+		}
+
+		for (const col of weekOverrideColumns) {
+			const checkboxRange = sheet.getRange(
+				CONFIG.FIRST_DATA_ROW,
+				col,
+				numRows,
+				1
+			);
+			checkboxRange.insertCheckboxes();
+		}
+
+		// Apply formulas for totals
+		const formulas = [];
+		for (let i = 0; i < numRows; i++) {
+			const row = CONFIG.FIRST_DATA_ROW + i;
+			const firstDayColLetter = columnToLetter(CONFIG.FIRST_DAY_COL);
+			const lastDayColLetter = columnToLetter(lastDayCol);
+			const rangeStr = `${firstDayColLetter}${row}:${lastDayColLetter}${row}`;
+			formulas.push([
+				`=SUM(${rangeStr})`,
+				`=G${row}/8`,
+				`=COUNTIF(${rangeStr},"=0")`,
+			]);
+		}
+
+		sheet.getRange(CONFIG.FIRST_DATA_ROW, 7, numRows, 3).setFormulas(formulas);
+
+		SpreadsheetApp.flush();
+
+		ui.alert(
+			`Empty table created successfully!\n\n` +
+				`• Month: ${month + 1}/${year}\n` +
+				`• Days: ${daysInMonth}\n` +
+				`• Employee rows: ${numRows}\n` +
+				`• All hours set to 0\n` +
+				`• All Validated checkboxes set to FALSE`
+		);
+	} catch (error) {
+		Logger.log('Error creating empty table: ' + error.message);
+		ui.alert('Error: ' + error.message);
+	}
+}
+
+/**
  * Apply leave colors only to the active sheet without syncing attendance
  */
 function applyLeaveColorsOnly() {
