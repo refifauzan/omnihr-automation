@@ -564,7 +564,7 @@ function applyAttendanceHours(
 		formulas.push([
 			`=SUM(${rangeStr})`,
 			`=G${row}/8`,
-			`=COUNTIF(${rangeStr},"=0")`,
+			'', // Column I will be updated by leave sync with actual working days off
 		]);
 	}
 

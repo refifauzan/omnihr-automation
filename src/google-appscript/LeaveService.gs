@@ -285,6 +285,36 @@ function updateSheetWithLeaveData(
 		}
 	}
 
+	// Calculate and update Total Days Off (column I) for each employee
+	const totalDaysOffMap = {};
+	for (const [key, empData] of Object.entries(leaveData)) {
+		const { employee_id, employee_name, leave_requests } = empData;
+
+		// Calculate total working days off (excluding weekends, counting half-days as 0.5)
+		let totalDaysOff = 0;
+		for (const leave of leave_requests) {
+			if (!leave.is_half_day) {
+				totalDaysOff += 1;
+			} else {
+				totalDaysOff += 0.5;
+			}
+		}
+
+		const rows = findEmployeeRows(employeeLookup, employee_id, employee_name);
+		for (const row of rows) {
+			totalDaysOffMap[row] = totalDaysOff;
+		}
+	}
+
+	// Update column I with calculated values
+	if (Object.keys(totalDaysOffMap).length > 0) {
+		Logger.log(`Updating Total Days Off for ${Object.keys(totalDaysOffMap).length} employee rows`);
+		for (const [rowStr, daysOff] of Object.entries(totalDaysOffMap)) {
+			const row = parseInt(rowStr);
+			sheet.getRange(row, 9).setValue(daysOff);
+		}
+	}
+
 	// Add conditional formatting
 	const newLeaveCells = [...fullDayCells, ...Object.keys(halfDayCellsMap)];
 	const existingLeaveCells = scanForLeaveCells(sheet, dayColumns);
