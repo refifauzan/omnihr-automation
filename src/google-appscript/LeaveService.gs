@@ -242,6 +242,14 @@ function updateSheetWithLeaveData(
       const col = dayColumns[leave.date];
       if (!col) continue;
 
+      // Skip visual marking if it's a public holiday
+      if (holidayDays.has(leave.date)) {
+        Logger.log(
+          `Skipping leave marking for ${employee_name} on day ${leave.date} - it's a public holiday`
+        );
+        continue;
+      }
+
       Logger.log(
         `Processing leave for ${employee_name} on day ${leave.date}, is_half_day: ${leave.is_half_day}`
       );
