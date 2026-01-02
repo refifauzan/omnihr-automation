@@ -311,6 +311,14 @@ function updateSheetWithLeaveData(
         continue;
       }
 
+      // Skip if leave falls on a weekend
+      const date = new Date(year, month, leave.date);
+      const dayOfWeek = date.getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) {
+        Logger.log(`Skipping leave on day ${leave.date} - it's a weekend`);
+        continue;
+      }
+
       if (!leave.is_half_day) {
         totalDaysOff += 1;
       } else {
