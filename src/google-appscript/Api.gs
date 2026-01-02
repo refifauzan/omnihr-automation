@@ -215,14 +215,11 @@ function fetchHolidaysForMonth(token, month, year) {
     const userId = firstEmployee.id || firstEmployee.user_id;
 
     // Fetch time-off calendar which includes holiday data
-    // Use full year range to ensure we get all holidays
-    const calendarStartDate = formatDateDMY(new Date(year, 0, 1)); // Jan 1
-    const calendarEndDate = formatDateDMY(new Date(year, 11, 31)); // Dec 31
-
+    // Use the month's date range
     const calendar = apiRequest(
       token,
       `/employee/1.1/${userId}/time-off-calendar/`,
-      { start_date: calendarStartDate, end_date: calendarEndDate }
+      { start_date: startDateStr, end_date: endDateStr }
     );
 
     // Extract holidays from the 'holiday' field (not 'public_holiday')
