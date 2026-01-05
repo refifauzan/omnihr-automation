@@ -288,6 +288,98 @@ function scanForLeaveCells(sheet, dayColumns) {
 }
 
 /**
+ * Clear all leave markings (colors and values) for cells where Time off Override is NOT checked
+ * This ensures the sheet is recalculated from OmniHR data only
+ * @param {Sheet} sheet - The sheet
+ * @param {Object} dayColumns - Day to column mapping
+ * @param {Object} dayToOverrideCol - Day to override column mapping
+ * @param {number} month - Month (0-11)
+ * @param {number} year - Year
+ * @param {Set} holidayDays - Set of holiday day numbers
+ */
+function clearLeaveCellsRespectingOverride(
+	sheet,
+	dayColumns,
+	dayToOverrideCol,
+	month,
+	year,
+	holidayDays
+) {
+	const lastRow = sheet.getLastRow();
+	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
+
+	if (numRows <= 0) return;
+
+	const cols = Object.values(dayColumns);
+	if (cols.length === 0) return;
+
+	const minCol = Math.min(...cols);
+	const maxCol = Math.max(...cols);
+	const numCols = maxCol - minCol + 1;
+
+	const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
+	const backgrounds = range.getBackgrounds();
+	const values = range.getValues();
+
+	const fullDayColor = CONFIG.COLORS.FULL_DAY.toUpperCase();
+	const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
+
+	let clearedCount = 0;
+
+	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
+		const row = CONFIG.FIRST_DATA_ROW + rowIdx;
+
+		for (let colIdx = 0; colIdx < numCols; colIdx++) {
+			const bg = backgrounds[rowIdx][colIdx].toUpperCase();
+
+			// Only process cells with leave colors
+			if (bg !== fullDayColor && bg !== halfDayColor) continue;
+
+			const col = minCol + colIdx;
+
+			// Find which day this column represents
+			const dayStr = Object.keys(dayColumns).find((d) => dayColumns[d] === col);
+			if (!dayStr) continue;
+
+			const dayNum = parseInt(dayStr);
+
+			// Check if Time off Override is checked for this day's week
+			const overrideCol = dayToOverrideCol[dayStr];
+			if (overrideCol) {
+				const overrideValue = sheet.getRange(row, overrideCol).getValue();
+				if (overrideValue === true) {
+					Logger.log(
+						`Row ${row}, day ${dayNum}: Time off Override checked, keeping leave marking`
+					);
+					continue; // Skip - don't clear this cell
+				}
+			}
+
+			// Check if it's a weekend
+			const date = new Date(year, month, dayNum);
+			const dayOfWeek = date.getDay();
+			if (dayOfWeek === 0 || dayOfWeek === 6) continue; // Skip weekends
+
+			// Check if it's a holiday
+			if (holidayDays.has(dayNum)) continue; // Skip holidays
+
+			// Clear the leave marking
+			const cellRange = sheet.getRange(row, col);
+			cellRange.setBackground(null);
+			cellRange.setFontColor('#000000');
+			cellRange.setFontWeight('normal');
+			// Reset value to 0 (default working day value)
+			cellRange.setValue(0);
+			clearedCount++;
+		}
+	}
+
+	Logger.log(
+		`Cleared ${clearedCount} leave cells (respecting Time off Override)`
+	);
+}
+
+/**
  * Determine if a leave day is half-day based on duration codes
  * @param {boolean} isSingleDay - Is single day leave
  * @param {boolean} isFirstDay - Is first day of leave range
