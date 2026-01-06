@@ -79,10 +79,34 @@ function syncEmployeeList() {
 
 /**
  * Add new employees from OmniHR - only adds employees not already in the sheet
+ * Applies proper formatting: weekends grey, holidays pastel red, default 0 values
  */
 function addNewEmployees() {
 	const ui = SpreadsheetApp.getUi();
 	const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+	// Prompt for month/year to know which formatting to apply
+	const monthResponse = ui.prompt(
+		'Add New Employees',
+		'Enter month (1-12) for the sheet:',
+		ui.ButtonSet.OK_CANCEL
+	);
+	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const yearResponse = ui.prompt(
+		'Add New Employees',
+		'Enter year (e.g., 2026):',
+		ui.ButtonSet.OK_CANCEL
+	);
+	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const month = parseInt(monthResponse.getResponseText()) - 1;
+	const year = parseInt(yearResponse.getResponseText());
+
+	if (isNaN(month) || month < 0 || month > 11 || isNaN(year)) {
+		ui.alert('Invalid month or year');
+		return;
+	}
 
 	try {
 		const token = getAccessToken();
@@ -98,6 +122,11 @@ function addNewEmployees() {
 			ui.alert('No employees found in OmniHR');
 			return;
 		}
+
+		// Fetch holidays for formatting
+		const holidays = fetchHolidaysForMonth(token, month, year);
+		const holidayDays = new Set(holidays.map((h) => h.date));
+		Logger.log(`Found ${holidays.length} holidays for formatting`);
 
 		// Get existing employee IDs from the sheet
 		const lastRow = sheet.getLastRow();
@@ -136,20 +165,120 @@ function addNewEmployees() {
 			return;
 		}
 
-		// Prepare new employee data
-		const newEmployeeData = newEmployees.map((emp) => [
-			emp.employee_id || '',
-			emp.full_name || '',
-		]);
+		// Calculate day columns for formatting
+		const { dayColumns, validatedColumns, weekOverrideColumns } =
+			calculateDayColumns(month, year);
+		const lastDayCol = Math.max(
+			...Object.values(dayColumns),
+			...validatedColumns,
+			...weekOverrideColumns
+		);
+		const totalCols = lastDayCol - CONFIG.FIRST_DAY_COL + 1;
 
 		// Find the next empty row
 		const nextRow =
 			lastRow >= CONFIG.FIRST_DATA_ROW ? lastRow + 1 : CONFIG.FIRST_DATA_ROW;
 
-		// Write new employees to sheet
+		// Prepare new employee data for columns A-B
+		const newEmployeeData = newEmployees.map((emp) => [
+			emp.employee_id || '',
+			emp.full_name || '',
+		]);
+
+		// Write new employees to columns A-B
 		sheet
 			.getRange(nextRow, 1, newEmployeeData.length, 2)
 			.setValues(newEmployeeData);
+
+		// Prepare day columns data with proper formatting
+		const dataValues = [];
+		const dataBackgrounds = [];
+
+		for (let i = 0; i < newEmployees.length; i++) {
+			const rowValues = [];
+			const rowBackgrounds = [];
+
+			for (let col = CONFIG.FIRST_DAY_COL; col <= lastDayCol; col++) {
+				const dayForCol = Object.keys(dayColumns).find(
+					(d) => dayColumns[d] === col
+				);
+
+				if (dayForCol) {
+					const date = new Date(year, month, parseInt(dayForCol));
+					const dayOfWeek = date.getDay();
+					const dayNum = parseInt(dayForCol);
+					const isHoliday = holidayDays.has(dayNum);
+
+					if (dayOfWeek === 0 || dayOfWeek === 6) {
+						// Weekend - grey background, empty value
+						rowValues.push('');
+						rowBackgrounds.push('#efefef');
+					} else if (isHoliday) {
+						// Holiday - pastel red background, empty value
+						rowValues.push('');
+						rowBackgrounds.push('#FFCCCB');
+					} else {
+						// Weekday - default 0 value
+						rowValues.push(0);
+						rowBackgrounds.push(null);
+					}
+				} else if (validatedColumns.includes(col)) {
+					rowValues.push(false);
+					rowBackgrounds.push(null);
+				} else if (weekOverrideColumns.includes(col)) {
+					rowValues.push(false);
+					rowBackgrounds.push(null);
+				} else {
+					rowValues.push(0);
+					rowBackgrounds.push(null);
+				}
+			}
+			dataValues.push(rowValues);
+			dataBackgrounds.push(rowBackgrounds);
+		}
+
+		// Apply day columns data and formatting
+		const dataRange = sheet.getRange(
+			nextRow,
+			CONFIG.FIRST_DAY_COL,
+			newEmployees.length,
+			totalCols
+		);
+		dataRange.setValues(dataValues);
+		dataRange.setBackgrounds(dataBackgrounds);
+
+		// Setup checkboxes for validated columns
+		for (const col of validatedColumns) {
+			const checkboxRange = sheet.getRange(
+				nextRow,
+				col,
+				newEmployees.length,
+				1
+			);
+			checkboxRange.insertCheckboxes();
+		}
+
+		// Setup checkboxes for override columns
+		for (const col of weekOverrideColumns) {
+			const checkboxRange = sheet.getRange(
+				nextRow,
+				col,
+				newEmployees.length,
+				1
+			);
+			checkboxRange.insertCheckboxes();
+		}
+
+		// Apply formulas for totals (columns G, H, I)
+		const formulas = [];
+		for (let i = 0; i < newEmployees.length; i++) {
+			const row = nextRow + i;
+			const firstDayColLetter = columnToLetter(CONFIG.FIRST_DAY_COL);
+			const lastDayColLetter = columnToLetter(lastDayCol);
+			const rangeStr = `${firstDayColLetter}${row}:${lastDayColLetter}${row}`;
+			formulas.push([`=SUM(${rangeStr})`, `=G${row}/8`, '']);
+		}
+		sheet.getRange(nextRow, 7, newEmployees.length, 3).setFormulas(formulas);
 
 		SpreadsheetApp.flush();
 
@@ -162,7 +291,8 @@ function addNewEmployees() {
 		ui.alert(
 			`New employees added successfully!\n\n` +
 				`• ${newEmployees.length} new employees added\n` +
-				`• Starting from row ${nextRow}\n\n` +
+				`• Starting from row ${nextRow}\n` +
+				`• Formatting applied for ${month + 1}/${year}\n\n` +
 				`New employees:\n` +
 				newEmployees.map((e) => `• ${e.full_name}`).join('\n')
 		);
