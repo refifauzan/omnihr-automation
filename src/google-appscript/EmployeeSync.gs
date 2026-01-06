@@ -175,6 +175,7 @@ function addNewEmployees() {
 /**
  * Apply grey-out formatting for employees based on hire/termination dates
  * Grey out days before hire date and after termination date
+ * Skips weekends and holidays (does not change their color)
  * @param {number} month - Month (0-11)
  * @param {number} year - Year
  */
@@ -196,6 +197,11 @@ function applyEmployeeDateGreyOut(month, year) {
 			Logger.log('No employees found');
 			return 0;
 		}
+
+		// Fetch holidays to skip them
+		const holidays = fetchHolidaysForMonth(token, month, year);
+		const holidayDays = new Set(holidays.map((h) => h.date));
+		Logger.log(`Found ${holidays.length} holidays to skip`);
 
 		const { dayColumns } = calculateDayColumns(month, year);
 		const employeeLookup = buildEmployeeLookup(sheet);
@@ -235,7 +241,7 @@ function applyEmployeeDateGreyOut(month, year) {
 				}
 			}
 
-			// Parse termination date (not available in API currently)
+			// Parse termination date
 			let terminationDay = null;
 			if (emp.termination_date) {
 				const termDate = parseDateDMY(emp.termination_date);
@@ -269,8 +275,11 @@ function applyEmployeeDateGreyOut(month, year) {
 					const date = new Date(year, month, dayNum);
 					const dayOfWeek = date.getDay();
 
-					// Skip weekends (already grey)
+					// Skip weekends - don't change their color
 					if (dayOfWeek === 0 || dayOfWeek === 6) continue;
+
+					// Skip holidays - don't change their color
+					if (holidayDays.has(dayNum)) continue;
 
 					let shouldGrey = false;
 
