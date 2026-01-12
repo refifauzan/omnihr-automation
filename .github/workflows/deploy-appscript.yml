@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - dev
     paths:
       - 'src/google-appscript/**'
   workflow_dispatch: # Allow manual trigger
@@ -37,13 +38,24 @@ jobs:
           chmod 600 ~/.clasprc.json
           echo "Credentials file size: $(wc -c < ~/.clasprc.json) bytes"
 
-      - name: Update script ID
+      - name: Set Script ID based on branch
         env:
-          SCRIPT_ID: ${{ secrets.SCRIPT_ID }}
+          SCRIPT_ID_PROD: ${{ secrets.SCRIPT_ID_PROD }}
+          SCRIPT_ID_DEV: ${{ secrets.SCRIPT_ID_DEV }}
+        run: |
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            echo "SCRIPT_ID=$SCRIPT_ID_PROD" >> $GITHUB_ENV
+            echo "DEPLOY_ENV=production" >> $GITHUB_ENV
+          else
+            echo "SCRIPT_ID=$SCRIPT_ID_DEV" >> $GITHUB_ENV
+            echo "DEPLOY_ENV=development" >> $GITHUB_ENV
+          fi
+
+      - name: Update script ID
         run: |
           cd src/google-appscript
           echo "{\"scriptId\":\"$SCRIPT_ID\",\"rootDir\":\".\"}" > .clasp.json
-          echo "Script ID configured"
+          echo "Script ID configured for $DEPLOY_ENV"
 
       - name: Verify config files
         run: |
@@ -59,4 +71,4 @@ jobs:
           clasp push --force
 
       - name: Deploy notification
-        run: echo "✅ Successfully deployed to Google Apps Script!"
+        run: echo "✅ Successfully deployed to Google Apps Script ($DEPLOY_ENV)!"

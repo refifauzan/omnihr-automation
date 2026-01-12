@@ -4,8 +4,9 @@
  */
 
 /**
- * Sync full employee list from OmniHR - overwrites existing data in columns A and B
+ * Sync full employee list from OmniHR - overwrites existing data in columns A, B, and C
  * Should be used at the beginning of each month
+ * Excludes: Omni Support, People Culture
  */
 function syncEmployeeList() {
 	const ui = SpreadsheetApp.getUi();
@@ -14,7 +15,8 @@ function syncEmployeeList() {
 	// Confirm with user since this will overwrite existing data
 	const response = ui.alert(
 		'Sync Employee List',
-		'This will overwrite the existing employee list in columns A and B.\n\n' +
+		'This will overwrite the existing employee list in columns A, B, and C.\n\n' +
+			'Excluded employees: Omni Support, People Culture\n\n' +
 			'Are you sure you want to continue?',
 		ui.ButtonSet.YES_NO
 	);
@@ -38,7 +40,7 @@ function syncEmployeeList() {
 			return;
 		}
 
-		// Clear existing employee data (columns A and B from row 3 onwards)
+		// Clear existing employee data (columns A, B, and C from row 3 onwards)
 		const lastRow = sheet.getLastRow();
 		if (lastRow >= CONFIG.FIRST_DATA_ROW) {
 			sheet
@@ -46,21 +48,22 @@ function syncEmployeeList() {
 					CONFIG.FIRST_DATA_ROW,
 					1,
 					lastRow - CONFIG.FIRST_DATA_ROW + 1,
-					2
+					3
 				)
 				.clearContent();
 		}
 
-		// Prepare employee data for sheet
+		// Prepare employee data for sheet (ID, Name, Team)
 		const employeeData = employees.map((emp) => [
 			emp.employee_id || '',
 			emp.full_name || '',
+			emp.team || '',
 		]);
 
 		// Write to sheet
 		if (employeeData.length > 0) {
 			sheet
-				.getRange(CONFIG.FIRST_DATA_ROW, 1, employeeData.length, 2)
+				.getRange(CONFIG.FIRST_DATA_ROW, 1, employeeData.length, 3)
 				.setValues(employeeData);
 		}
 
@@ -69,7 +72,8 @@ function syncEmployeeList() {
 		ui.alert(
 			`Employee list synced successfully!\n\n` +
 				`• ${employeeData.length} employees loaded from OmniHR\n` +
-				`• Columns A (ID) and B (Name) updated`
+				`• Columns A (ID), B (Name), and C (Team) updated\n` +
+				`• Excluded: Omni Support, People Culture`
 		);
 	} catch (error) {
 		Logger.log('Error syncing employee list: ' + error.message);
@@ -80,6 +84,7 @@ function syncEmployeeList() {
 /**
  * Add new employees from OmniHR - only adds employees not already in the sheet
  * Applies proper formatting: weekends grey, holidays pastel red, default 0 values
+ * Excludes: Omni Support, People Culture
  */
 function addNewEmployees() {
 	const ui = SpreadsheetApp.getUi();
@@ -179,15 +184,16 @@ function addNewEmployees() {
 		const nextRow =
 			lastRow >= CONFIG.FIRST_DATA_ROW ? lastRow + 1 : CONFIG.FIRST_DATA_ROW;
 
-		// Prepare new employee data for columns A-B
+		// Prepare new employee data for columns A-C (ID, Name, Team)
 		const newEmployeeData = newEmployees.map((emp) => [
 			emp.employee_id || '',
 			emp.full_name || '',
+			emp.team || '',
 		]);
 
-		// Write new employees to columns A-B
+		// Write new employees to columns A-C
 		sheet
-			.getRange(nextRow, 1, newEmployeeData.length, 2)
+			.getRange(nextRow, 1, newEmployeeData.length, 3)
 			.setValues(newEmployeeData);
 
 		// Prepare day columns data with proper formatting

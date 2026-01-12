@@ -266,19 +266,44 @@ function fetchHolidaysForMonth(token, month, year) {
 }
 
 /**
- * Fetch all employees with their base data (ID, name, hire date, termination date)
+ * Employees to exclude from sync
+ */
+const EXCLUDED_EMPLOYEES = ['Omni Support', 'People Culture'];
+
+/**
+ * Fetch all employees with their base data (ID, name, hire date, termination date, team)
  * Uses employee/list endpoint for hired_date, base-data for employee_id,
- * and onboarding/workflow-dashboard for termination_date
+ * job endpoint for team, and onboarding/workflow-dashboard for termination_date
  * @param {string} token - Access token
  * @returns {Array} Array of employee objects with full details
  */
 function fetchAllEmployeesWithDetails(token) {
-	const employees = fetchAllEmployees(token);
+	const allEmployees = fetchAllEmployees(token);
+
+	// Filter out excluded employees
+	const employees = allEmployees.filter((emp) => {
+		const fullName = emp.full_name || emp.name || '';
+		const isExcluded = EXCLUDED_EMPLOYEES.some(
+			(excluded) => fullName.toLowerCase() === excluded.toLowerCase()
+		);
+		if (isExcluded) {
+			Logger.log(`Excluding employee: ${fullName}`);
+		}
+		return !isExcluded;
+	});
+
+	Logger.log(
+		`Filtered ${allEmployees.length - employees.length} excluded employees`
+	);
+
 	const employeeDetails = [];
 	const BATCH_SIZE = 50;
 
 	// First, fetch termination dates from onboarding/workflow-dashboard
 	const terminationDates = fetchTerminationDates(token);
+
+	// Fetch team data for all employees
+	const teamData = fetchEmployeeTeams(token, employees);
 
 	for (let i = 0; i < employees.length; i += BATCH_SIZE) {
 		const batch = employees.slice(i, i + BATCH_SIZE);
@@ -315,6 +340,7 @@ function fetchAllEmployeesWithDetails(token) {
 					full_name: emp.full_name || emp.name || `User ${userId}`,
 					hired_date: emp.hired_date || null,
 					termination_date: terminationDate,
+					team: teamData[userId] || '',
 					employment_status: emp.employment_status || null,
 					employment_status_display: emp.employment_status_display || null,
 				});
@@ -328,6 +354,7 @@ function fetchAllEmployeesWithDetails(token) {
 					full_name: emp.full_name || emp.name || `User ${userId}`,
 					hired_date: emp.hired_date || null,
 					termination_date: terminationDates[userId] || null,
+					team: teamData[userId] || '',
 					employment_status: emp.employment_status || null,
 					employment_status_display: emp.employment_status_display || null,
 				});
@@ -337,6 +364,73 @@ function fetchAllEmployeesWithDetails(token) {
 
 	Logger.log(`Fetched details for ${employeeDetails.length} employees`);
 	return employeeDetails;
+}
+
+/**
+ * Fetch team data for all employees from job endpoint
+ * @param {string} token - Access token
+ * @param {Array} employees - Employee list
+ * @returns {Object} Map of user_id -> team_display
+ */
+function fetchEmployeeTeams(token, employees) {
+	const props = PropertiesService.getScriptProperties();
+	const baseUrl = props.getProperty('OMNIHR_BASE_URL');
+	const subdomain = props.getProperty('OMNIHR_SUBDOMAIN');
+
+	const headers = {
+		Authorization: `Bearer ${token}`,
+		'x-subdomain': subdomain,
+		'Content-Type': 'application/json',
+	};
+
+	const teamData = {};
+	const BATCH_SIZE = 50;
+
+	Logger.log('Fetching team data for employees...');
+
+	for (let i = 0; i < employees.length; i += BATCH_SIZE) {
+		const batch = employees.slice(i, i + BATCH_SIZE);
+		Logger.log(
+			`Fetching team data batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(
+				employees.length / BATCH_SIZE
+			)}`
+		);
+
+		const requests = batch.map((emp) => {
+			const userId = emp.id || emp.user_id;
+			return {
+				url: `${baseUrl}/employee/${userId}/job/`,
+				method: 'get',
+				headers: headers,
+				muteHttpExceptions: true,
+			};
+		});
+
+		const responses = UrlFetchApp.fetchAll(requests);
+
+		for (let j = 0; j < responses.length; j++) {
+			try {
+				const response = responses[j];
+				const responseCode = response.getResponseCode();
+				const emp = batch[j];
+				const userId = emp.id || emp.user_id;
+
+				if (responseCode === 200) {
+					const jobs = JSON.parse(response.getContentText());
+					// Get the first (most recent) job record which has team_display
+					if (jobs && jobs.length > 0 && jobs[0].team_display) {
+						teamData[userId] = jobs[0].team_display;
+						Logger.log(`Team for ${emp.full_name}: ${jobs[0].team_display}`);
+					}
+				}
+			} catch (e) {
+				// Silently continue if team data fetch fails
+			}
+		}
+	}
+
+	Logger.log(`Fetched team data for ${Object.keys(teamData).length} employees`);
+	return teamData;
 }
 
 /**
