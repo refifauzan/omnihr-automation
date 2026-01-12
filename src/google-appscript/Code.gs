@@ -496,6 +496,187 @@ function createEmptyTableStructure() {
 }
 
 /**
+ * Sync holidays from OmniHR - refreshes holiday formatting on the active sheet
+ * Applies pastel red background to holiday columns for all employee rows
+ */
+function syncHolidays() {
+	const ui = SpreadsheetApp.getUi();
+	const sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+	const monthResponse = ui.prompt(
+		'Sync Holidays',
+		'Enter month (1-12):',
+		ui.ButtonSet.OK_CANCEL
+	);
+	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const yearResponse = ui.prompt(
+		'Sync Holidays',
+		'Enter year (e.g., 2026):',
+		ui.ButtonSet.OK_CANCEL
+	);
+	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const month = parseInt(monthResponse.getResponseText()) - 1;
+	const year = parseInt(yearResponse.getResponseText());
+
+	if (isNaN(month) || month < 0 || month > 11 || isNaN(year)) {
+		ui.alert('Invalid month or year');
+		return;
+	}
+
+	try {
+		Logger.log(`Syncing holidays for ${month + 1}/${year} to active sheet`);
+
+		const token = getAccessToken();
+		if (!token) {
+			ui.alert('Failed to get API token. Check your credentials.');
+			return;
+		}
+
+		// Fetch holidays from OmniHR
+		const holidays = fetchHolidaysForMonth(token, month, year);
+		Logger.log(`Found ${holidays.length} public holidays from OmniHR`);
+
+		if (holidays.length === 0) {
+			ui.alert(`No public holidays found for ${month + 1}/${year}`);
+			return;
+		}
+
+		// Log each holiday for verification
+		for (const holiday of holidays) {
+			Logger.log(`Holiday: Day ${holiday.date} - ${holiday.name}`);
+		}
+
+		// Apply holiday formatting to the sheet
+		applyHolidayFormatting(sheet, holidays, month, year);
+
+		SpreadsheetApp.flush();
+
+		const holidayList = holidays
+			.map((h) => `• Day ${h.date}: ${h.name}`)
+			.join('\n');
+
+		ui.alert(
+			`Holidays synced successfully!\n\n` +
+				`Found ${holidays.length} public holidays for ${
+					month + 1
+				}/${year}:\n\n` +
+				holidayList
+		);
+	} catch (error) {
+		Logger.log('Error syncing holidays: ' + error.message);
+		ui.alert('Error: ' + error.message);
+	}
+}
+
+/**
+ * Test function to verify holidays from OmniHR API
+ * Run this to check what holidays are returned for a specific month
+ */
+function testFetchHolidays() {
+	const ui = SpreadsheetApp.getUi();
+
+	const monthResponse = ui.prompt(
+		'Test Fetch Holidays',
+		'Enter month (1-12):',
+		ui.ButtonSet.OK_CANCEL
+	);
+	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const yearResponse = ui.prompt(
+		'Test Fetch Holidays',
+		'Enter year (e.g., 2026):',
+		ui.ButtonSet.OK_CANCEL
+	);
+	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const month = parseInt(monthResponse.getResponseText()) - 1;
+	const year = parseInt(yearResponse.getResponseText());
+
+	if (isNaN(month) || month < 0 || month > 11 || isNaN(year)) {
+		ui.alert('Invalid month or year');
+		return;
+	}
+
+	try {
+		const token = getAccessToken();
+		if (!token) {
+			ui.alert('Failed to get API token. Check your credentials.');
+			return;
+		}
+
+		Logger.log(`Testing holiday fetch for ${month + 1}/${year}`);
+		const holidays = fetchHolidaysForMonth(token, month, year);
+
+		if (holidays.length === 0) {
+			ui.alert(`No holidays found for ${month + 1}/${year}`);
+			return;
+		}
+
+		let message = `Holidays for ${month + 1}/${year}:\n\n`;
+		for (const h of holidays) {
+			message += `• Day ${h.date}: ${h.name}\n`;
+			Logger.log(`Holiday: Day ${h.date} - ${h.name}`);
+		}
+
+		ui.alert(message);
+	} catch (error) {
+		Logger.log('Error testing holidays: ' + error.message);
+		ui.alert('Error: ' + error.message);
+	}
+}
+
+/**
+ * Apply holiday formatting to the sheet
+ * Sets pastel red background and clears values for holiday columns
+ * @param {Sheet} sheet - The sheet
+ * @param {Array} holidays - Array of { date: dayNumber, name: holidayName }
+ * @param {number} month - Month (0-11)
+ * @param {number} year - Year
+ */
+function applyHolidayFormatting(sheet, holidays, month, year) {
+	const { dayColumns } = calculateDayColumns(month, year);
+	const holidayDays = new Set(holidays.map((h) => h.date));
+
+	const lastRow = sheet.getLastRow();
+	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
+
+	if (numRows <= 0) {
+		Logger.log('No data rows to format');
+		return;
+	}
+
+	const holidayColor = '#FFCCCB'; // Pastel red
+	let formattedCells = 0;
+
+	for (const [dayStr, col] of Object.entries(dayColumns)) {
+		const dayNum = parseInt(dayStr);
+
+		if (!holidayDays.has(dayNum)) continue;
+
+		// Check if it's a weekday (holidays on weekends are already grey)
+		const date = new Date(year, month, dayNum);
+		const dayOfWeek = date.getDay();
+
+		if (dayOfWeek === 0 || dayOfWeek === 6) {
+			Logger.log(`Day ${dayNum} is a weekend, skipping holiday formatting`);
+			continue;
+		}
+
+		// Apply holiday formatting to all rows in this column
+		const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, col, numRows, 1);
+		range.setBackground(holidayColor);
+		range.setValue(''); // Clear values (no work on holidays)
+
+		formattedCells += numRows;
+		Logger.log(`Applied holiday formatting to day ${dayNum}, column ${col}`);
+	}
+
+	Logger.log(`Formatted ${formattedCells} cells as holidays`);
+}
+
+/**
  * Apply leave colors only to the active sheet without syncing attendance
  */
 function applyLeaveColorsOnly() {

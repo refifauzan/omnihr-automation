@@ -25,6 +25,7 @@ function onOpen() {
 			.addSeparator()
 			.addItem('Sync Leave Data (Custom Month)', 'syncLeaveData')
 			.addItem('Sync Leave Only (Current Month)', 'syncLeaveOnly')
+			.addItem('Sync Holidays', 'syncHolidays')
 			.addSeparator()
 			.addSubMenu(
 				ui
