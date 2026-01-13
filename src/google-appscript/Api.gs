@@ -302,8 +302,11 @@ function fetchAllEmployeesWithDetails(token) {
 	// First, fetch termination dates from onboarding/workflow-dashboard
 	const terminationDates = fetchTerminationDates(token);
 
-	// Fetch team data for all employees
-	const teamData = fetchEmployeeTeams(token, employees);
+	// Fetch team and project contribution data for all employees
+	const { teamData, projectContribution } = fetchEmployeeJobData(
+		token,
+		employees
+	);
 
 	for (let i = 0; i < employees.length; i += BATCH_SIZE) {
 		const batch = employees.slice(i, i + BATCH_SIZE);
@@ -341,6 +344,7 @@ function fetchAllEmployeesWithDetails(token) {
 					hired_date: emp.hired_date || null,
 					termination_date: terminationDate,
 					team: teamData[userId] || '',
+					project_contribution: projectContribution[userId] || '',
 					employment_status: emp.employment_status || null,
 					employment_status_display: emp.employment_status_display || null,
 				});
@@ -355,6 +359,7 @@ function fetchAllEmployeesWithDetails(token) {
 					hired_date: emp.hired_date || null,
 					termination_date: terminationDates[userId] || null,
 					team: teamData[userId] || '',
+					project_contribution: projectContribution[userId] || '',
 					employment_status: emp.employment_status || null,
 					employment_status_display: emp.employment_status_display || null,
 				});
@@ -367,12 +372,17 @@ function fetchAllEmployeesWithDetails(token) {
 }
 
 /**
- * Fetch team data for all employees from job endpoint
+ * Custom attribute ID for Project Contribution (Full Time / Part Time)
+ */
+const PROJECT_CONTRIBUTION_ATTR_ID = 8337;
+
+/**
+ * Fetch team and project contribution data for all employees from job endpoint
  * @param {string} token - Access token
  * @param {Array} employees - Employee list
- * @returns {Object} Map of user_id -> team_display
+ * @returns {Object} { teamData: Map of user_id -> team_display, projectContribution: Map of user_id -> contribution }
  */
-function fetchEmployeeTeams(token, employees) {
+function fetchEmployeeJobData(token, employees) {
 	const props = PropertiesService.getScriptProperties();
 	const baseUrl = props.getProperty('OMNIHR_BASE_URL');
 	const subdomain = props.getProperty('OMNIHR_SUBDOMAIN');
@@ -384,14 +394,17 @@ function fetchEmployeeTeams(token, employees) {
 	};
 
 	const teamData = {};
+	const projectContribution = {};
 	const BATCH_SIZE = 50;
 
-	Logger.log('Fetching team data for employees...');
+	Logger.log(
+		'Fetching job data (team & project contribution) for employees...'
+	);
 
 	for (let i = 0; i < employees.length; i += BATCH_SIZE) {
 		const batch = employees.slice(i, i + BATCH_SIZE);
 		Logger.log(
-			`Fetching team data batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(
+			`Fetching job data batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(
 				employees.length / BATCH_SIZE
 			)}`
 		);
@@ -417,20 +430,42 @@ function fetchEmployeeTeams(token, employees) {
 
 				if (responseCode === 200) {
 					const jobs = JSON.parse(response.getContentText());
-					// Get the first (most recent) job record which has team_display
-					if (jobs && jobs.length > 0 && jobs[0].team_display) {
-						teamData[userId] = jobs[0].team_display;
-						Logger.log(`Team for ${emp.full_name}: ${jobs[0].team_display}`);
+					// Get the first (most recent) job record
+					if (jobs && jobs.length > 0) {
+						const currentJob = jobs[0];
+
+						// Get team
+						if (currentJob.team_display) {
+							teamData[userId] = currentJob.team_display;
+						}
+
+						// Get project contribution from custom_data_attributes_values
+						const customAttrs = currentJob.custom_data_attributes_values || [];
+						const contributionAttr = customAttrs.find(
+							(attr) => attr.attr === PROJECT_CONTRIBUTION_ATTR_ID
+						);
+						if (
+							contributionAttr &&
+							contributionAttr.value &&
+							contributionAttr.value.value
+						) {
+							projectContribution[userId] = contributionAttr.value.value;
+						}
 					}
 				}
 			} catch (e) {
-				// Silently continue if team data fetch fails
+				// Silently continue if job data fetch fails
 			}
 		}
 	}
 
 	Logger.log(`Fetched team data for ${Object.keys(teamData).length} employees`);
-	return teamData;
+	Logger.log(
+		`Fetched project contribution for ${
+			Object.keys(projectContribution).length
+		} employees`
+	);
+	return { teamData, projectContribution };
 }
 
 /**

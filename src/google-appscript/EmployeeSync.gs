@@ -4,7 +4,7 @@
  */
 
 /**
- * Sync full employee list from OmniHR - overwrites existing data in columns A, B, and C
+ * Sync full employee list from OmniHR - overwrites existing data in columns A, B, C, and D
  * Should be used at the beginning of each month
  * Excludes: Omni Support, People Culture
  */
@@ -15,7 +15,7 @@ function syncEmployeeList() {
 	// Confirm with user since this will overwrite existing data
 	const response = ui.alert(
 		'Sync Employee List',
-		'This will overwrite the existing employee list in columns A, B, and C.\n\n' +
+		'This will overwrite the existing employee list in columns A, B, C, and D.\n\n' +
 			'Excluded employees: Omni Support, People Culture\n\n' +
 			'Are you sure you want to continue?',
 		ui.ButtonSet.YES_NO
@@ -40,7 +40,7 @@ function syncEmployeeList() {
 			return;
 		}
 
-		// Clear existing employee data (columns A, B, and C from row 3 onwards)
+		// Clear existing employee data (columns A, B, C, and D from row 3 onwards)
 		const lastRow = sheet.getLastRow();
 		if (lastRow >= CONFIG.FIRST_DATA_ROW) {
 			sheet
@@ -48,22 +48,23 @@ function syncEmployeeList() {
 					CONFIG.FIRST_DATA_ROW,
 					1,
 					lastRow - CONFIG.FIRST_DATA_ROW + 1,
-					3
+					4
 				)
 				.clearContent();
 		}
 
-		// Prepare employee data for sheet (ID, Name, Team)
+		// Prepare employee data for sheet (ID, Name, Team, Project Contribution)
 		const employeeData = employees.map((emp) => [
 			emp.employee_id || '',
 			emp.full_name || '',
 			emp.team || '',
+			emp.project_contribution || '',
 		]);
 
 		// Write to sheet
 		if (employeeData.length > 0) {
 			sheet
-				.getRange(CONFIG.FIRST_DATA_ROW, 1, employeeData.length, 3)
+				.getRange(CONFIG.FIRST_DATA_ROW, 1, employeeData.length, 4)
 				.setValues(employeeData);
 		}
 
@@ -72,7 +73,7 @@ function syncEmployeeList() {
 		ui.alert(
 			`Employee list synced successfully!\n\n` +
 				`• ${employeeData.length} employees loaded from OmniHR\n` +
-				`• Columns A (ID), B (Name), and C (Team) updated\n` +
+				`• Columns A (ID), B (Name), C (Team), D (Project Contribution) updated\n` +
 				`• Excluded: Omni Support, People Culture`
 		);
 	} catch (error) {
@@ -184,16 +185,17 @@ function addNewEmployees() {
 		const nextRow =
 			lastRow >= CONFIG.FIRST_DATA_ROW ? lastRow + 1 : CONFIG.FIRST_DATA_ROW;
 
-		// Prepare new employee data for columns A-C (ID, Name, Team)
+		// Prepare new employee data for columns A-D (ID, Name, Team, Project Contribution)
 		const newEmployeeData = newEmployees.map((emp) => [
 			emp.employee_id || '',
 			emp.full_name || '',
 			emp.team || '',
+			emp.project_contribution || '',
 		]);
 
-		// Write new employees to columns A-C
+		// Write new employees to columns A-D
 		sheet
-			.getRange(nextRow, 1, newEmployeeData.length, 3)
+			.getRange(nextRow, 1, newEmployeeData.length, 4)
 			.setValues(newEmployeeData);
 
 		// Prepare day columns data with proper formatting
