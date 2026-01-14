@@ -389,8 +389,9 @@ function clearLeaveCellsRespectingOverride(
 }
 
 /**
- * Set default 8 hours for Operations team members on working days
- * Only sets value if current cell is 0 or empty (doesn't overwrite existing values)
+ * Set default hours for all employees on working days
+ * Operations team: 8 hours, Others: 0 hours
+ * Only sets value if current cell is empty (doesn't overwrite existing non-zero values)
  * Respects Time off Override checkbox
  * @param {Sheet} sheet - The sheet
  * @param {Object} dayColumns - Day to column mapping
@@ -440,6 +441,8 @@ function setOperationsDefaultHours(
 
 	const fullDayColor = CONFIG.COLORS.FULL_DAY.toUpperCase();
 	const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
+	const weekendColor = '#EFEFEF';
+	const holidayColor = '#FFCCCB';
 
 	let updatedCount = 0;
 
@@ -448,9 +451,6 @@ function setOperationsDefaultHours(
 		const isOperations =
 			teamData[rowIdx] &&
 			teamData[rowIdx].toString().toLowerCase() === 'operations';
-
-		// Skip non-Operations employees
-		if (!isOperations) continue;
 
 		for (let colIdx = 0; colIdx < numCols; colIdx++) {
 			const col = minCol + colIdx;
@@ -473,28 +473,45 @@ function setOperationsDefaultHours(
 			// Check if it's a weekend
 			const date = new Date(year, month, dayNum);
 			const dayOfWeek = date.getDay();
-			if (dayOfWeek === 0 || dayOfWeek === 6) continue; // Skip weekends
+			if (dayOfWeek === 0 || dayOfWeek === 6) {
+				// Weekend - ensure empty value and grey background
+				if (values[rowIdx][colIdx] === '' || values[rowIdx][colIdx] === null) {
+					// Already empty, just ensure background
+					backgrounds[rowIdx][colIdx] = weekendColor;
+				}
+				continue;
+			}
 
 			// Check if it's a holiday
-			if (holidayDays.has(dayNum)) continue; // Skip holidays
+			if (holidayDays.has(dayNum)) {
+				// Holiday - ensure empty value and pastel red background
+				if (values[rowIdx][colIdx] === '' || values[rowIdx][colIdx] === null) {
+					backgrounds[rowIdx][colIdx] = holidayColor;
+				}
+				continue;
+			}
 
 			// Check if cell has leave color (don't overwrite leave cells)
 			const bg = backgrounds[rowIdx][colIdx].toUpperCase();
 			if (bg === fullDayColor || bg === halfDayColor) continue;
 
-			// Only update if current value is 0 or empty
+			// Only update if current value is empty
 			const currentValue = values[rowIdx][colIdx];
-			if (currentValue === 0 || currentValue === '' || currentValue === null) {
-				values[rowIdx][colIdx] = 8;
+			if (currentValue === '' || currentValue === null) {
+				// Set default: 8 for Operations, 0 for others
+				values[rowIdx][colIdx] = isOperations ? 8 : 0;
 				updatedCount++;
 			}
 		}
 	}
 
-	// Write back updated values
+	// Write back updated values and backgrounds
 	if (updatedCount > 0) {
 		range.setValues(values);
-		Logger.log(`Set 8 hours for ${updatedCount} Operations team cells`);
+		range.setBackgrounds(backgrounds);
+		Logger.log(
+			`Set default hours for ${updatedCount} cells (Operations: 8, Others: 0)`
+		);
 	}
 }
 
