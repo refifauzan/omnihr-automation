@@ -211,6 +211,10 @@ function updateSheetWithLeaveData(
 		holidayDays
 	);
 
+	// Set default hours for Operations team (8 hours on working days without existing values)
+	Logger.log('Setting default hours for Operations team...');
+	setOperationsDefaultHours(sheet, dayColumns, month, year, holidayDays);
+
 	const fullDayCells = [];
 	const halfDayCellsMap = {};
 	let matchedEmployees = 0;

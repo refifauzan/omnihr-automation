@@ -321,6 +321,12 @@ function clearLeaveCellsRespectingOverride(
 	const backgrounds = range.getBackgrounds();
 	const values = range.getValues();
 
+	// Get team data from column C to check for Operations team
+	const teamData = sheet
+		.getRange(CONFIG.FIRST_DATA_ROW, CONFIG.PROJECT_COL, numRows, 1)
+		.getValues()
+		.map((row) => row[0]);
+
 	const fullDayColor = CONFIG.COLORS.FULL_DAY.toUpperCase();
 	const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
 
@@ -328,6 +334,9 @@ function clearLeaveCellsRespectingOverride(
 
 	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
 		const row = CONFIG.FIRST_DATA_ROW + rowIdx;
+		const isOperations =
+			teamData[rowIdx] &&
+			teamData[rowIdx].toString().toLowerCase() === 'operations';
 
 		for (let colIdx = 0; colIdx < numCols; colIdx++) {
 			const bg = backgrounds[rowIdx][colIdx].toUpperCase();
@@ -368,8 +377,8 @@ function clearLeaveCellsRespectingOverride(
 			cellRange.setBackground(null);
 			cellRange.setFontColor('#000000');
 			cellRange.setFontWeight('normal');
-			// Reset value to 0 (default working day value)
-			cellRange.setValue(0);
+			// Reset value: 8 for Operations team, 0 for others
+			cellRange.setValue(isOperations ? 8 : 0);
 			clearedCount++;
 		}
 	}
@@ -377,6 +386,116 @@ function clearLeaveCellsRespectingOverride(
 	Logger.log(
 		`Cleared ${clearedCount} leave cells (respecting Time off Override)`
 	);
+}
+
+/**
+ * Set default 8 hours for Operations team members on working days
+ * Only sets value if current cell is 0 or empty (doesn't overwrite existing values)
+ * Respects Time off Override checkbox
+ * @param {Sheet} sheet - The sheet
+ * @param {Object} dayColumns - Day to column mapping
+ * @param {number} month - Month (0-11)
+ * @param {number} year - Year
+ * @param {Set} holidayDays - Set of holiday day numbers
+ */
+function setOperationsDefaultHours(
+	sheet,
+	dayColumns,
+	month,
+	year,
+	holidayDays
+) {
+	const lastRow = sheet.getLastRow();
+	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
+
+	if (numRows <= 0) return;
+
+	// Get team data from column C
+	const teamData = sheet
+		.getRange(CONFIG.FIRST_DATA_ROW, CONFIG.PROJECT_COL, numRows, 1)
+		.getValues()
+		.map((row) => row[0]);
+
+	// Build day -> override column mapping
+	const { weekRanges } = calculateDayColumns(month, year);
+	const dayToOverrideCol = {};
+	for (const weekRange of weekRanges) {
+		for (const [dayStr, col] of Object.entries(dayColumns)) {
+			if (col >= weekRange.startCol && col <= weekRange.endCol) {
+				dayToOverrideCol[dayStr] = weekRange.overrideCol;
+			}
+		}
+	}
+
+	const cols = Object.values(dayColumns);
+	if (cols.length === 0) return;
+
+	const minCol = Math.min(...cols);
+	const maxCol = Math.max(...cols);
+	const numCols = maxCol - minCol + 1;
+
+	const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
+	const values = range.getValues();
+	const backgrounds = range.getBackgrounds();
+
+	const fullDayColor = CONFIG.COLORS.FULL_DAY.toUpperCase();
+	const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
+
+	let updatedCount = 0;
+
+	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
+		const row = CONFIG.FIRST_DATA_ROW + rowIdx;
+		const isOperations =
+			teamData[rowIdx] &&
+			teamData[rowIdx].toString().toLowerCase() === 'operations';
+
+		// Skip non-Operations employees
+		if (!isOperations) continue;
+
+		for (let colIdx = 0; colIdx < numCols; colIdx++) {
+			const col = minCol + colIdx;
+
+			// Find which day this column represents
+			const dayStr = Object.keys(dayColumns).find((d) => dayColumns[d] === col);
+			if (!dayStr) continue;
+
+			const dayNum = parseInt(dayStr);
+
+			// Check if Time off Override is checked for this day's week
+			const overrideCol = dayToOverrideCol[dayStr];
+			if (overrideCol) {
+				const overrideValue = sheet.getRange(row, overrideCol).getValue();
+				if (overrideValue === true) {
+					continue; // Skip - Time off Override is checked
+				}
+			}
+
+			// Check if it's a weekend
+			const date = new Date(year, month, dayNum);
+			const dayOfWeek = date.getDay();
+			if (dayOfWeek === 0 || dayOfWeek === 6) continue; // Skip weekends
+
+			// Check if it's a holiday
+			if (holidayDays.has(dayNum)) continue; // Skip holidays
+
+			// Check if cell has leave color (don't overwrite leave cells)
+			const bg = backgrounds[rowIdx][colIdx].toUpperCase();
+			if (bg === fullDayColor || bg === halfDayColor) continue;
+
+			// Only update if current value is 0 or empty
+			const currentValue = values[rowIdx][colIdx];
+			if (currentValue === 0 || currentValue === '' || currentValue === null) {
+				values[rowIdx][colIdx] = 8;
+				updatedCount++;
+			}
+		}
+	}
+
+	// Write back updated values
+	if (updatedCount > 0) {
+		range.setValues(values);
+		Logger.log(`Set 8 hours for ${updatedCount} Operations team cells`);
+	}
 }
 
 /**

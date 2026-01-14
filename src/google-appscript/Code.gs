@@ -377,13 +377,22 @@ function createEmptyTableStructure() {
 			}
 		}
 
-		// Fill data with 0 for hours and FALSE for validated
+		// Get team data from column C to check for Operations team
+		const teamData = sheet
+			.getRange(CONFIG.FIRST_DATA_ROW, CONFIG.PROJECT_COL, numRows, 1)
+			.getValues()
+			.map((row) => row[0]);
+
+		// Fill data with 0 for hours (8 for Operations) and FALSE for validated
 		const dataValues = [];
 		const dataBackgrounds = [];
 
 		for (let i = 0; i < numRows; i++) {
 			const rowValues = [];
 			const rowBackgrounds = [];
+			const isOperations =
+				teamData[i] && teamData[i].toString().toLowerCase() === 'operations';
+
 			for (let col = CONFIG.FIRST_DAY_COL; col <= lastDayCol; col++) {
 				const dayForCol = Object.keys(dayColumns).find(
 					(d) => dayColumns[d] === col
@@ -405,7 +414,8 @@ function createEmptyTableStructure() {
 						rowValues.push(''); // Empty value (like weekend)
 						rowBackgrounds.push('#FFCCCB'); // Pastel red background
 					} else {
-						rowValues.push(0); // 0 for weekdays
+						// Weekday - 8 hours for Operations, 0 for others
+						rowValues.push(isOperations ? 8 : 0);
 						rowBackgrounds.push(null); // Default background
 					}
 				} else if (validatedColumns.includes(col)) {

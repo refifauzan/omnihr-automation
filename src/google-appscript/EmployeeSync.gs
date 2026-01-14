@@ -205,6 +205,9 @@ function addNewEmployees() {
 		for (let i = 0; i < newEmployees.length; i++) {
 			const rowValues = [];
 			const rowBackgrounds = [];
+			const isOperations =
+				newEmployees[i].team &&
+				newEmployees[i].team.toString().toLowerCase() === 'operations';
 
 			for (let col = CONFIG.FIRST_DAY_COL; col <= lastDayCol; col++) {
 				const dayForCol = Object.keys(dayColumns).find(
@@ -226,8 +229,8 @@ function addNewEmployees() {
 						rowValues.push('');
 						rowBackgrounds.push('#FFCCCB');
 					} else {
-						// Weekday - default 0 value
-						rowValues.push(0);
+						// Weekday - 8 hours for Operations, 0 for others
+						rowValues.push(isOperations ? 8 : 0);
 						rowBackgrounds.push(null);
 					}
 				} else if (validatedColumns.includes(col)) {
