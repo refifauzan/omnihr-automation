@@ -12,60 +12,74 @@
  * @param {Object} e - Edit event object
  */
 function onEdit(e) {
-	try {
-		if (!e || !e.range) return;
+  try {
+    if (!e || !e.range) return;
 
-		const sheet = e.range.getSheet();
-		const sheetName = sheet.getName();
+    const sheet = e.range.getSheet();
+    const sheetName = sheet.getName();
 
-		// Skip specific non-data sheets
-		if (
-			sheetName === 'Attendance' ||
-			sheetName === 'Config' ||
-			sheetName === 'Template'
-		) {
-			return;
-		}
+    // Skip specific non-data sheets
+    if (
+      sheetName === "Attendance" ||
+      sheetName === "Config" ||
+      sheetName === "Template"
+    ) {
+      return;
+    }
 
-		const row = e.range.getRow();
-		const col = e.range.getColumn();
+    const row = e.range.getRow();
+    const col = e.range.getColumn();
 
-		// Only check data rows (skip header rows)
-		if (row < CONFIG.FIRST_DATA_ROW) return;
+    // Only check data rows (skip header rows)
+    if (row < CONFIG.FIRST_DATA_ROW) return;
 
-		// Only check columns in the day area (starting from FIRST_DAY_COL)
-		if (col < CONFIG.FIRST_DAY_COL) return;
+    // Only check columns in the day area (starting from FIRST_DAY_COL)
+    if (col < CONFIG.FIRST_DAY_COL) return;
 
-		// Find validated column by scanning header row for "Validated" text
-		const weekInfo = findWeekInfoFromHeader(sheet, col);
-		if (!weekInfo) return;
+    // Find validated column by scanning header row for "Validated" text
+    const weekInfo = findWeekInfoFromHeader(sheet, col);
+    if (!weekInfo) return;
 
-		// Allow editing checkbox columns (Validated and Override)
-		if (weekInfo.isCheckboxColumn) return;
+    // Handle checkbox edits (Validated)
+    if (weekInfo.isCheckboxColumn) {
+      const headerValue = sheet.getRange(CONFIG.HEADER_ROW, col).getValue();
+      if (
+        String(headerValue).trim() === "Validated" &&
+        e.range.getValue() === true
+      ) {
+        recordValidationTime(sheet, row, col);
+      }
+      return;
+    }
 
-		// Check if this week is validated (checkbox is TRUE)
-		const validatedValue = sheet
-			.getRange(row, weekInfo.validatedCol)
-			.getValue();
+    // Check if this week is validated (checkbox is TRUE)
+    const validatedValue = sheet
+      .getRange(row, weekInfo.validatedCol)
+      .getValue();
 
-		if (validatedValue === true) {
-			// Week is validated - revert the change
-			let oldValue = '';
-			if (e.oldValue !== undefined) {
-				oldValue = e.oldValue;
-			}
+    if (validatedValue === true) {
+      // Check for grace period (race condition fix)
+      if (wasRecentlyValidated(sheet, row, weekInfo.validatedCol)) {
+        return;
+      }
 
-			// Revert the change immediately
-			e.range.setValue(oldValue);
+      // Week is validated - revert the change
+      let oldValue = "";
+      if (e.oldValue !== undefined) {
+        oldValue = e.oldValue;
+      }
 
-			// Add a note to the cell as warning (simple trigger can do this)
-			e.range.setNote(
-				'⚠️ PROTECTED: This week is validated.\nUncheck "Validated" to edit.'
-			);
-		}
-	} catch (error) {
-		Logger.log('onEdit error: ' + error.message);
-	}
+      // Revert the change immediately
+      e.range.setValue(oldValue);
+
+      // Add a note to the cell as warning (simple trigger can do this)
+      e.range.setNote(
+        '⚠️ PROTECTED: This week is validated.\nUncheck "Validated" to edit.',
+      );
+    }
+  } catch (error) {
+    Logger.log("onEdit error: " + error.message);
+  }
 }
 
 /**
@@ -73,73 +87,88 @@ function onEdit(e) {
  * @param {Object} e - Edit event object
  */
 function onEditInstallable(e) {
-	try {
-		if (!e || !e.range) return;
+  try {
+    if (!e || !e.range) return;
 
-		const sheet = e.range.getSheet();
-		const sheetName = sheet.getName();
+    const sheet = e.range.getSheet();
+    const sheetName = sheet.getName();
 
-		// Skip specific non-data sheets
-		if (
-			sheetName === 'Attendance' ||
-			sheetName === 'Config' ||
-			sheetName === 'Template'
-		) {
-			return;
-		}
+    // Skip specific non-data sheets
+    if (
+      sheetName === "Attendance" ||
+      sheetName === "Config" ||
+      sheetName === "Template"
+    ) {
+      return;
+    }
 
-		const row = e.range.getRow();
-		const col = e.range.getColumn();
+    const row = e.range.getRow();
+    const col = e.range.getColumn();
 
-		// Only check data rows
-		if (row < CONFIG.FIRST_DATA_ROW) return;
+    // Only check data rows
+    if (row < CONFIG.FIRST_DATA_ROW) return;
 
-		// Only check columns in the day area
-		if (col < CONFIG.FIRST_DAY_COL) return;
+    // Only check columns in the day area
+    if (col < CONFIG.FIRST_DAY_COL) return;
 
-		// Find validated column by scanning header row for "Validated" text
-		const weekInfo = findWeekInfoFromHeader(sheet, col);
-		if (!weekInfo) return;
+    // Find validated column by scanning header row for "Validated" text
+    const weekInfo = findWeekInfoFromHeader(sheet, col);
+    if (!weekInfo) return;
 
-		// Allow editing checkbox columns (Validated and Override)
-		if (weekInfo.isCheckboxColumn) return;
+    // Handle checkbox edits (Validated)
+    if (weekInfo.isCheckboxColumn) {
+      const headerValue = sheet.getRange(CONFIG.HEADER_ROW, col).getValue();
+      if (
+        String(headerValue).trim() === "Validated" &&
+        e.range.getValue() === true
+      ) {
+        recordValidationTime(sheet, row, col);
+      }
+      return;
+    }
 
-		// Check if this week is validated
-		const validatedValue = sheet
-			.getRange(row, weekInfo.validatedCol)
-			.getValue();
+    // Check if this week is validated
+    const validatedValue = sheet
+      .getRange(row, weekInfo.validatedCol)
+      .getValue();
 
-		if (validatedValue === true) {
-			// Revert the change - use oldValue if available, otherwise get current value and revert
-			let oldValue = '';
+    if (validatedValue === true) {
+      // Check for grace period (race condition fix)
+      if (wasRecentlyValidated(sheet, row, weekInfo.validatedCol)) {
+        Logger.log("Edit allowed during grace period");
+        return;
+      }
 
-			// Try to use the old value from the event
-			if (e.oldValue !== undefined) {
-				oldValue = e.oldValue;
-			} else {
-				const currentValue = e.range.getValue();
-				if (typeof currentValue === 'number') {
-					oldValue = 0;
-				} else {
-					oldValue = '';
-				}
-			}
+      // Revert the change - use oldValue if available, otherwise get current value and revert
+      let oldValue = "";
 
-			e.range.setValue(oldValue);
+      // Try to use the old value from the event
+      if (e.oldValue !== undefined) {
+        oldValue = e.oldValue;
+      } else {
+        const currentValue = e.range.getValue();
+        if (typeof currentValue === "number") {
+          oldValue = 0;
+        } else {
+          oldValue = "";
+        }
+      }
 
-			// Clear any note that might have been set
-			e.range.clearNote();
+      e.range.setValue(oldValue);
 
-			// Show warning popup (installable trigger CAN do this)
-			SpreadsheetApp.getUi().alert(
-				'⚠️ Protected Area',
-				'This week has been validated.\n\nTo edit this cell, please uncheck the "Validated" checkbox first.',
-				SpreadsheetApp.getUi().ButtonSet.OK
-			);
-		}
-	} catch (error) {
-		Logger.log('onEditInstallable error: ' + error.message);
-	}
+      // Clear any note that might have been set
+      e.range.clearNote();
+
+      // Show warning popup (installable trigger CAN do this)
+      SpreadsheetApp.getUi().alert(
+        "⚠️ Protected Area",
+        'This week has been validated.\n\nTo edit this cell, please uncheck the "Validated" checkbox first.',
+        SpreadsheetApp.getUi().ButtonSet.OK,
+      );
+    }
+  } catch (error) {
+    Logger.log("onEditInstallable error: " + error.message);
+  }
 }
 
 /**
@@ -149,31 +178,31 @@ function onEditInstallable(e) {
  * @returns {Object|null} { month, year } or null if not a month sheet
  */
 function parseMonthYearFromSheetName(sheetName) {
-	const monthNames = [
-		'January',
-		'February',
-		'March',
-		'April',
-		'May',
-		'June',
-		'July',
-		'August',
-		'September',
-		'October',
-		'November',
-		'December',
-	];
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
 
-	const parts = sheetName.trim().split(' ');
-	if (parts.length !== 2) return null;
+  const parts = sheetName.trim().split(" ");
+  if (parts.length !== 2) return null;
 
-	const monthIndex = monthNames.indexOf(parts[0]);
-	if (monthIndex === -1) return null;
+  const monthIndex = monthNames.indexOf(parts[0]);
+  if (monthIndex === -1) return null;
 
-	const year = parseInt(parts[1]);
-	if (isNaN(year)) return null;
+  const year = parseInt(parts[1]);
+  if (isNaN(year)) return null;
 
-	return { month: monthIndex, year: year };
+  return { month: monthIndex, year: year };
 }
 
 /**
@@ -183,12 +212,12 @@ function parseMonthYearFromSheetName(sheetName) {
  * @returns {Object|null} Week range object or null
  */
 function findWeekRangeForColumn(col, weekRanges) {
-	for (const weekRange of weekRanges) {
-		if (col >= weekRange.startCol && col <= weekRange.endCol) {
-			return weekRange;
-		}
-	}
-	return null;
+  for (const weekRange of weekRanges) {
+    if (col >= weekRange.startCol && col <= weekRange.endCol) {
+      return weekRange;
+    }
+  }
+  return null;
 }
 
 /**
@@ -199,52 +228,52 @@ function findWeekRangeForColumn(col, weekRanges) {
  * @returns {Object|null} { validatedCol, isCheckboxColumn } or null
  */
 function findWeekInfoFromHeader(sheet, editedCol) {
-	const lastCol = sheet.getLastColumn();
-	if (lastCol < CONFIG.FIRST_DAY_COL) return null;
+  const lastCol = sheet.getLastColumn();
+  if (lastCol < CONFIG.FIRST_DAY_COL) return null;
 
-	// Read header row (row 2)
-	const headerRange = sheet.getRange(
-		CONFIG.HEADER_ROW,
-		CONFIG.FIRST_DAY_COL,
-		1,
-		lastCol - CONFIG.FIRST_DAY_COL + 1
-	);
-	const headerValues = headerRange.getValues()[0];
+  // Read header row (row 2)
+  const headerRange = sheet.getRange(
+    CONFIG.HEADER_ROW,
+    CONFIG.FIRST_DAY_COL,
+    1,
+    lastCol - CONFIG.FIRST_DAY_COL + 1,
+  );
+  const headerValues = headerRange.getValues()[0];
 
-	// Find all "Validated" and "Override" column positions
-	const validatedCols = [];
-	const overrideCols = [];
+  // Find all "Validated" and "Override" column positions
+  const validatedCols = [];
+  const overrideCols = [];
 
-	for (let i = 0; i < headerValues.length; i++) {
-		const colNum = CONFIG.FIRST_DAY_COL + i;
-		const value = String(headerValues[i]).trim();
+  for (let i = 0; i < headerValues.length; i++) {
+    const colNum = CONFIG.FIRST_DAY_COL + i;
+    const value = String(headerValues[i]).trim();
 
-		if (value === 'Validated') {
-			validatedCols.push(colNum);
-		} else if (value === 'Override' || value === 'Time off Override') {
-			overrideCols.push(colNum);
-		}
-	}
+    if (value === "Validated") {
+      validatedCols.push(colNum);
+    } else if (value === "Override" || value === "Time off Override") {
+      overrideCols.push(colNum);
+    }
+  }
 
-	// Check if edited column is a checkbox column
-	if (validatedCols.includes(editedCol) || overrideCols.includes(editedCol)) {
-		return { validatedCol: null, isCheckboxColumn: true };
-	}
+  // Check if edited column is a checkbox column
+  if (validatedCols.includes(editedCol) || overrideCols.includes(editedCol)) {
+    return { validatedCol: null, isCheckboxColumn: true };
+  }
 
-	// Find the next "Validated" column after the edited column
-	// This is the validated checkbox for the week containing the edited cell
-	let validatedCol = null;
-	for (const vc of validatedCols) {
-		if (vc > editedCol) {
-			validatedCol = vc;
-			break;
-		}
-	}
+  // Find the next "Validated" column after the edited column
+  // This is the validated checkbox for the week containing the edited cell
+  let validatedCol = null;
+  for (const vc of validatedCols) {
+    if (vc > editedCol) {
+      validatedCol = vc;
+      break;
+    }
+  }
 
-	// If no validated column found after, the edited column might be outside week areas
-	if (!validatedCol) return null;
+  // If no validated column found after, the edited column might be outside week areas
+  if (!validatedCol) return null;
 
-	return { validatedCol: validatedCol, isCheckboxColumn: false };
+  return { validatedCol: validatedCol, isCheckboxColumn: false };
 }
 
 /**
@@ -252,24 +281,24 @@ function findWeekInfoFromHeader(sheet, editedCol) {
  * Used by sync functions to auto-enable protection
  */
 function installOnEditTriggerSilent() {
-	const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-	// Check if trigger already exists
-	const triggers = ScriptApp.getUserTriggers(ss);
-	for (const trigger of triggers) {
-		if (trigger.getHandlerFunction() === 'onEditInstallable') {
-			Logger.log('Edit protection trigger already installed');
-			return;
-		}
-	}
+  // Check if trigger already exists
+  const triggers = ScriptApp.getUserTriggers(ss);
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === "onEditInstallable") {
+      Logger.log("Edit protection trigger already installed");
+      return;
+    }
+  }
 
-	// Create new trigger
-	ScriptApp.newTrigger('onEditInstallable')
-		.forSpreadsheet(ss)
-		.onEdit()
-		.create();
+  // Create new trigger
+  ScriptApp.newTrigger("onEditInstallable")
+    .forSpreadsheet(ss)
+    .onEdit()
+    .create();
 
-	Logger.log('Edit protection trigger installed silently');
+  Logger.log("Edit protection trigger installed silently");
 }
 
 /**
@@ -277,49 +306,49 @@ function installOnEditTriggerSilent() {
  * Run this once to set up the installable trigger
  */
 function installOnEditTrigger() {
-	const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
 
-	// Remove existing onEdit triggers to avoid duplicates
-	const triggers = ScriptApp.getUserTriggers(ss);
-	for (const trigger of triggers) {
-		if (trigger.getHandlerFunction() === 'onEditInstallable') {
-			ScriptApp.deleteTrigger(trigger);
-		}
-	}
+  // Remove existing onEdit triggers to avoid duplicates
+  const triggers = ScriptApp.getUserTriggers(ss);
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === "onEditInstallable") {
+      ScriptApp.deleteTrigger(trigger);
+    }
+  }
 
-	// Create new trigger
-	ScriptApp.newTrigger('onEditInstallable')
-		.forSpreadsheet(ss)
-		.onEdit()
-		.create();
+  // Create new trigger
+  ScriptApp.newTrigger("onEditInstallable")
+    .forSpreadsheet(ss)
+    .onEdit()
+    .create();
 
-	SpreadsheetApp.getUi().alert(
-		'Trigger Installed',
-		'The edit protection trigger has been installed successfully.',
-		SpreadsheetApp.getUi().ButtonSet.OK
-	);
+  SpreadsheetApp.getUi().alert(
+    "Trigger Installed",
+    "The edit protection trigger has been installed successfully.",
+    SpreadsheetApp.getUi().ButtonSet.OK,
+  );
 }
 
 /**
  * Remove the onEdit trigger
  */
 function removeOnEditTrigger() {
-	const ss = SpreadsheetApp.getActiveSpreadsheet();
-	const triggers = ScriptApp.getUserTriggers(ss);
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const triggers = ScriptApp.getUserTriggers(ss);
 
-	let removed = 0;
-	for (const trigger of triggers) {
-		if (trigger.getHandlerFunction() === 'onEditInstallable') {
-			ScriptApp.deleteTrigger(trigger);
-			removed++;
-		}
-	}
+  let removed = 0;
+  for (const trigger of triggers) {
+    if (trigger.getHandlerFunction() === "onEditInstallable") {
+      ScriptApp.deleteTrigger(trigger);
+      removed++;
+    }
+  }
 
-	SpreadsheetApp.getUi().alert(
-		'Trigger Removed',
-		`Removed ${removed} edit protection trigger(s).`,
-		SpreadsheetApp.getUi().ButtonSet.OK
-	);
+  SpreadsheetApp.getUi().alert(
+    "Trigger Removed",
+    `Removed ${removed} edit protection trigger(s).`,
+    SpreadsheetApp.getUi().ButtonSet.OK,
+  );
 }
 
 /**
@@ -327,62 +356,99 @@ function removeOnEditTrigger() {
  * Run this manually to check if everything is set up correctly
  */
 function testProtectionSetup() {
-	const ui = SpreadsheetApp.getUi();
-	const ss = SpreadsheetApp.getActiveSpreadsheet();
-	const sheet = ss.getActiveSheet();
-	const sheetName = sheet.getName();
+  const ui = SpreadsheetApp.getUi();
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sheet = ss.getActiveSheet();
+  const sheetName = sheet.getName();
 
-	let message = `Sheet name: "${sheetName}"\n\n`;
+  let message = `Sheet name: "${sheetName}"\n\n`;
 
-	// Scan header row for Validated columns
-	const lastCol = sheet.getLastColumn();
-	if (lastCol >= CONFIG.FIRST_DAY_COL) {
-		const headerRange = sheet.getRange(
-			CONFIG.HEADER_ROW,
-			CONFIG.FIRST_DAY_COL,
-			1,
-			lastCol - CONFIG.FIRST_DAY_COL + 1
-		);
-		const headerValues = headerRange.getValues()[0];
+  // Scan header row for Validated columns
+  const lastCol = sheet.getLastColumn();
+  if (lastCol >= CONFIG.FIRST_DAY_COL) {
+    const headerRange = sheet.getRange(
+      CONFIG.HEADER_ROW,
+      CONFIG.FIRST_DAY_COL,
+      1,
+      lastCol - CONFIG.FIRST_DAY_COL + 1,
+    );
+    const headerValues = headerRange.getValues()[0];
 
-		const validatedCols = [];
-		for (let i = 0; i < headerValues.length; i++) {
-			const value = String(headerValues[i]).trim();
-			if (value === 'Validated') {
-				validatedCols.push(CONFIG.FIRST_DAY_COL + i);
-			}
-		}
+    const validatedCols = [];
+    for (let i = 0; i < headerValues.length; i++) {
+      const value = String(headerValues[i]).trim();
+      if (value === "Validated") {
+        validatedCols.push(CONFIG.FIRST_DAY_COL + i);
+      }
+    }
 
-		if (validatedCols.length > 0) {
-			message += `✅ Found ${validatedCols.length} "Validated" column(s):\n`;
-			for (let i = 0; i < validatedCols.length; i++) {
-				const col = validatedCols[i];
-				const colLetter = columnToLetter(col);
-				const checkboxValue = sheet
-					.getRange(CONFIG.FIRST_DATA_ROW, col)
-					.getValue();
-				message += `  Week ${
-					i + 1
-				}: Column ${colLetter} (${col}) = ${checkboxValue}\n`;
-			}
-		} else {
-			message += `❌ No "Validated" columns found in header row ${CONFIG.HEADER_ROW}\n`;
-			message += `Make sure row 2 contains "Validated" text in the checkbox columns.`;
-		}
-	} else {
-		message += `❌ Sheet has no columns from ${CONFIG.FIRST_DAY_COL} onwards.`;
-	}
+    if (validatedCols.length > 0) {
+      message += `✅ Found ${validatedCols.length} "Validated" column(s):\n`;
+      for (let i = 0; i < validatedCols.length; i++) {
+        const col = validatedCols[i];
+        const colLetter = columnToLetter(col);
+        const checkboxValue = sheet
+          .getRange(CONFIG.FIRST_DATA_ROW, col)
+          .getValue();
+        message += `  Week ${
+          i + 1
+        }: Column ${colLetter} (${col}) = ${checkboxValue}\n`;
+      }
+    } else {
+      message += `❌ No "Validated" columns found in header row ${CONFIG.HEADER_ROW}\n`;
+      message += `Make sure row 2 contains "Validated" text in the checkbox columns.`;
+    }
+  } else {
+    message += `❌ Sheet has no columns from ${CONFIG.FIRST_DAY_COL} onwards.`;
+  }
 
-	// Check triggers
-	const triggers = ScriptApp.getUserTriggers(ss);
-	const editTriggers = triggers.filter(
-		(t) => t.getHandlerFunction() === 'onEditInstallable'
-	);
-	message += `\n\nInstalled edit triggers: ${editTriggers.length}`;
+  // Check triggers
+  const triggers = ScriptApp.getUserTriggers(ss);
+  const editTriggers = triggers.filter(
+    (t) => t.getHandlerFunction() === "onEditInstallable",
+  );
+  message += `\n\nInstalled edit triggers: ${editTriggers.length}`;
 
-	if (editTriggers.length === 0) {
-		message += `\n⚠️ No trigger installed! Go to OmniHR > Protection > Enable Edit Protection`;
-	}
+  if (editTriggers.length === 0) {
+    message += `\n⚠️ No trigger installed! Go to OmniHR > Protection > Enable Edit Protection`;
+  }
 
-	ui.alert('Protection Setup Test', message, ui.ButtonSet.OK);
+  ui.alert("Protection Setup Test", message, ui.ButtonSet.OK);
+}
+
+/**
+ * Check if a validation checkbox was recently checked (within 5 seconds)
+ * This handles the race condition where a user edits a cell and immediately checks "Validated"
+ */
+function wasRecentlyValidated(sheet, row, validatedCol) {
+  try {
+    const key = `VALIDATED_${sheet.getSheetId()}_${row}_${validatedCol}`;
+    const cache = CacheService.getScriptCache();
+    const timestamp = cache.get(key);
+
+    if (timestamp) {
+      const timeDiff = new Date().getTime() - parseInt(timestamp);
+      // 5 second grace period
+      if (timeDiff < 5000) {
+        return true;
+      }
+    }
+  } catch (e) {
+    // Ignore cache errors
+  }
+  return false;
+}
+
+/**
+ * Record when a validation checkbox is checked
+ */
+function recordValidationTime(sheet, row, validatedCol) {
+  try {
+    const key = `VALIDATED_${sheet.getSheetId()}_${row}_${validatedCol}`;
+    const cache = CacheService.getScriptCache();
+    // Store for 1 minute (sufficient for the 5s grace period)
+    cache.put(key, new Date().getTime().toString(), 60);
+  } catch (e) {
+    // Ignore errors
+  }
 }
