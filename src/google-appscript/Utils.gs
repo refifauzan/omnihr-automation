@@ -3,6 +3,17 @@
  */
 
 /**
+ * Check if a team should get 8 hours by default
+ * @param {string} team - Team name from column C
+ * @returns {boolean} True if team gets 8 hours default
+ */
+function isDefault8HoursTeam(team) {
+	if (!team) return false;
+	const teamLower = team.toString().toLowerCase();
+	return CONFIG.DEFAULT_8_HOURS_TEAMS.includes(teamLower);
+}
+
+/**
  * Format date as DD/MM/YYYY
  * @param {Date} d - Date object
  * @returns {string} Formatted date
@@ -323,7 +334,7 @@ function clearLeaveCellsRespectingOverride(
 	const fontColors = range.getFontColors();
 	const fontWeights = range.getFontWeights();
 
-	// Get team data from column C to check for Operations team
+	// Get team data from column C to check for default 8 hours teams
 	const teamData = sheet
 		.getRange(CONFIG.FIRST_DATA_ROW, CONFIG.PROJECT_COL, numRows, 1)
 		.getValues()
@@ -351,9 +362,7 @@ function clearLeaveCellsRespectingOverride(
 	let clearedCount = 0;
 
 	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
-		const isOperations =
-			teamData[rowIdx] &&
-			teamData[rowIdx].toString().toLowerCase() === 'operations';
+		const is8HoursTeam = isDefault8HoursTeam(teamData[rowIdx]);
 
 		for (let colIdx = 0; colIdx < numCols; colIdx++) {
 			const bg = backgrounds[rowIdx][colIdx].toUpperCase();
@@ -387,7 +396,7 @@ function clearLeaveCellsRespectingOverride(
 			backgrounds[rowIdx][colIdx] = null;
 			fontColors[rowIdx][colIdx] = '#000000';
 			fontWeights[rowIdx][colIdx] = 'normal';
-			values[rowIdx][colIdx] = isOperations ? 8 : 0;
+			values[rowIdx][colIdx] = is8HoursTeam ? 8 : 0;
 			clearedCount++;
 		}
 	}
@@ -406,21 +415,25 @@ function clearLeaveCellsRespectingOverride(
 }
 
 /**
- * Fix manually added rows by applying proper formatting, default values, and checkboxes
- * This ensures rows added mid-month get the same structure as original rows
+ * Reset all row formatting while preserving existing values
+ * This is like createEmptyTable but keeps existing values intact
+ * Clears static backgrounds on day columns so conditional formatting works properly
+ * Respects Time off Override - cells with override checked are preserved
  * @param {Sheet} sheet - The sheet
  * @param {Object} dayColumns - Day to column mapping
  * @param {Array} validatedColumns - Validated checkbox columns
  * @param {Array} weekOverrideColumns - Week override checkbox columns
+ * @param {Array} weekRanges - Week range objects with startCol, endCol, overrideCol
  * @param {number} month - Month (0-11)
  * @param {number} year - Year
  * @param {Set} holidayDays - Set of holiday day numbers
  */
-function fixManuallyAddedRows(
+function resetAllRowFormatting(
 	sheet,
 	dayColumns,
 	validatedColumns,
 	weekOverrideColumns,
+	weekRanges,
 	month,
 	year,
 	holidayDays,
@@ -429,6 +442,8 @@ function fixManuallyAddedRows(
 	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
 
 	if (numRows <= 0) return;
+
+	Logger.log(`Resetting formatting for ${numRows} rows...`);
 
 	// Get team data from column C
 	const teamData = sheet
@@ -449,7 +464,7 @@ function fixManuallyAddedRows(
 
 	const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
 	const values = range.getValues();
-	const backgrounds = range.getBackgrounds();
+	const currentBackgrounds = range.getBackgrounds();
 
 	// Build reverse lookup: col -> dayStr for faster access
 	const colToDayStr = {};
@@ -457,92 +472,119 @@ function fixManuallyAddedRows(
 		colToDayStr[col] = dayStr;
 	}
 
+	// Build day column -> override column mapping
+	const dayToOverrideCol = {};
+	for (const weekRange of weekRanges) {
+		for (const [dayStr, col] of Object.entries(dayColumns)) {
+			if (col >= weekRange.startCol && col <= weekRange.endCol) {
+				dayToOverrideCol[col] = weekRange.overrideCol;
+			}
+		}
+	}
+
+	// Pre-fetch override column values
+	const overrideColValues = {};
+	for (const overrideCol of weekOverrideColumns) {
+		overrideColValues[overrideCol] = sheet
+			.getRange(CONFIG.FIRST_DATA_ROW, overrideCol, numRows, 1)
+			.getValues()
+			.map((row) => row[0] === true);
+	}
+
 	// Convert arrays to Sets for O(1) lookup
 	const validatedColSet = new Set(validatedColumns);
 	const weekOverrideColSet = new Set(weekOverrideColumns);
+	const dayColSet = new Set(cols);
 
 	const weekendColor = '#efefef';
 	const holidayColor = '#FFCCCB';
+	const fullDayColor = CONFIG.COLORS.FULL_DAY.toUpperCase();
+	const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
 
-	let fixedCount = 0;
+	// Build new backgrounds array - preserve leave colors and overridden cells
+	const newBackgrounds = [];
 
 	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
-		const isOperations =
-			teamData[rowIdx] &&
-			teamData[rowIdx].toString().toLowerCase() === 'operations';
+		const is8HoursTeam = isDefault8HoursTeam(teamData[rowIdx]);
+		const rowBackgrounds = [];
 
 		for (let col = minCol; col <= totalLastCol; col++) {
 			const colIdx = col - minCol;
 			const dayStr = colToDayStr[col];
 
 			if (dayStr) {
+				// Day column - set proper background based on day type
 				const dayNum = parseInt(dayStr);
 				const date = new Date(year, month, dayNum);
 				const dayOfWeek = date.getDay();
 				const isHoliday = holidayDays.has(dayNum);
-				const currentValue = values[rowIdx][colIdx];
-				const currentBg = backgrounds[rowIdx][colIdx];
+				const currentBg = currentBackgrounds[rowIdx][colIdx]
+					? currentBackgrounds[rowIdx][colIdx].toUpperCase()
+					: '';
 
-				if (dayOfWeek === 0 || dayOfWeek === 6) {
-					// Weekend - ensure empty value and grey background
-					if (
-						currentValue === '' ||
-						currentValue === null ||
-						currentBg === '' ||
-						currentBg === null ||
-						currentBg === '#ffffff'
-					) {
-						values[rowIdx][colIdx] = '';
-						backgrounds[rowIdx][colIdx] = weekendColor;
-						fixedCount++;
-					}
+				// Check if Time off Override is checked for this day
+				const overrideCol = dayToOverrideCol[col];
+				const isOverridden =
+					overrideCol &&
+					overrideColValues[overrideCol] &&
+					overrideColValues[overrideCol][rowIdx];
+
+				// Check if cell has leave color
+				const hasLeaveColor =
+					currentBg === fullDayColor || currentBg === halfDayColor;
+
+				if (isOverridden) {
+					// Time off Override is checked - PRESERVE everything (background and value)
+					rowBackgrounds.push(currentBackgrounds[rowIdx][colIdx]);
+				} else if (hasLeaveColor) {
+					// Keep existing leave color (value is already preserved)
+					rowBackgrounds.push(currentBackgrounds[rowIdx][colIdx]);
+				} else if (dayOfWeek === 0 || dayOfWeek === 6) {
+					// Weekend - grey background, keep existing value
+					rowBackgrounds.push(weekendColor);
+					// Don't reset value - preserve what user entered
 				} else if (isHoliday) {
-					// Holiday - ensure empty value and pastel red background
-					if (
-						currentValue === '' ||
-						currentValue === null ||
-						currentBg === '' ||
-						currentBg === null ||
-						currentBg === '#ffffff'
-					) {
-						values[rowIdx][colIdx] = '';
-						backgrounds[rowIdx][colIdx] = holidayColor;
-						fixedCount++;
-					}
+					// Holiday - pastel red background, keep existing value
+					rowBackgrounds.push(holidayColor);
+					// Don't reset value - preserve what user entered
 				} else {
-					// Weekday - set default hours if empty
-					if (currentValue === '' || currentValue === null) {
-						values[rowIdx][colIdx] = isOperations ? 8 : 0;
-						fixedCount++;
+					// Weekday - clear background (null) to allow conditional formatting
+					// Keep existing value, only set default if truly empty
+					rowBackgrounds.push(null);
+					if (
+						values[rowIdx][colIdx] === '' ||
+						values[rowIdx][colIdx] === null
+					) {
+						values[rowIdx][colIdx] = is8HoursTeam ? 8 : 0;
 					}
+					// Otherwise keep existing value as-is
 				}
 			} else if (validatedColSet.has(col)) {
-				// Validated checkbox column - ensure FALSE if empty
-				const currentValue = values[rowIdx][colIdx];
-				if (currentValue === '' || currentValue === null) {
+				// Validated checkbox - clear background, keep value
+				rowBackgrounds.push(null);
+				if (values[rowIdx][colIdx] === '' || values[rowIdx][colIdx] === null) {
 					values[rowIdx][colIdx] = false;
-					fixedCount++;
 				}
 			} else if (weekOverrideColSet.has(col)) {
-				// Week override checkbox column - ensure FALSE if empty
-				const currentValue = values[rowIdx][colIdx];
-				if (currentValue === '' || currentValue === null) {
+				// Override checkbox - clear background, keep value
+				rowBackgrounds.push(null);
+				if (values[rowIdx][colIdx] === '' || values[rowIdx][colIdx] === null) {
 					values[rowIdx][colIdx] = false;
-					fixedCount++;
 				}
+			} else {
+				// Other columns - keep original (shouldn't happen but just in case)
+				rowBackgrounds.push(null);
 			}
 		}
+
+		newBackgrounds.push(rowBackgrounds);
 	}
 
-	// Write back updated values and backgrounds
-	if (fixedCount > 0) {
-		range.setValues(values);
-		range.setBackgrounds(backgrounds);
-		Logger.log(`Fixed ${fixedCount} cells in manually added rows`);
-	}
+	// Apply values and backgrounds in batch
+	range.setValues(values);
+	range.setBackgrounds(newBackgrounds);
 
-	// Always ensure checkboxes are set up for validated and override columns
-	// This handles manually added rows that may not have checkboxes
+	// Ensure checkboxes are set up for validated and override columns
 	for (const col of validatedColumns) {
 		const checkboxRange = sheet.getRange(
 			CONFIG.FIRST_DATA_ROW,
@@ -561,11 +603,13 @@ function fixManuallyAddedRows(
 		);
 		checkboxRange.insertCheckboxes();
 	}
+
+	Logger.log(`Reset formatting for ${numRows} rows completed`);
 }
 
 /**
  * Set default hours for all employees on working days
- * Operations team: 8 hours, Others: 0 hours
+ * Teams in CONFIG.DEFAULT_8_HOURS_TEAMS: 8 hours, Others: 0 hours
  * Only sets value if current cell is empty (doesn't overwrite existing non-zero values)
  * Respects Time off Override checkbox
  * @param {Sheet} sheet - The sheet
@@ -638,9 +682,7 @@ function setOperationsDefaultHours(
 	let updatedCount = 0;
 
 	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
-		const isOperations =
-			teamData[rowIdx] &&
-			teamData[rowIdx].toString().toLowerCase() === 'operations';
+		const is8HoursTeam = isDefault8HoursTeam(teamData[rowIdx]);
 
 		for (let colIdx = 0; colIdx < numCols; colIdx++) {
 			const col = minCol + colIdx;
@@ -684,8 +726,8 @@ function setOperationsDefaultHours(
 			// Only update if current value is empty
 			const currentValue = values[rowIdx][colIdx];
 			if (currentValue === '' || currentValue === null) {
-				// Set default: 8 for Operations, 0 for others
-				values[rowIdx][colIdx] = isOperations ? 8 : 0;
+				// Set default: 8 for configured teams, 0 for others
+				values[rowIdx][colIdx] = is8HoursTeam ? 8 : 0;
 				updatedCount++;
 			}
 		}
@@ -696,7 +738,7 @@ function setOperationsDefaultHours(
 		range.setValues(values);
 		range.setBackgrounds(backgrounds);
 		Logger.log(
-			`Set default hours for ${updatedCount} cells (Operations: 8, Others: 0)`,
+			`Set default hours for ${updatedCount} cells (${CONFIG.DEFAULT_8_HOURS_TEAMS.join('/')}: 8, Others: 0)`,
 		);
 	}
 }
@@ -936,7 +978,7 @@ function buildWeekConditionalRule(
 	if (weekdayRanges.length === 0) return null;
 
 	return SpreadsheetApp.newConditionalFormatRule()
-		.whenFormulaSatisfied(`=$${checkboxColLetter}${CONFIG.FIRST_DATA_ROW}=TRUE`)
+		.whenFormulaSatisfied(`=$${checkboxColLetter}3=TRUE`)
 		.setBackground('#B8E1CD')
 		.setRanges(weekdayRanges)
 		.build();

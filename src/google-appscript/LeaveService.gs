@@ -201,13 +201,15 @@ function updateSheetWithLeaveData(
 		}
 	}
 
-	// Fix manually added rows first (apply formatting, default values, checkboxes)
-	Logger.log('Fixing manually added rows...');
-	fixManuallyAddedRows(
+	// Reset all row formatting (like createEmptyTable but preserving values)
+	// Respects Time off Override - cells with override checked are not reset
+	Logger.log('Resetting all row formatting...');
+	resetAllRowFormatting(
 		sheet,
 		dayColumns,
 		validatedColumns,
 		weekOverrideColumns,
+		weekRanges,
 		month,
 		year,
 		holidayDays,
@@ -224,8 +226,8 @@ function updateSheetWithLeaveData(
 		holidayDays,
 	);
 
-	// Set default hours for Operations team (8 hours on working days without existing values)
-	Logger.log('Setting default hours for Operations team...');
+	// Set default hours for configured teams (8 hours on working days without existing values)
+	Logger.log('Setting default hours for configured teams...');
 	setOperationsDefaultHours(sheet, dayColumns, month, year, holidayDays);
 
 	const fullDayCells = [];

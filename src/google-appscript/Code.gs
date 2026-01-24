@@ -34,7 +34,7 @@ function syncLeaveData() {
 	const monthResponse = ui.prompt(
 		'Enter Month',
 		'Enter month number (1-12):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 
 	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
@@ -42,7 +42,7 @@ function syncLeaveData() {
 	const yearResponse = ui.prompt(
 		'Enter Year',
 		'Enter year (e.g., 2025):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 
 	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
@@ -69,7 +69,7 @@ function syncLeaveData() {
 	ui.alert(
 		`Sync complete!\n\n` +
 			`• Edit protection: Enabled\n` +
-			`• Daily sync: Enabled for ${month + 1}/${year} at 6 AM`
+			`• Daily sync: Enabled for ${month + 1}/${year} at 6 AM`,
 	);
 }
 
@@ -90,14 +90,14 @@ function syncLeaveOnly() {
 	Logger.log(
 		`Syncing leave only for current month ${
 			month + 1
-		}/${year} to sheet "${sheetName}"`
+		}/${year} to sheet "${sheetName}"`,
 	);
 
 	try {
 		Logger.log(
 			`Syncing leave only for ${
 				month + 1
-			}/${year} to active sheet (keeping hours)`
+			}/${year} to active sheet (keeping hours)`,
 		);
 
 		const token = getAccessToken();
@@ -139,7 +139,7 @@ function syncLeaveOnly() {
 				`Processed ${Object.keys(leaveData).length} employees with leave.\n` +
 				`Employee working hours were NOT changed.\n\n` +
 				`• Edit protection: Enabled\n` +
-				`• Daily sync: Enabled for ${month + 1}/${year} at 6 AM`
+				`• Daily sync: Enabled for ${month + 1}/${year} at 6 AM`,
 		);
 	} catch (error) {
 		Logger.log('Error syncing leave only: ' + error.message);
@@ -177,7 +177,7 @@ function syncLeaveDataToSheet(sheet, month, year) {
 	const sheetName = sheet.getName();
 
 	Logger.log(
-		`Syncing leave data for ${month + 1}/${year} to sheet "${sheetName}"`
+		`Syncing leave data for ${month + 1}/${year} to sheet "${sheetName}"`,
 	);
 
 	try {
@@ -185,7 +185,7 @@ function syncLeaveDataToSheet(sheet, month, year) {
 		const token = getAccessToken();
 		if (!token) {
 			SpreadsheetApp.getUi().alert(
-				'Failed to get API token. Check your credentials.'
+				'Failed to get API token. Check your credentials.',
 			);
 			return;
 		}
@@ -220,13 +220,13 @@ function syncLeaveDataToSheet(sheet, month, year) {
 		SpreadsheetApp.getUi().alert(
 			`Sync complete!\n\n` +
 				`• Leave requests: ${Object.keys(leaveData).length} employees\n` +
-				`• Total employees processed: ${employees.length}`
+				`• Total employees processed: ${employees.length}`,
 		);
 	} catch (error) {
 		Logger.log('Error: ' + error.message);
 		Logger.log('Stack: ' + error.stack);
 		SpreadsheetApp.getUi().alert(
-			'Error: ' + error.message + '\n\nCheck View > Execution Log for details.'
+			'Error: ' + error.message + '\n\nCheck View > Execution Log for details.',
 		);
 	} finally {
 		SpreadsheetApp.flush();
@@ -244,14 +244,14 @@ function createEmptyTableStructure() {
 	const monthResponse = ui.prompt(
 		'Create Empty Table',
 		'Enter month (1-12):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
 
 	const yearResponse = ui.prompt(
 		'Create Empty Table',
 		'Enter year (e.g., 2025):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
 
@@ -274,7 +274,7 @@ function createEmptyTableStructure() {
 			if (token) {
 				holidays = fetchHolidaysForMonth(token, month, year);
 				Logger.log(
-					`Found ${holidays.length} public holidays for ${month + 1}/${year}`
+					`Found ${holidays.length} public holidays for ${month + 1}/${year}`,
 				);
 			}
 		} catch (e) {
@@ -291,7 +291,7 @@ function createEmptyTableStructure() {
 		const lastDayCol = Math.max(
 			...Object.values(dayColumns),
 			...validatedColumns,
-			...weekOverrideColumns
+			...weekOverrideColumns,
 		);
 		const totalCols = lastDayCol - CONFIG.FIRST_DAY_COL + 1;
 
@@ -301,7 +301,7 @@ function createEmptyTableStructure() {
 
 		if (numRows === 0) {
 			ui.alert(
-				'No employee data found. Please ensure employee data exists in columns A-D.'
+				'No employee data found. Please ensure employee data exists in columns A-D.',
 			);
 			return;
 		}
@@ -322,7 +322,7 @@ function createEmptyTableStructure() {
 
 		for (let col = CONFIG.FIRST_DAY_COL; col <= lastDayCol; col++) {
 			const dayForCol = Object.keys(dayColumns).find(
-				(d) => dayColumns[d] === col
+				(d) => dayColumns[d] === col,
 			);
 			if (dayForCol) {
 				const date = new Date(year, month, parseInt(dayForCol));
@@ -330,7 +330,7 @@ function createEmptyTableStructure() {
 				headerRow1.push(dayNames[dayOfWeek]);
 				headerRow2.push(parseInt(dayForCol));
 				headerBgColors.push(
-					dayOfWeek >= 1 && dayOfWeek <= 5 ? '#356854' : '#efefef'
+					dayOfWeek >= 1 && dayOfWeek <= 5 ? '#356854' : '#efefef',
 				);
 			} else if (validatedColumns.includes(col)) {
 				headerRow1.push('');
@@ -359,12 +359,12 @@ function createEmptyTableStructure() {
 			CONFIG.HEADER_ROW,
 			CONFIG.FIRST_DAY_COL,
 			1,
-			totalCols
+			totalCols,
 		);
 		headerRange2.setBackgrounds([headerBgColors]);
 
 		const fontColors = headerBgColors.map((bg) =>
-			bg === '#356854' ? '#FFFFFF' : '#000000'
+			bg === '#356854' ? '#FFFFFF' : '#000000',
 		);
 		headerRange2.setFontColors([fontColors]);
 
@@ -377,25 +377,24 @@ function createEmptyTableStructure() {
 			}
 		}
 
-		// Get team data from column C to check for Operations team
+		// Get team data from column C to check for default 8 hours teams
 		const teamData = sheet
 			.getRange(CONFIG.FIRST_DATA_ROW, CONFIG.PROJECT_COL, numRows, 1)
 			.getValues()
 			.map((row) => row[0]);
 
-		// Fill data with 0 for hours (8 for Operations) and FALSE for validated
+		// Fill data with 0 for hours (8 for configured teams) and FALSE for validated
 		const dataValues = [];
 		const dataBackgrounds = [];
 
 		for (let i = 0; i < numRows; i++) {
 			const rowValues = [];
 			const rowBackgrounds = [];
-			const isOperations =
-				teamData[i] && teamData[i].toString().toLowerCase() === 'operations';
+			const is8HoursTeam = isDefault8HoursTeam(teamData[i]);
 
 			for (let col = CONFIG.FIRST_DAY_COL; col <= lastDayCol; col++) {
 				const dayForCol = Object.keys(dayColumns).find(
-					(d) => dayColumns[d] === col
+					(d) => dayColumns[d] === col,
 				);
 
 				if (dayForCol) {
@@ -414,8 +413,8 @@ function createEmptyTableStructure() {
 						rowValues.push(''); // Empty value (like weekend)
 						rowBackgrounds.push('#FFCCCB'); // Pastel red background
 					} else {
-						// Weekday - 8 hours for Operations, 0 for others
-						rowValues.push(isOperations ? 8 : 0);
+						// Weekday - 8 hours for configured teams, 0 for others
+						rowValues.push(is8HoursTeam ? 8 : 0);
 						rowBackgrounds.push(null); // Default background
 					}
 				} else if (validatedColumns.includes(col)) {
@@ -438,7 +437,7 @@ function createEmptyTableStructure() {
 			CONFIG.FIRST_DATA_ROW,
 			CONFIG.FIRST_DAY_COL,
 			numRows,
-			totalCols
+			totalCols,
 		);
 		dataRange.setValues(dataValues);
 		dataRange.setBackgrounds(dataBackgrounds);
@@ -449,7 +448,7 @@ function createEmptyTableStructure() {
 				CONFIG.FIRST_DATA_ROW,
 				col,
 				numRows,
-				1
+				1,
 			);
 			checkboxRange.insertCheckboxes();
 		}
@@ -459,7 +458,7 @@ function createEmptyTableStructure() {
 				CONFIG.FIRST_DATA_ROW,
 				col,
 				numRows,
-				1
+				1,
 			);
 			checkboxRange.insertCheckboxes();
 		}
@@ -497,7 +496,7 @@ function createEmptyTableStructure() {
 				`• Employee rows: ${numRows}\n` +
 				holidayInfo +
 				`• All hours set to 0\n` +
-				`• All Validated checkboxes set to FALSE`
+				`• All Validated checkboxes set to FALSE`,
 		);
 	} catch (error) {
 		Logger.log('Error creating empty table: ' + error.message);
@@ -516,14 +515,14 @@ function syncHolidays() {
 	const monthResponse = ui.prompt(
 		'Sync Holidays',
 		'Enter month (1-12):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
 
 	const yearResponse = ui.prompt(
 		'Sync Holidays',
 		'Enter year (e.g., 2026):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
 
@@ -572,7 +571,7 @@ function syncHolidays() {
 				`Found ${holidays.length} public holidays for ${
 					month + 1
 				}/${year}:\n\n` +
-				holidayList
+				holidayList,
 		);
 	} catch (error) {
 		Logger.log('Error syncing holidays: ' + error.message);
@@ -590,14 +589,14 @@ function testFetchHolidays() {
 	const monthResponse = ui.prompt(
 		'Test Fetch Holidays',
 		'Enter month (1-12):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
 
 	const yearResponse = ui.prompt(
 		'Test Fetch Holidays',
 		'Enter year (e.g., 2026):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
 
@@ -696,14 +695,14 @@ function applyLeaveColorsOnly() {
 	const monthResponse = ui.prompt(
 		'Apply Leave Colors',
 		'Enter month (1-12):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
 
 	const yearResponse = ui.prompt(
 		'Apply Leave Colors',
 		'Enter year (e.g., 2025):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
 
@@ -717,7 +716,7 @@ function applyLeaveColorsOnly() {
 
 	try {
 		Logger.log(
-			`Applying leave colors for ${month + 1}/${year} to active sheet`
+			`Applying leave colors for ${month + 1}/${year} to active sheet`,
 		);
 
 		const token = getAccessToken();
@@ -740,7 +739,7 @@ function applyLeaveColorsOnly() {
 		ui.alert(
 			`Leave colors applied successfully!\n\nProcessed ${
 				Object.keys(leaveData).length
-			} employees with leave.`
+			} employees with leave.`,
 		);
 	} catch (error) {
 		Logger.log('Error applying leave colors: ' + error.message);
