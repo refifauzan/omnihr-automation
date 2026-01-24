@@ -538,28 +538,28 @@ function fixManuallyAddedRows(
 	if (fixedCount > 0) {
 		range.setValues(values);
 		range.setBackgrounds(backgrounds);
-
-		// Ensure checkboxes are set up for validated and override columns
-		for (const col of validatedColumns) {
-			const checkboxRange = sheet.getRange(
-				CONFIG.FIRST_DATA_ROW,
-				col,
-				numRows,
-				1,
-			);
-			checkboxRange.insertCheckboxes();
-		}
-		for (const col of weekOverrideColumns) {
-			const checkboxRange = sheet.getRange(
-				CONFIG.FIRST_DATA_ROW,
-				col,
-				numRows,
-				1,
-			);
-			checkboxRange.insertCheckboxes();
-		}
-
 		Logger.log(`Fixed ${fixedCount} cells in manually added rows`);
+	}
+
+	// Always ensure checkboxes are set up for validated and override columns
+	// This handles manually added rows that may not have checkboxes
+	for (const col of validatedColumns) {
+		const checkboxRange = sheet.getRange(
+			CONFIG.FIRST_DATA_ROW,
+			col,
+			numRows,
+			1,
+		);
+		checkboxRange.insertCheckboxes();
+	}
+	for (const col of weekOverrideColumns) {
+		const checkboxRange = sheet.getRange(
+			CONFIG.FIRST_DATA_ROW,
+			col,
+			numRows,
+			1,
+		);
+		checkboxRange.insertCheckboxes();
 	}
 }
 
