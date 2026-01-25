@@ -18,7 +18,7 @@ function syncEmployeeList() {
 		'This will overwrite the existing employee list in columns A, B, C, and D.\n\n' +
 			'Excluded employees: Omni Support, People Culture\n\n' +
 			'Are you sure you want to continue?',
-		ui.ButtonSet.YES_NO
+		ui.ButtonSet.YES_NO,
 	);
 
 	if (response !== ui.Button.YES) {
@@ -48,7 +48,7 @@ function syncEmployeeList() {
 					CONFIG.FIRST_DATA_ROW,
 					1,
 					lastRow - CONFIG.FIRST_DATA_ROW + 1,
-					4
+					4,
 				)
 				.clearContent();
 		}
@@ -74,7 +74,7 @@ function syncEmployeeList() {
 			`Employee list synced successfully!\n\n` +
 				`• ${employeeData.length} employees loaded from OmniHR\n` +
 				`• Columns A (ID), B (Name), C (Team), D (Project Contribution) updated\n` +
-				`• Excluded: Omni Support, People Culture`
+				`• Excluded: Omni Support, People Culture`,
 		);
 	} catch (error) {
 		Logger.log('Error syncing employee list: ' + error.message);
@@ -95,14 +95,14 @@ function addNewEmployees() {
 	const monthResponse = ui.prompt(
 		'Add New Employees',
 		'Enter month (1-12) for the sheet:',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
 
 	const yearResponse = ui.prompt(
 		'Add New Employees',
 		'Enter year (e.g., 2026):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
 
@@ -143,7 +143,7 @@ function addNewEmployees() {
 				CONFIG.FIRST_DATA_ROW,
 				CONFIG.EMPLOYEE_ID_COL,
 				lastRow - CONFIG.FIRST_DATA_ROW + 1,
-				1
+				1,
 			);
 			const idValues = idRange.getValues();
 			for (const row of idValues) {
@@ -166,7 +166,7 @@ function addNewEmployees() {
 
 		if (newEmployees.length === 0) {
 			ui.alert(
-				'No new employees to add.\n\nAll employees from OmniHR are already in the sheet.'
+				'No new employees to add.\n\nAll employees from OmniHR are already in the sheet.',
 			);
 			return;
 		}
@@ -177,7 +177,7 @@ function addNewEmployees() {
 		const lastDayCol = Math.max(
 			...Object.values(dayColumns),
 			...validatedColumns,
-			...weekOverrideColumns
+			...weekOverrideColumns,
 		);
 		const totalCols = lastDayCol - CONFIG.FIRST_DAY_COL + 1;
 
@@ -211,7 +211,7 @@ function addNewEmployees() {
 
 			for (let col = CONFIG.FIRST_DAY_COL; col <= lastDayCol; col++) {
 				const dayForCol = Object.keys(dayColumns).find(
-					(d) => dayColumns[d] === col
+					(d) => dayColumns[d] === col,
 				);
 
 				if (dayForCol) {
@@ -229,8 +229,14 @@ function addNewEmployees() {
 						rowValues.push('');
 						rowBackgrounds.push('#FFCCCB');
 					} else {
-						// Weekday - 8 hours for Operations, 0 for others
-						rowValues.push(isOperations ? 8 : 0);
+						// Weekday - 8 hours for Operations, Astro, and Mediacorp, 0 for others
+						const isDefaultHoursTeam =
+							isOperations ||
+							(newEmployees[i].team &&
+								(newEmployees[i].team.toString().toLowerCase() === 'astro' ||
+									newEmployees[i].team.toString().toLowerCase() ===
+										'mediacorp'));
+						rowValues.push(isDefaultHoursTeam ? 8 : 0);
 						rowBackgrounds.push(null);
 					}
 				} else if (validatedColumns.includes(col)) {
@@ -253,7 +259,7 @@ function addNewEmployees() {
 			nextRow,
 			CONFIG.FIRST_DAY_COL,
 			newEmployees.length,
-			totalCols
+			totalCols,
 		);
 		dataRange.setValues(dataValues);
 		dataRange.setBackgrounds(dataBackgrounds);
@@ -264,7 +270,7 @@ function addNewEmployees() {
 				nextRow,
 				col,
 				newEmployees.length,
-				1
+				1,
 			);
 			checkboxRange.insertCheckboxes();
 		}
@@ -275,7 +281,7 @@ function addNewEmployees() {
 				nextRow,
 				col,
 				newEmployees.length,
-				1
+				1,
 			);
 			checkboxRange.insertCheckboxes();
 		}
@@ -305,7 +311,7 @@ function addNewEmployees() {
 				`• Starting from row ${nextRow}\n` +
 				`• Formatting applied for ${month + 1}/${year}\n\n` +
 				`New employees:\n` +
-				newEmployees.map((e) => `• ${e.full_name}`).join('\n')
+				newEmployees.map((e) => `• ${e.full_name}`).join('\n'),
 		);
 	} catch (error) {
 		Logger.log('Error adding new employees: ' + error.message);
@@ -348,7 +354,7 @@ function applyEmployeeDateGreyOut(month, year) {
 			const rows = findEmployeeRows(
 				employeeLookup,
 				emp.employee_id,
-				emp.full_name
+				emp.full_name,
 			);
 			if (rows.length === 0) continue;
 
@@ -371,7 +377,7 @@ function applyEmployeeDateGreyOut(month, year) {
 					// Hired after this month - grey out entire month
 					hireDay = 32; // Will grey out all days
 					Logger.log(
-						`${emp.full_name} hired after this month - greying out all days`
+						`${emp.full_name} hired after this month - greying out all days`,
 					);
 				}
 			}
@@ -395,7 +401,7 @@ function applyEmployeeDateGreyOut(month, year) {
 					// Terminated before this month - grey out entire month
 					terminationDay = 0; // Will grey out all days
 					Logger.log(
-						`${emp.full_name} terminated before this month - greying out all days`
+						`${emp.full_name} terminated before this month - greying out all days`,
 					);
 				}
 			}
@@ -431,7 +437,7 @@ function applyEmployeeDateGreyOut(month, year) {
 		}
 
 		Logger.log(
-			`Greyed out ${greyedCells} cells based on hire/termination dates`
+			`Greyed out ${greyedCells} cells based on hire/termination dates`,
 		);
 		SpreadsheetApp.flush();
 
@@ -451,14 +457,14 @@ function applyEmployeeDateGreyOutMenu() {
 	const monthResponse = ui.prompt(
 		'Apply Grey-Out',
 		'Enter month (1-12):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
 
 	const yearResponse = ui.prompt(
 		'Apply Grey-Out',
 		'Enter year (e.g., 2026):',
-		ui.ButtonSet.OK_CANCEL
+		ui.ButtonSet.OK_CANCEL,
 	);
 	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
 
@@ -474,7 +480,7 @@ function applyEmployeeDateGreyOutMenu() {
 		const greyedCells = applyEmployeeDateGreyOut(month, year);
 		ui.alert(
 			`Grey-out applied successfully!\n\n` +
-				`• ${greyedCells} cells greyed out based on hire/termination dates`
+				`• ${greyedCells} cells greyed out based on hire/termination dates`,
 		);
 	} catch (error) {
 		ui.alert('Error: ' + error.message);
