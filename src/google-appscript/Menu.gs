@@ -19,8 +19,8 @@ function onOpen() {
 					.addSeparator()
 					.addItem(
 						'Apply Grey-Out (Hire/Termination)',
-						'applyEmployeeDateGreyOutMenu'
-					)
+						'applyEmployeeDateGreyOutMenu',
+					),
 			)
 			.addSeparator()
 			.addItem('Sync Leave Data (Custom Month)', 'syncLeaveData')
@@ -31,7 +31,7 @@ function onOpen() {
 				ui
 					.createMenu('Schedule')
 					.addItem('View Current Schedule', 'viewTriggers')
-					.addItem('Disable Automation', 'removeTriggers')
+					.addItem('Disable Automation', 'removeTriggers'),
 			)
 			.addSeparator()
 			.addSubMenu(
@@ -40,7 +40,14 @@ function onOpen() {
 					.addItem('Enable Edit Protection', 'installOnEditTrigger')
 					.addItem('Disable Edit Protection', 'removeOnEditTrigger')
 					.addSeparator()
-					.addItem('Test Protection Setup', 'testProtectionSetup')
+					.addItem('Test Protection Setup', 'testProtectionSetup'),
+			)
+			.addSeparator()
+			.addSubMenu(
+				ui
+					.createMenu('Capacity View')
+					.addItem('Generate Capacity View', 'generateCapacityView')
+					.addItem('Update Current View', 'updateCapacityValues'),
 			)
 			.addSeparator()
 			.addItem('Setup API Credentials', 'showCredentialsDialog')
@@ -69,7 +76,7 @@ function setupDailyLeaveOnlyTrigger(month, year, sheetName) {
 			configs = JSON.parse(existingConfigs);
 		} catch (e) {
 			Logger.log(
-				'Error parsing existing configs, starting fresh: ' + e.message
+				'Error parsing existing configs, starting fresh: ' + e.message,
 			);
 			configs = [];
 		}
@@ -93,7 +100,7 @@ function setupDailyLeaveOnlyTrigger(month, year, sheetName) {
 	// Ensure we have exactly one daily trigger (don't create duplicates)
 	const triggers = ScriptApp.getProjectTriggers();
 	const hasTrigger = triggers.some(
-		(trigger) => trigger.getHandlerFunction() === 'scheduledLeaveOnlySync'
+		(trigger) => trigger.getHandlerFunction() === 'scheduledLeaveOnlySync',
 	);
 
 	if (!hasTrigger) {
@@ -111,7 +118,7 @@ function setupDailyLeaveOnlyTrigger(month, year, sheetName) {
 			month + 1
 		}/${year} on sheet "${sheetName}". Total configured sheets: ${
 			configs.length
-		}`
+		}`,
 	);
 }
 
@@ -189,7 +196,7 @@ function scheduledLeaveOnlySync() {
 			Logger.log(
 				`Config expired for sheet "${sheetName}": ${
 					month + 1
-				}/${year} has passed (current: ${currentMonth + 1}/${currentYear})`
+				}/${year} has passed (current: ${currentMonth + 1}/${currentYear})`,
 			);
 			continue; // Don't add to activeConfigs - effectively removes it
 		}
@@ -204,7 +211,7 @@ function scheduledLeaveOnlySync() {
 		}
 
 		Logger.log(
-			`Syncing leave data for ${month + 1}/${year} to sheet: ${sheetName}`
+			`Syncing leave data for ${month + 1}/${year} to sheet: ${sheetName}`,
 		);
 
 		try {
@@ -224,7 +231,7 @@ function scheduledLeaveOnlySync() {
 				month,
 				year,
 				true,
-				holidayDays
+				holidayDays,
 			);
 
 			// Apply grey-out for employees who joined/left mid-month
@@ -235,7 +242,7 @@ function scheduledLeaveOnlySync() {
 			Logger.log(
 				`Leave sync complete for "${sheetName}": ${
 					Object.keys(leaveData).length
-				} employees with leave`
+				} employees with leave`,
 			);
 		} catch (error) {
 			Logger.log(`Error syncing sheet "${sheetName}": ${error.message}`);
@@ -246,7 +253,7 @@ function scheduledLeaveOnlySync() {
 	if (activeConfigs.length !== configs.length) {
 		props.setProperty('DAILY_SYNC_CONFIGS', JSON.stringify(activeConfigs));
 		Logger.log(
-			`Removed ${configs.length - activeConfigs.length} expired config(s)`
+			`Removed ${configs.length - activeConfigs.length} expired config(s)`,
 		);
 	}
 
@@ -258,7 +265,7 @@ function scheduledLeaveOnlySync() {
 
 	SpreadsheetApp.flush();
 	Logger.log(
-		`Scheduled sync complete: ${totalSynced}/${activeConfigs.length} sheets synced successfully`
+		`Scheduled sync complete: ${totalSynced}/${activeConfigs.length} sheets synced successfully`,
 	);
 }
 
@@ -278,7 +285,7 @@ function removeDailySyncTrigger(sheetName) {
 				configs = configs.filter((c) => c.sheetName !== sheetName);
 				props.setProperty('DAILY_SYNC_CONFIGS', JSON.stringify(configs));
 				Logger.log(
-					`Removed config for sheet "${sheetName}". Remaining: ${configs.length}`
+					`Removed config for sheet "${sheetName}". Remaining: ${configs.length}`,
 				);
 
 				// If no configs left, remove the trigger
@@ -318,7 +325,7 @@ function removeTriggers() {
 	triggers.forEach((trigger) => ScriptApp.deleteTrigger(trigger));
 	Logger.log('All triggers removed');
 	SpreadsheetApp.getUi().alert(
-		'Automation disabled.\n\nAll scheduled syncs have been removed.'
+		'Automation disabled.\n\nAll scheduled syncs have been removed.',
 	);
 }
 
@@ -343,12 +350,12 @@ function viewTriggers() {
 
 	// Check for daily sync trigger
 	const hasDailySyncTrigger = triggers.some(
-		(t) => t.getHandlerFunction() === 'scheduledLeaveOnlySync'
+		(t) => t.getHandlerFunction() === 'scheduledLeaveOnlySync',
 	);
 
 	if (configs.length === 0 && triggers.length === 0) {
 		ui.alert(
-			'No scheduled syncs.\n\nUse "Sync Leave Data (Custom Month)" on each sheet to set up daily automation.'
+			'No scheduled syncs.\n\nUse "Sync Leave Data (Custom Month)" on each sheet to set up daily automation.',
 		);
 		return;
 	}
@@ -373,7 +380,7 @@ function viewTriggers() {
 
 	// Show other triggers (like protection)
 	const otherTriggers = triggers.filter(
-		(t) => t.getHandlerFunction() !== 'scheduledLeaveOnlySync'
+		(t) => t.getHandlerFunction() !== 'scheduledLeaveOnlySync',
 	);
 
 	if (otherTriggers.length > 0) {
@@ -433,7 +440,7 @@ function showCredentialsDialog() {
           );
       }
     </script>
-  `
+  `,
 	)
 		.setWidth(400)
 		.setHeight(380);

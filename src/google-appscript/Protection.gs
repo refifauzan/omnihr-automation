@@ -230,10 +230,32 @@ function parseMonthYearFromSheetName(sheetName) {
 		'December',
 	];
 
+	const monthAbbrevs = [
+		'Jan',
+		'Feb',
+		'Mar',
+		'Apr',
+		'May',
+		'Jun',
+		'Jul',
+		'Aug',
+		'Sep',
+		'Oct',
+		'Nov',
+		'Dec',
+	];
+
 	const parts = sheetName.trim().split(' ');
 	if (parts.length !== 2) return null;
 
-	const monthIndex = monthNames.indexOf(parts[0]);
+	// Try full month names first
+	let monthIndex = monthNames.indexOf(parts[0]);
+
+	// If not found, try abbreviated names
+	if (monthIndex === -1) {
+		monthIndex = monthAbbrevs.indexOf(parts[0]);
+	}
+
 	if (monthIndex === -1) return null;
 
 	const year = parseInt(parts[1]);
