@@ -1,9 +1,15 @@
 /**
  * Menu and Trigger functions for OmniHR Leave Integration
+ *
+ * WHY: A user-friendly menu system is essential because most users are not
+ * technical and need easy access to HR functions without knowing function names
+ * or understanding the underlying code structure.
  */
 
 /**
- * Creates custom menu when spreadsheet opens
+ * WHY: Automatically creates the OmniHR menu when any spreadsheet opens
+ * This function exists to provide immediate access to HR functions without
+ * requiring users to manually run scripts or remember function names.
  */
 function onOpen() {
 	try {
@@ -59,8 +65,11 @@ function onOpen() {
 }
 
 /**
- * Setup daily trigger for leave-only sync for a specific month/year
- * Supports multiple sheets - each sheet can have its own month/year configuration
+ * WHY: Automates daily leave updates to keep data current without manual intervention
+ * This function exists because leave data changes frequently and managers need
+ * up-to-date information for resource planning. It supports multiple sheets with
+ * different months to handle projects spanning multiple time periods.
+ *
  * @param {number} month - Month (0-11)
  * @param {number} year - Year
  * @param {string} sheetName - Sheet name to sync to

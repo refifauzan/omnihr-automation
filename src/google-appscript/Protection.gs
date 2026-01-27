@@ -1,14 +1,22 @@
 /**
  * Protection functions for validated week areas
  *
+ * WHY: Prevents accidental changes to validated timesheets while maintaining
+ * data integrity. This protects against unauthorized modifications that could
+ * affect payroll, billing, and project tracking. The system allows managers
+ * to lock down weeks after review while still providing clear feedback when
+ * someone attempts to edit protected data.
+ *
  * When a "Validated" checkbox is TRUE, the corresponding week's day columns
  * are protected. Editing those cells will show a warning popup.
  */
 
 /**
- * Simple trigger that runs on every edit (limited permissions - no UI alerts)
- * Checks if the edited cell is in a validated (protected) week area
- * Works with ANY sheet name by scanning header row for "Validated" columns
+ * WHY: Disabled simple trigger to prevent duplicate alerts and race conditions
+ * This function is disabled because having both simple and installable triggers
+ * running simultaneously caused multiple popups and inconsistent behavior.
+ * The installable trigger provides better user experience with proper UI alerts.
+ *
  * @param {Object} e - Edit event object
  */
 function onEdit(e) {

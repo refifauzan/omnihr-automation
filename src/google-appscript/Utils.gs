@@ -1,9 +1,16 @@
 /**
  * Utility functions for OmniHR Leave Integration
+ *
+ * WHY: Shared utility functions prevent code duplication and ensure consistent
+ * date formatting, column handling, and common operations across all modules.
+ * This makes the system more maintainable and reduces bugs from inconsistent implementations.
  */
 
 /**
- * Format date as DD/MM/YYYY
+ * WHY: Standardizes date formatting for API communication and display
+ * DD/MM/YYYY format is used because it matches the regional settings and
+ * prevents ambiguity between US and European date formats when exchanging data.
+ *
  * @param {Date} d - Date object
  * @returns {string} Formatted date
  */
@@ -15,7 +22,10 @@ function formatDateDMY(d) {
 }
 
 /**
- * Parse date in DD/MM/YYYY format
+ * WHY: Safely parses dates from API responses and user input
+ * Robust date parsing prevents crashes from malformed data and ensures
+ * consistent date handling across the entire system.
+ *
  * @param {string} dateStr - Date string
  * @returns {Date|null}
  */

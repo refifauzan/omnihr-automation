@@ -1,17 +1,23 @@
 /**
  * Capacity View - Shows free capacity for each employee per day
  *
- * Calculates: 8 hours - (sum of hours across all project sheets for the same month)
+ * CAPACITY CALCULATION LOGIC:
+ * - Base capacity: 8 hours per working day
+ * - Formula: Capacity = 8 - (total assigned hours across all project sheets)
+ * - Minimum capacity: 0 (never negative)
  *
- * Example:
- * - Aaron has 8 hours on Atlas Monday = 0 capacity
- * - Aaron has 1 hour on Atlas + 4 hours on GBG = 3 capacity (8 - 5 = 3)
- * - Holiday or weekend = 0 capacity (greyed out)
+ * EXAMPLES:
+ * - Aaron assigned 8 hours on Atlas Monday = 0 capacity (8 - 8 = 0)
+ * - Aaron assigned 1 hour on Atlas + 4 hours on GBG = 3 capacity (8 - 5 = 3)
+ * - Aaron on full-day leave = 0 capacity (leave overrides all assignments)
+ * - Aaron on half-day leave with 2 hours assigned = 2 capacity (4 - 2 = 2)
+ * - Weekend/holiday = 0 capacity (greyed out)
  */
 
 /**
- * Generate or update Capacity View for a specific month
- * Prompts user for month/year and which sheets to include
+ * Entry point for creating Capacity Views - automatically finds matching sheets
+ * This function automatically generates capacity reports for the specified month/year
+ * without requiring users to manually select sheets.
  */
 function generateCapacityView() {
 	const ui = SpreadsheetApp.getUi();
@@ -41,11 +47,11 @@ function generateCapacityView() {
 		return;
 	}
 
-	// Get all sheets that could be project sheets for this month
+	// Get all sheets that could be project sheets for this month/year
 	const allSheets = ss.getSheets();
 	const projectSheets = [];
 
-	// Find sheets that have the month/year structure (day columns starting at K)
+	// Find sheets that have the exact matching month/year name
 	for (const sheet of allSheets) {
 		const sheetName = sheet.getName();
 
@@ -59,64 +65,44 @@ function generateCapacityView() {
 			continue;
 		}
 
-		// Check if sheet has the expected structure (day columns)
-		if (sheet.getLastColumn() >= CONFIG.FIRST_DAY_COL) {
-			projectSheets.push(sheetName);
+		// Check if sheet name exactly matches the target month/year
+		const monthNames = [
+			'January',
+			'February',
+			'March',
+			'April',
+			'May',
+			'June',
+			'July',
+			'August',
+			'September',
+			'October',
+			'November',
+			'December',
+		];
+		const expectedSheetName = `${monthNames[month]} ${year}`;
+
+		if (sheetName === expectedSheetName) {
+			// Check if sheet has the expected structure (day columns)
+			if (sheet.getLastColumn() >= CONFIG.FIRST_DAY_COL) {
+				projectSheets.push(sheetName);
+			}
 		}
 	}
 
 	if (projectSheets.length === 0) {
 		ui.alert(
-			'No project sheets found.\n\nMake sure you have sheets with the day column structure.',
+			`No project sheets found for ${month + 1}/${year}.\n\nMake sure you have sheets named "[Month] [Year]" with the day column structure.\n\nExamples: "January 2026", "February 2026"`,
 		);
 		return;
 	}
 
-	// Let user select which sheets to include
-	const sheetListHtml = projectSheets
-		.map(
-			(name, i) =>
-				`<label><input type="checkbox" name="sheet" value="${name}" checked> ${name}</label><br>`,
-		)
-		.join('');
-
-	const html = HtmlService.createHtmlOutput(
-		`
-		<style>
-			body { font-family: Arial, sans-serif; padding: 15px; }
-			h3 { margin-top: 0; }
-			.sheets { max-height: 200px; overflow-y: auto; margin: 10px 0; }
-			button { padding: 10px 20px; background: #4285f4; color: white; border: none; cursor: pointer; margin-right: 10px; }
-			button:hover { background: #357abd; }
-			.cancel { background: #666; }
-		</style>
-		<h3>Select Project Sheets</h3>
-		<p>Choose which sheets to include in the capacity calculation for ${month + 1}/${year}:</p>
-		<div class="sheets">
-			${sheetListHtml}
-		</div>
-		<button onclick="submit()">Generate</button>
-		<button class="cancel" onclick="google.script.host.close()">Cancel</button>
-		<script>
-			function submit() {
-				const checkboxes = document.querySelectorAll('input[name="sheet"]:checked');
-				const selected = Array.from(checkboxes).map(cb => cb.value);
-				if (selected.length === 0) {
-					alert('Please select at least one sheet');
-					return;
-				}
-				google.script.run
-					.withSuccessHandler(() => google.script.host.close())
-					.withFailureHandler(err => alert('Error: ' + err))
-					.createCapacityViewSheet(${month}, ${year}, selected);
-			}
-		</script>
-	`,
-	)
-		.setWidth(400)
-		.setHeight(350);
-
-	ui.showModalDialog(html, 'Capacity View - Select Sheets');
+	// Automatically create capacity view with all found sheets
+	try {
+		createCapacityViewSheet(month, year, projectSheets);
+	} catch (error) {
+		ui.alert('Error generating capacity view: ' + error.message);
+	}
 }
 
 /**
@@ -165,21 +151,60 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 			calculateDayColumns(month, year);
 		const daysInMonth = new Date(year, month + 1, 0).getDate();
 
+		Logger.log(`Day columns calculated for ${month + 1}/${year}:`);
+		Logger.log(`  Days in month: ${daysInMonth}`);
+		Logger.log(
+			`  Sample day columns: Day 1 -> Col ${dayColumns[1]}, Day 2 -> Col ${dayColumns[2]}, Day 15 -> Col ${dayColumns[15]}`,
+		);
+
 		// Fetch holidays
 		let holidayDays = new Set();
+		let leaveData = new Map(); // employeeId -> Set of leave days
+
 		try {
 			const token = getAccessToken();
 			if (token) {
+				// Fetch holidays
 				const holidays = fetchHolidaysForMonth(token, month, year);
 				holidayDays = new Set(holidays.map((h) => h.date));
 				Logger.log(`Found ${holidays.length} holidays`);
+
+				// Fetch leave data
+				const employees = fetchAllEmployees(token);
+				if (employees && employees.length > 0) {
+					const monthLeaveData = fetchLeaveDataForMonth(
+						token,
+						employees,
+						month,
+						year,
+					);
+
+					// Convert leave data to Map of employeeId -> Map<day, leaveInfo>
+					for (const [employeeId, empData] of Object.entries(monthLeaveData)) {
+						const leaveDays = new Map(); // day -> { is_half_day }
+						if (empData.leave_requests) {
+							Logger.log(
+								`Processing leave for employee ${empData.employee_name} (${employeeId}): ${empData.leave_requests.length} requests`,
+							);
+							for (const leave of empData.leave_requests) {
+								// Add all days in the leave period
+								leaveDays.set(leave.date, { is_half_day: leave.is_half_day });
+								Logger.log(
+									`  - Day ${leave.date}: half_day=${leave.is_half_day}, type=${leave.leave_type}`,
+								);
+							}
+						}
+						leaveData.set(employeeId, leaveDays);
+					}
+					Logger.log(`Found leave data for ${leaveData.size} employees`);
+				}
 			}
 		} catch (e) {
-			Logger.log('Could not fetch holidays: ' + e.message);
+			Logger.log('Could not fetch holidays/leave: ' + e.message);
 		}
 
-		// Collect all employees from all project sheets
-		const employeeMap = new Map(); // employeeId -> { name, team, project }
+		// Collect all employees from all project sheets - aggregate hours across projects
+		const employeeMap = new Map(); // employeeId -> { name, team, totalHoursPerDay }
 		const projectData = new Map(); // sheetName -> { employees: Map<employeeId, hoursPerDay> }
 
 		for (const sheetName of projectSheetNames) {
@@ -224,27 +249,44 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 
 				if (!employeeId) continue;
 
-				// Add to global employee map
+				// Initialize employee if not exists
 				if (!employeeMap.has(employeeId)) {
+					const totalHoursPerDay = {};
+					for (let day = 1; day <= daysInMonth; day++) {
+						totalHoursPerDay[day] = 0; // Initialize all days to 0
+					}
 					employeeMap.set(employeeId, {
 						name: employeeName,
-						team: team,
-						project: project,
+						projects: new Set([project]), // Track all projects from column C
+						totalHoursPerDay: totalHoursPerDay,
 					});
+				} else {
+					// Add project to existing employee
+					employeeMap.get(employeeId).projects.add(project);
 				}
 
-				// Store hours per day for this employee in this sheet
+				// Read hours for this employee-project assignment
 				const hoursPerDay = {};
 				for (let day = 1; day <= daysInMonth; day++) {
 					const hours = hoursData[day] ? hoursData[day][i] : 0;
-					hoursPerDay[day] = typeof hours === 'number' ? hours : 0;
+					const validHours = typeof hours === 'number' ? hours : 0;
+					hoursPerDay[day] = validHours;
+
+					// Add to employee's total hours for this day
+					employeeMap.get(employeeId).totalHoursPerDay[day] += validHours;
 				}
-				sheetEmployeeHours.set(employeeId, hoursPerDay);
+
+				Logger.log(
+					`Added ${employeeName} (${employeeId}) - ${team} - ${project}: Day 1=${hoursPerDay[1]}h`,
+				);
+
+				// Store individual project data for reference
+				sheetEmployeeHours.set(`${employeeId}_${project}`, hoursPerDay);
 			}
 
 			projectData.set(sheetName, { employees: sheetEmployeeHours });
 			Logger.log(
-				`Loaded ${sheetEmployeeHours.size} employees from ${sheetName}`,
+				`Loaded ${sheetEmployeeHours.size} employee assignments from ${sheetName}`,
 			);
 		}
 
@@ -262,7 +304,7 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 		const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
 		// Headers
-		const headerRow1 = ['ID', 'Name', 'Team'];
+		const headerRow1 = ['ID', 'Name', 'Projects'];
 		const headerRow2 = ['', '', ''];
 		const headerBgColors = ['#356854', '#356854', '#356854'];
 
@@ -296,7 +338,9 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 		const bgRows = [];
 
 		for (const [employeeId, empInfo] of sortedEmployees) {
-			const row = [employeeId, empInfo.name, empInfo.team];
+			// Join all projects with comma separator
+			const projectsDisplay = Array.from(empInfo.projects).sort().join(', ');
+			const row = [employeeId, empInfo.name, projectsDisplay];
 			const bgRow = [null, null, null];
 
 			for (let day = 1; day <= daysInMonth; day++) {
@@ -312,28 +356,56 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 					row.push('');
 					bgRow.push('#FFCCCB');
 				} else {
-					// Calculate total hours across all project sheets
-					let totalHours = 0;
-					for (const [sheetName, sheetData] of projectData) {
-						const empHours = sheetData.employees.get(employeeId);
-						if (empHours && empHours[day]) {
-							totalHours += empHours[day];
+					// Check if employee is on leave
+					const empLeaveDays = leaveData.get(employeeId);
+					const leaveInfo = empLeaveDays && empLeaveDays.get(day);
+
+					if (leaveInfo) {
+						// Employee on leave - capacity is 0 regardless of assignments
+						Logger.log(
+							`Employee ${empInfo.name} on leave day ${day}: half_day=${leaveInfo.is_half_day}`,
+						);
+						let capacity = 0;
+						let bgColor = '';
+
+						if (leaveInfo.is_half_day) {
+							// Half-day leave - capacity = 4 - total assigned hours
+							const totalHours = empInfo.totalHoursPerDay[day] || 0;
+							capacity = Math.max(0, 4 - totalHours);
+							bgColor = CONFIG.COLORS.HALF_DAY; // Orange for half-day leave
+							Logger.log(
+								`  Half-day leave: total assigned hours=${totalHours}, capacity=${capacity}`,
+							);
+						} else {
+							// Full-day leave - no capacity
+							capacity = 0;
+							bgColor = CONFIG.COLORS.FULL_DAY; // Red for full-day leave
+							Logger.log(`  Full-day leave: capacity=0`);
 						}
-					}
 
-					// Capacity = 8 - total hours (minimum 0)
-					const capacity = Math.max(0, 8 - totalHours);
-					row.push(capacity);
-
-					// Color based on capacity
-					if (capacity === 0) {
-						bgRow.push('#FFE6E6'); // Light red - fully occupied
-					} else if (capacity <= 2) {
-						bgRow.push('#FFF3CD'); // Light yellow - almost full
-					} else if (capacity < 8) {
-						bgRow.push('#D4EDDA'); // Light green - partially available
+						row.push(capacity);
+						bgRow.push(bgColor);
 					} else {
-						bgRow.push('#FFFFFF'); // White - fully available
+						// Calculate total capacity: 8 - sum of all project hours
+						const totalHours = empInfo.totalHoursPerDay[day] || 0;
+						const capacity = Math.max(0, 8 - totalHours);
+
+						Logger.log(
+							`Employee ${empInfo.name} day ${day}: total assigned hours=${totalHours}, capacity=${capacity}`,
+						);
+
+						row.push(capacity);
+
+						// Color based on capacity
+						if (capacity === 0) {
+							bgRow.push('#FFE6E6'); // Light red - fully occupied
+						} else if (capacity <= 2) {
+							bgRow.push('#FFF3CD'); // Light yellow - almost full
+						} else if (capacity < 8) {
+							bgRow.push('#D4EDDA'); // Light green - partially available
+						} else {
+							bgRow.push('#FFFFFF'); // White - fully available
+						}
 					}
 				}
 			}
@@ -362,9 +434,11 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 			const formulas = [];
 			for (let i = 0; i < dataRows.length; i++) {
 				const rowNum = 3 + i;
-				// Sum only weekday columns (skip weekends)
+				// Sum all capacity values (weekends and holidays are empty, so use SUMPRODUCT to ignore them)
+				const firstDayCol = columnToLetter(4);
+				const lastDayCol = columnToLetter(3 + daysInMonth);
 				formulas.push([
-					`=SUMPRODUCT((D${rowNum}:${columnToLetter(3 + daysInMonth)}${rowNum})<>"",(D${rowNum}:${columnToLetter(3 + daysInMonth)}${rowNum}))`,
+					`=SUMPRODUCT((${firstDayCol}${rowNum}:${lastDayCol}${rowNum}<>""),(${firstDayCol}${rowNum}:${lastDayCol}${rowNum}))`,
 				]);
 			}
 			capacitySheet
@@ -391,7 +465,8 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 			`Capacity View generated successfully!\n\n` +
 				`• Month: ${month + 1}/${year}\n` +
 				`• Employees: ${sortedEmployees.length}\n` +
-				`• Project sheets included: ${projectSheetNames.length}\n\n` +
+				`• Project sheets included: ${projectSheetNames.length}\n` +
+				`• Sheets: ${projectSheetNames.join(', ')}\n\n` +
 				`Sheet: "${capacitySheetName}"`,
 		);
 	} catch (error) {
@@ -428,9 +503,26 @@ function refreshCapacityView() {
 		return;
 	}
 
-	// Get all project sheets and refresh
+	// Get project sheets that exactly match the capacity view's month/year name
 	const allSheets = ss.getSheets();
 	const projectSheetNames = [];
+
+	// Build the expected exact sheet name from the capacity view
+	const monthNames = [
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December',
+	];
+	const expectedSheetName = `${monthNames[parsed.month]} ${parsed.year}`;
 
 	for (const sheet of allSheets) {
 		const name = sheet.getName();
@@ -442,13 +534,19 @@ function refreshCapacityView() {
 		) {
 			continue;
 		}
-		if (sheet.getLastColumn() >= CONFIG.FIRST_DAY_COL) {
-			projectSheetNames.push(name);
+
+		// Check if sheet name exactly matches the expected name
+		if (name === expectedSheetName) {
+			if (sheet.getLastColumn() >= CONFIG.FIRST_DAY_COL) {
+				projectSheetNames.push(name);
+			}
 		}
 	}
 
 	if (projectSheetNames.length === 0) {
-		ui.alert('No project sheets found.');
+		ui.alert(
+			`No project sheets found for ${parsed.month + 1}/${parsed.year}.\n\nMake sure you have sheets named "[Month] [Year]" that match this capacity view.`,
+		);
 		return;
 	}
 
@@ -488,9 +586,26 @@ function updateCapacityValues() {
 
 	const { month, year } = parsed;
 
-	// Get all project sheets (same logic as generateCapacityView)
+	// Get project sheets that exactly match the capacity view's month/year name
 	const allSheets = ss.getSheets();
 	const projectSheetNames = [];
+
+	// Build the expected exact sheet name from the capacity view
+	const monthNames = [
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December',
+	];
+	const expectedSheetName = `${monthNames[month]} ${year}`;
 
 	for (const sheet of allSheets) {
 		const name = sheet.getName();
@@ -502,13 +617,19 @@ function updateCapacityValues() {
 		) {
 			continue;
 		}
-		if (sheet.getLastColumn() >= CONFIG.FIRST_DAY_COL) {
-			projectSheetNames.push(name);
+
+		// Check if sheet name exactly matches the expected name
+		if (name === expectedSheetName) {
+			if (sheet.getLastColumn() >= CONFIG.FIRST_DAY_COL) {
+				projectSheetNames.push(name);
+			}
 		}
 	}
 
 	if (projectSheetNames.length === 0) {
-		ui.alert('No project sheets found.');
+		ui.alert(
+			`No project sheets found for ${month + 1}/${year}.\n\nMake sure you have sheets named "[Month] [Year]" that match this capacity view.`,
+		);
 		return;
 	}
 
