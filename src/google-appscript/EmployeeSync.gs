@@ -337,17 +337,56 @@ function applyEmployeeDateGreyOut(month, year) {
     }
 
     Logger.log(`Applying grey-out for ${month + 1}/${year}...`);
-    const employees = fetchAllEmployeesWithDetails(token);
+    const { dayColumns } = calculateDayColumns(month, year);
+    const employeeLookup = buildEmployeeLookup(sheet);
+    const lastRow = sheet.getLastRow();
 
+    // Clear existing hire/termination grey so we can reapply from current OmniHR data
+    // (termination status may have been updated, so old grey must be removed first)
+    const greyColor = "#D3D3D3";
+    const weekendColor = "#efefef";
+    const holidayColor = "#FFCCCB";
+    const holidays = fetchHolidaysForMonth(token, month, year);
+    const holidayDays = new Set(holidays.map((h) => h.date));
+    let clearedCount = 0;
+    if (lastRow >= CONFIG.FIRST_DATA_ROW) {
+      for (let row = CONFIG.FIRST_DATA_ROW; row <= lastRow; row++) {
+        for (const [dayStr, col] of Object.entries(dayColumns)) {
+          const cell = sheet.getRange(row, col);
+          const bg = (cell.getBackground() || "").toUpperCase();
+          if (bg === greyColor.toUpperCase()) {
+            const dayNum = parseInt(dayStr, 10);
+            const date = new Date(year, month, dayNum);
+            const dayOfWeek = date.getDay();
+            const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            const isHoliday = holidayDays.has(dayNum);
+            if (isWeekend) {
+              cell.setBackground(weekendColor);
+              cell.setValue("");
+            } else if (isHoliday) {
+              cell.setBackground(holidayColor);
+              cell.setValue("");
+            } else {
+              cell.setBackground(null);
+              cell.setValue(0);
+            }
+            clearedCount++;
+          }
+        }
+      }
+      if (clearedCount > 0) {
+        Logger.log(
+          `Cleared ${clearedCount} existing hire/termination grey cells before reapply`,
+        );
+      }
+    }
+
+    const employees = fetchAllEmployeesWithDetails(token);
     if (!employees || employees.length === 0) {
       Logger.log("No employees found");
       return 0;
     }
 
-    const { dayColumns } = calculateDayColumns(month, year);
-    const employeeLookup = buildEmployeeLookup(sheet);
-
-    const greyColor = "#D3D3D3"; // Light grey
     let greyedCells = 0;
 
     for (const emp of employees) {
