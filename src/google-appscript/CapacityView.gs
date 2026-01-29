@@ -204,7 +204,7 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
     }
 
     // Collect all employees from all project sheets - aggregate hours across projects
-    const employeeMap = new Map(); // employeeId -> { name, team, totalHoursPerDay }
+    const employeeMap = new Map(); // employeeId -> { name, teams, projects, totalHoursPerDay }
     const projectData = new Map(); // sheetName -> { employees: Map<employeeId, hoursPerDay> }
 
     for (const sheetName of projectSheetNames) {
@@ -255,14 +255,18 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
           for (let day = 1; day <= daysInMonth; day++) {
             totalHoursPerDay[day] = 0; // Initialize all days to 0
           }
+          const teamsSet = new Set();
+          if (team && String(team).trim()) teamsSet.add(String(team).trim());
           employeeMap.set(employeeId, {
             name: employeeName,
-            projects: new Set([project]), // Track all projects from column C
+            teams: teamsSet,
+            projects: new Set([project]),
             totalHoursPerDay: totalHoursPerDay,
           });
         } else {
-          // Add project to existing employee
-          employeeMap.get(employeeId).projects.add(project);
+          const emp = employeeMap.get(employeeId);
+          emp.projects.add(project);
+          if (team && String(team).trim()) emp.teams.add(String(team).trim());
         }
 
         // Read hours for this employee-project assignment
@@ -304,7 +308,7 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
     const dayNames = ["S", "M", "T", "W", "T", "F", "S"];
 
     // Headers
-    const headerRow1 = ["ID", "Name", "Projects"];
+    const headerRow1 = ["ID", "Name", "Team"];
     const headerRow2 = ["", "", ""];
     const headerBgColors = ["#356854", "#356854", "#356854"];
 
@@ -338,9 +342,12 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
     const bgRows = [];
 
     for (const [employeeId, empInfo] of sortedEmployees) {
-      // Join all projects with comma separator
-      const projectsDisplay = Array.from(empInfo.projects).sort().join(", ");
-      const row = [employeeId, empInfo.name, projectsDisplay];
+      // Column C: Team(s), comma-separated e.g. Floater, GBG 2
+      const teamsDisplay = Array.from(empInfo.teams)
+        .filter(Boolean)
+        .sort()
+        .join(", ");
+      const row = [employeeId, empInfo.name, teamsDisplay];
       const bgRow = [null, null, null];
 
       for (let day = 1; day <= daysInMonth; day++) {
@@ -429,20 +436,23 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
       dataRange.setValues(dataRows);
       dataRange.setBackgrounds(bgRows);
 
-      // Set Total Free H formulas (sum of free hours across days)
-      const totalCol = 4 + daysInMonth; // Column after all days
+      // Set Total Free D (count of days with free capacity > 0) and Total Free H (sum of free hours)
+      const totalFreeDCol = 4 + daysInMonth;
+      const totalFreeHCol = totalFreeDCol + 1;
+      const firstDayColLetter = columnToLetter(4);
+      const lastDayColLetter = columnToLetter(3 + daysInMonth);
       const formulas = [];
       for (let i = 0; i < dataRows.length; i++) {
         const rowNum = 3 + i;
-        // Sum all capacity values (weekends and holidays are empty, so use SUMPRODUCT to ignore them)
-        const firstDayCol = columnToLetter(4);
-        const lastDayCol = columnToLetter(3 + daysInMonth);
-        formulas.push([
-          `=SUMPRODUCT((${firstDayCol}${rowNum}:${lastDayCol}${rowNum}<>""),(${firstDayCol}${rowNum}:${lastDayCol}${rowNum}))`,
-        ]);
+        const dayRange = `${firstDayColLetter}${rowNum}:${lastDayColLetter}${rowNum}`;
+        // Total Free D: count of days where capacity is not 0 (days that need allocation)
+        const formulaD = `=COUNTIF(${dayRange},">0")`;
+        // Total Free H: sum of free hours across those days
+        const formulaH = `=SUMPRODUCT((${dayRange}<>""),(${dayRange}))`;
+        formulas.push([formulaD, formulaH]);
       }
       capacitySheet
-        .getRange(3, totalCol, formulas.length, 1)
+        .getRange(3, totalFreeDCol, dataRows.length, 2)
         .setFormulas(formulas);
     }
 
