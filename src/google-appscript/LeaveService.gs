@@ -355,8 +355,12 @@ function updateSheetWithLeaveData(
 		}
 
 		const rows = findEmployeeRows(employeeLookup, employee_id, employee_name);
-		for (const row of rows) {
-			totalDaysOffMap[row] = totalDaysOff;
+		// Distribute leave days evenly across all project rows for this employee
+		if (rows.length > 0) {
+			const daysPerRow = totalDaysOff / rows.length;
+			for (const row of rows) {
+				totalDaysOffMap[row] = daysPerRow;
+			}
 		}
 	}
 
