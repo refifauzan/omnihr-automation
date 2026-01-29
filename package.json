@@ -1,25 +1,26 @@
 {
-	"name": "omnihr-integration",
-	"version": "1.0.0",
-	"description": "OmniHR leave data integration for Excel and Google Sheets",
-	"main": "src/main.js",
-	"scripts": {
-		"start": "node src/main.js",
-		"fetch-leaves": "node src/fetchLeaves.js",
-		"update-excel": "node src/updateExcel.js",
-		"export-sheets": "node src/exportToSheets.js",
-		"clasp:login": "clasp login",
-		"clasp:push": "cd src/google-appscript && clasp push",
-		"clasp:pull": "cd src/google-appscript && clasp pull",
-		"clasp:open": "cd src/google-appscript && clasp open"
-	},
-	"author": "",
-	"license": "ISC",
-	"dependencies": {
-		"dotenv": "^17.2.3",
-		"exceljs": "^4.4.0"
-	},
-	"devDependencies": {
-		"@google/clasp": "^2.4.2"
-	}
+  "name": "omnihr-integration",
+  "version": "1.0.0",
+  "description": "OmniHR leave data integration for Excel and Google Sheets",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js",
+    "fetch-leaves": "node src/fetchLeaves.js",
+    "update-excel": "node src/updateExcel.js",
+    "export-sheets": "node src/exportToSheets.js",
+    "detect-hire-termination": "node src/detectHireTermination.js",
+    "clasp:login": "clasp login",
+    "clasp:push": "cd src/google-appscript && clasp push",
+    "clasp:pull": "cd src/google-appscript && clasp pull",
+    "clasp:open": "cd src/google-appscript && clasp open"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "exceljs": "^4.4.0"
+  },
+  "devDependencies": {
+    "@google/clasp": "^2.4.2"
+  }
 }
