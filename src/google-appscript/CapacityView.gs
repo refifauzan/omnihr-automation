@@ -318,10 +318,10 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 			);
 		}
 
-		// Add Total column
-		headerRow1.push('');
-		headerRow2.push('Total Free');
-		headerBgColors.push('#356854');
+		// Add Total Days Off and Total Free columns
+		headerRow1.push('', '');
+		headerRow2.push('Total Days Off', 'Total Free');
+		headerBgColors.push('#356854', '#356854');
 
 		// Write headers
 		capacitySheet.getRange(1, 1, 1, headerRow1.length).setValues([headerRow1]);
@@ -398,21 +398,19 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 
 						// Color based on capacity
 						if (capacity === 0) {
-							bgRow.push('#FFE6E6'); // Light red - fully occupied
-						} else if (capacity <= 2) {
-							bgRow.push('#FFF3CD'); // Light yellow - almost full
-						} else if (capacity < 8) {
-							bgRow.push('#D4EDDA'); // Light green - partially available
+							bgRow.push('#D4EDDA'); // Green - fully assigned or on leave (no action needed)
+						} else if (capacity >= 1 && capacity <= 8) {
+							bgRow.push('#FFE6E6'); // Light red - actions needed (lost hours need allocation)
 						} else {
-							bgRow.push('#FFFFFF'); // White - fully available
+							bgRow.push('#FFFFFF'); // White - default (shouldn't occur with current logic)
 						}
 					}
 				}
 			}
 
-			// Add Total Free formula placeholder (will be set as formula)
-			row.push(0);
-			bgRow.push(null);
+			// Add Total Days Off and Total Free formula placeholders (will be set as formulas)
+			row.push(0, 0);
+			bgRow.push(null, null);
 
 			dataRows.push(row);
 			bgRows.push(bgRow);
