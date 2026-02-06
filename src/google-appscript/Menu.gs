@@ -53,7 +53,10 @@ function onOpen() {
 				ui
 					.createMenu('Capacity View')
 					.addItem('Generate Capacity View', 'generateCapacityView')
-					.addItem('Update Current View', 'updateCapacityValues'),
+					.addItem('Update Current View', 'updateCapacityValues')
+					.addSeparator()
+					.addItem('Enable Hourly Updates', 'setupHourlyCapacityTrigger')
+					.addItem('Disable Hourly Updates', 'removeHourlyCapacityTrigger'),
 			)
 			.addSeparator()
 			.addItem('Setup API Credentials', 'showCredentialsDialog')
@@ -362,9 +365,18 @@ function viewTriggers() {
 		(t) => t.getHandlerFunction() === 'scheduledLeaveOnlySync',
 	);
 
-	if (configs.length === 0 && triggers.length === 0) {
+	// Check for hourly capacity trigger
+	const hasHourlyCapacityTrigger = triggers.some(
+		(t) => t.getHandlerFunction() === 'scheduledHourlyCapacityUpdate',
+	);
+
+	if (
+		configs.length === 0 &&
+		triggers.length === 0 &&
+		!hasHourlyCapacityTrigger
+	) {
 		ui.alert(
-			'No scheduled syncs.\n\nUse "Sync Leave Data (Custom Month)" on each sheet to set up daily automation.',
+			'No scheduled syncs.\n\nUse "Sync Leave Data (Custom Month)" on each sheet to set up daily automation.\nUse "Enable Hourly Updates" to set up capacity view automation.',
 		);
 		return;
 	}
@@ -387,9 +399,20 @@ function viewTriggers() {
 		}
 	}
 
+	// Show hourly capacity trigger status
+	if (hasHourlyCapacityTrigger) {
+		info += '\n⚡ Hourly Capacity Updates: ACTIVE\n';
+		info += '   Updates all capacity view sheets every hour\n';
+	} else {
+		info += '\n⚡ Hourly Capacity Updates: INACTIVE\n';
+		info += '   Use "Enable Hourly Updates" to activate\n';
+	}
+
 	// Show other triggers (like protection)
 	const otherTriggers = triggers.filter(
-		(t) => t.getHandlerFunction() !== 'scheduledLeaveOnlySync',
+		(t) =>
+			t.getHandlerFunction() !== 'scheduledLeaveOnlySync' &&
+			t.getHandlerFunction() !== 'scheduledHourlyCapacityUpdate',
 	);
 
 	if (otherTriggers.length > 0) {
