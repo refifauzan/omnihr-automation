@@ -84,15 +84,13 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
       const empName = data.empName;
       const calendar = data.calendar || {};
 
-      const approvedRequests = (calendar.time_off_request || []).filter(
-        (r) => r.status === 3,
-      );
+      const allRequests = calendar.time_off_request || [];
 
-      if (approvedRequests.length === 0) continue;
+      if (allRequests.length === 0) continue;
 
       const leaveDays = [];
 
-      for (const request of approvedRequests) {
+      for (const request of allRequests) {
         const leaveStart = parseDateDMY(request.effective_date);
         const leaveEnd = request.end_date
           ? parseDateDMY(request.end_date)
@@ -129,13 +127,14 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
           );
 
           Logger.log(
-            `Leave for ${empName} on day ${dateToProcess.getDate()}: effectiveDuration=${effectiveDuration}, endDuration=${endDuration}, isHalfDay=${isHalfDay}`,
+            `Leave for ${empName} on day ${dateToProcess.getDate()}: status=${request.status}, effectiveDuration=${effectiveDuration}, endDuration=${endDuration}, isHalfDay=${isHalfDay}`,
           );
 
           leaveDays.push({
             date: dateToProcess.getDate(),
             leave_type: request.time_off?.name,
             is_half_day: isHalfDay,
+            status: request.status,
           });
         }
       }
