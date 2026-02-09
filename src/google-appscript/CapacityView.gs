@@ -160,6 +160,8 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 		// Fetch holidays
 		let holidayDays = new Set();
 		let leaveData = new Map(); // employeeId -> Set of leave days
+		let terminationMap = new Map(); // employeeId -> terminationDay (day number in month, or 0 if terminated before month)
+		let hireDateMap = new Map(); // employeeId -> hireDay (day number in month, or 32 if hired after month)
 
 		try {
 			const token = getAccessToken();
@@ -197,6 +199,68 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 						leaveData.set(employeeId, leaveDays);
 					}
 					Logger.log(`Found leave data for ${leaveData.size} employees`);
+				}
+
+				// Fetch termination and hire dates for capacity view
+				const employeesWithDetails = fetchAllEmployeesWithDetails(token);
+				if (employeesWithDetails && employeesWithDetails.length > 0) {
+					for (const emp of employeesWithDetails) {
+						const empId = emp.employee_id;
+						if (!empId) continue;
+
+						// Parse termination date
+						if (emp.termination_date) {
+							const termDate = parseDateDMY(emp.termination_date);
+							if (termDate) {
+								if (
+									termDate.getMonth() === month &&
+									termDate.getFullYear() === year
+								) {
+									terminationMap.set(empId, termDate.getDate());
+									Logger.log(
+										`${emp.full_name} (${empId}) terminated on day ${termDate.getDate()}`,
+									);
+								} else if (
+									termDate.getFullYear() < year ||
+									(termDate.getFullYear() === year &&
+										termDate.getMonth() < month)
+								) {
+									terminationMap.set(empId, 0); // Terminated before this month
+									Logger.log(
+										`${emp.full_name} (${empId}) terminated before this month`,
+									);
+								}
+							}
+						}
+
+						// Parse hire date
+						if (emp.hired_date) {
+							const hireDate = parseDateDMY(emp.hired_date);
+							if (hireDate) {
+								if (
+									hireDate.getMonth() === month &&
+									hireDate.getFullYear() === year
+								) {
+									hireDateMap.set(empId, hireDate.getDate());
+									Logger.log(
+										`${emp.full_name} (${empId}) hired on day ${hireDate.getDate()}`,
+									);
+								} else if (
+									hireDate.getFullYear() > year ||
+									(hireDate.getFullYear() === year &&
+										hireDate.getMonth() > month)
+								) {
+									hireDateMap.set(empId, 32); // Hired after this month
+									Logger.log(
+										`${emp.full_name} (${empId}) hired after this month`,
+									);
+								}
+							}
+						}
+					}
+					Logger.log(
+						`Found ${terminationMap.size} employees with termination dates, ${hireDateMap.size} with hire dates`,
+					);
 				}
 			}
 		} catch (e) {
@@ -350,15 +414,28 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 			const row = [employeeId, empInfo.name, teamsDisplay];
 			const bgRow = [null, null, null];
 
+			// Get termination/hire day for this employee
+			const terminationDay = terminationMap.get(employeeId);
+			const hireDay = hireDateMap.get(employeeId);
+
 			for (let day = 1; day <= daysInMonth; day++) {
 				const date = new Date(year, month, day);
 				const dayOfWeek = date.getDay();
 				const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 				const isHoliday = holidayDays.has(day);
 
+				// Check if employee is not yet hired or already terminated
+				const isBeforeHire = hireDay !== undefined && day < hireDay;
+				const isAfterTermination =
+					terminationDay !== undefined && day > terminationDay;
+
 				if (isWeekend) {
 					row.push('');
 					bgRow.push('#efefef');
+				} else if (isBeforeHire || isAfterTermination) {
+					// Employee not active on this day (not yet hired or already resigned/terminated)
+					row.push('');
+					bgRow.push('#D3D3D3'); // Grey - employee not active
 				} else if (isHoliday) {
 					// Holiday = 0, green (no action needed; if person is on leave we can't do anything)
 					row.push('');
