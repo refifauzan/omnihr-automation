@@ -664,8 +664,9 @@ function setOperationsDefaultHours(
 		const team = teamData[rowIdx]
 			? teamData[rowIdx].toString().toLowerCase()
 			: '';
-		const isOperations = team.includes('operations');
-		const isAstro = team.includes('astro');
+		const hasDefaultHours = CONFIG.DEFAULT_HOUR_TEAMS.some((t) =>
+			team.includes(t),
+		);
 
 		for (let colIdx = 0; colIdx < numCols; colIdx++) {
 			const col = minCol + colIdx;
@@ -706,11 +707,11 @@ function setOperationsDefaultHours(
 			const bg = backgrounds[rowIdx][colIdx].toUpperCase();
 			if (bg === fullDayColor || bg === halfDayColor) continue;
 
-			// Only update if current value is empty
+			// Update if current value is empty, null, or 0 (but not if it has leave color)
 			const currentValue = values[rowIdx][colIdx];
-			if (currentValue === '' || currentValue === null) {
-				// Set default: 8 for Operations or Astro, 0 for others
-				values[rowIdx][colIdx] = isOperations || isAstro ? 8 : 0;
+			if (currentValue === '' || currentValue === null || currentValue === 0) {
+				// Set default: CONFIG.DEFAULT_HOURS for default teams, 0 for others
+				values[rowIdx][colIdx] = hasDefaultHours ? CONFIG.DEFAULT_HOURS : 0;
 				updatedCount++;
 			}
 		}
@@ -721,7 +722,7 @@ function setOperationsDefaultHours(
 		range.setValues(values);
 		range.setBackgrounds(backgrounds);
 		Logger.log(
-			`Set default hours for ${updatedCount} cells (Operations/Astro: 8, Others: 0)`,
+			`Set default hours for ${updatedCount} cells (Default teams: ${CONFIG.DEFAULT_HOURS}h, Others: 0h)`,
 		);
 	}
 }

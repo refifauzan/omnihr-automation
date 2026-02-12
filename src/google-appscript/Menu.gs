@@ -33,6 +33,8 @@ function onOpen() {
 			.addItem('Sync Leave Only (Current Month)', 'syncLeaveOnly')
 			.addItem('Sync Holidays', 'syncHolidays')
 			.addSeparator()
+			.addItem('Populate Default Hours', 'populateDefaultHours')
+			.addSeparator()
 			.addSubMenu(
 				ui
 					.createMenu('Schedule')

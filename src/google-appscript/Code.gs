@@ -154,6 +154,59 @@ function syncLeaveOnly() {
 }
 
 /**
+ * Populate default hours for empty cells while preserving existing values and leave
+ * This function fills empty working day cells with 8 hours for default teams
+ */
+function populateDefaultHours() {
+	const ui = SpreadsheetApp.getUi();
+	const ss = SpreadsheetApp.getActiveSpreadsheet();
+	const sheet = ss.getActiveSheet();
+	const sheetName = sheet.getName();
+
+	// Use current month/year automatically
+	const now = new Date();
+	const month = now.getMonth();
+	const year = now.getFullYear();
+
+	Logger.log(
+		`Populating default hours for current month ${
+			month + 1
+		}/${year} to sheet "${sheetName}"`,
+	);
+
+	try {
+		// Fetch holidays to skip them
+		let holidays = [];
+		try {
+			const token = getAccessToken();
+			if (token) {
+				holidays = fetchHolidaysForMonth(token, month, year);
+				Logger.log(`Found ${holidays.length} holidays`);
+			}
+		} catch (e) {
+			Logger.log('Could not fetch holidays: ' + e.message);
+		}
+		const holidayDays = new Set(holidays.map((h) => h.date));
+
+		// Call the existing function to set default hours
+		const { dayColumns } = calculateDayColumns(month, year);
+		setOperationsDefaultHours(sheet, dayColumns, month, year, holidayDays);
+
+		SpreadsheetApp.flush();
+
+		ui.alert(
+			`Default hours populated successfully!\n\n` +
+				`Empty cells for default teams (${CONFIG.DEFAULT_HOUR_TEAMS.join(', ')}) ` +
+				`have been set to ${CONFIG.DEFAULT_HOURS} hours.\n\n` +
+				`Existing values and leave markings were preserved.`,
+		);
+	} catch (error) {
+		Logger.log('Error populating default hours: ' + error.message);
+		ui.alert('Error: ' + error.message);
+	}
+}
+
+/**
  * Main sync function for a specific month
  * @param {number} month - Month (0-11)
  * @param {number} year - Year
@@ -396,8 +449,10 @@ function createEmptyTableStructure() {
 		for (let i = 0; i < numRows; i++) {
 			const rowValues = [];
 			const rowBackgrounds = [];
-			const isOperations =
-				teamData[i] && teamData[i].toString().toLowerCase() === 'operations';
+			const team = teamData[i] ? teamData[i].toString().toLowerCase() : '';
+			const hasDefaultHours = CONFIG.DEFAULT_HOUR_TEAMS.some((t) =>
+				team.includes(t),
+			);
 
 			for (let col = CONFIG.FIRST_DAY_COL; col <= lastDayCol; col++) {
 				const dayForCol = Object.keys(dayColumns).find(
@@ -420,8 +475,8 @@ function createEmptyTableStructure() {
 						rowValues.push(''); // Empty value (like weekend)
 						rowBackgrounds.push('#FFCCCB'); // Pastel red background
 					} else {
-						// Weekday - 8 hours for Operations, 0 for others
-						rowValues.push(isOperations ? 8 : 0);
+						// Weekday - 8 hours for default teams, 0 for others
+						rowValues.push(hasDefaultHours ? CONFIG.DEFAULT_HOURS : 0);
 						rowBackgrounds.push(null); // Default background
 					}
 				} else if (validatedColumns.includes(col)) {

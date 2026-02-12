@@ -43,4 +43,9 @@ const CONFIG = {
 	// and consistent leave processing across the entire system.
 	DEFAULT_HOURS: 8,
 	HALF_DAY_HOURS: 4,
+
+	// Teams that get 8 hours by default on working days
+	// These teams are automatically assigned 8 hours when creating empty tables
+	// or during leave sync for empty cells. Team names are matched as substrings.
+	DEFAULT_HOUR_TEAMS: ['operations', 'astro'],
 };
