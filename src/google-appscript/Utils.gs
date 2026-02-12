@@ -688,9 +688,8 @@ function setOperationsDefaultHours(
 			const dayOfWeek = date.getDay();
 			if (dayOfWeek === 0 || dayOfWeek === 6) {
 				// Weekend - ensure empty value and grey background
-				if (values[rowIdx][colIdx] === '' || values[rowIdx][colIdx] === null) {
-					backgrounds[rowIdx][colIdx] = weekendColor;
-				}
+				values[rowIdx][colIdx] = '';
+				backgrounds[rowIdx][colIdx] = weekendColor;
 				continue;
 			}
 
