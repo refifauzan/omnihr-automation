@@ -47,5 +47,5 @@ const CONFIG = {
 	// Teams that get 8 hours by default on working days
 	// These teams are automatically assigned 8 hours when creating empty tables
 	// or during leave sync for empty cells. Team names are matched as substrings.
-	DEFAULT_HOUR_TEAMS: ['operations', 'astro'],
+	DEFAULT_HOUR_TEAMS: ['operations', 'astro', 'mediacorp'],
 };
