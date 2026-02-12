@@ -163,15 +163,32 @@ function populateDefaultHours() {
 	const sheet = ss.getActiveSheet();
 	const sheetName = sheet.getName();
 
-	// Use current month/year automatically
-	const now = new Date();
-	const month = now.getMonth();
-	const year = now.getFullYear();
+	const monthResponse = ui.prompt(
+		'Populate Default Hours',
+		'Enter month (1-12):',
+		ui.ButtonSet.OK_CANCEL,
+	);
+
+	if (monthResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const yearResponse = ui.prompt(
+		'Populate Default Hours',
+		'Enter year (e.g., 2025):',
+		ui.ButtonSet.OK_CANCEL,
+	);
+
+	if (yearResponse.getSelectedButton() !== ui.Button.OK) return;
+
+	const month = parseInt(monthResponse.getResponseText()) - 1;
+	const year = parseInt(yearResponse.getResponseText());
+
+	if (isNaN(month) || month < 0 || month > 11 || isNaN(year)) {
+		ui.alert('Invalid month or year');
+		return;
+	}
 
 	Logger.log(
-		`Populating default hours for current month ${
-			month + 1
-		}/${year} to sheet "${sheetName}"`,
+		`Populating default hours for ${month + 1}/${year} to sheet "${sheetName}"`,
 	);
 
 	try {
