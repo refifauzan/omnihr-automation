@@ -697,9 +697,9 @@ function setOperationsDefaultHours(
 			// Check if it's a holiday
 			if (holidayDays.has(dayNum)) {
 				// Holiday - ensure empty value and pastel red background
-				if (values[rowIdx][colIdx] === '' || values[rowIdx][colIdx] === null) {
-					backgrounds[rowIdx][colIdx] = holidayColor;
-				}
+				// Clear any existing value on holidays
+				values[rowIdx][colIdx] = '';
+				backgrounds[rowIdx][colIdx] = holidayColor;
 				continue;
 			}
 
