@@ -15,10 +15,10 @@
  * @returns {string} Formatted date
  */
 function formatDateDMY(d) {
-  const day = String(d.getDate()).padStart(2, "0");
-  const month = String(d.getMonth() + 1).padStart(2, "0");
-  const year = d.getFullYear();
-  return `${day}/${month}/${year}`;
+	const day = String(d.getDate()).padStart(2, '0');
+	const month = String(d.getMonth() + 1).padStart(2, '0');
+	const year = d.getFullYear();
+	return `${day}/${month}/${year}`;
 }
 
 /**
@@ -30,14 +30,14 @@ function formatDateDMY(d) {
  * @returns {Date|null}
  */
 function parseDateDMY(dateStr) {
-  if (!dateStr) return null;
-  const parts = dateStr.split("/");
-  if (parts.length !== 3) return null;
-  return new Date(
-    parseInt(parts[2]),
-    parseInt(parts[1]) - 1,
-    parseInt(parts[0]),
-  );
+	if (!dateStr) return null;
+	const parts = dateStr.split('/');
+	if (parts.length !== 3) return null;
+	return new Date(
+		parseInt(parts[2]),
+		parseInt(parts[1]) - 1,
+		parseInt(parts[0]),
+	);
 }
 
 /**
@@ -46,13 +46,13 @@ function parseDateDMY(dateStr) {
  * @returns {string} Column letter
  */
 function columnToLetter(column) {
-  let letter = "";
-  while (column > 0) {
-    const mod = (column - 1) % 26;
-    letter = String.fromCharCode(65 + mod) + letter;
-    column = Math.floor((column - mod) / 26);
-  }
-  return letter;
+	let letter = '';
+	while (column > 0) {
+		const mod = (column - 1) % 26;
+		letter = String.fromCharCode(65 + mod) + letter;
+		column = Math.floor((column - mod) / 26);
+	}
+	return letter;
 }
 
 /**
@@ -63,21 +63,21 @@ function columnToLetter(column) {
  * @returns {string} Sheet name
  */
 function getMonthSheetName(month, year) {
-  const monthNames = [
-    "January",
-    "February",
-    "March",
-    "April",
-    "May",
-    "June",
-    "July",
-    "August",
-    "September",
-    "October",
-    "November",
-    "December",
-  ];
-  return `${monthNames[month]} ${year}`;
+	const monthNames = [
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December',
+	];
+	return `${monthNames[month]} ${year}`;
 }
 
 /**
@@ -88,58 +88,58 @@ function getMonthSheetName(month, year) {
  * @returns {Object} { dayColumns, validatedColumns, weekOverrideColumns, weekRanges }
  */
 function calculateDayColumns(month, year) {
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-  const dayColumns = {};
-  const validatedColumns = [];
-  const weekOverrideColumns = [];
-  const weekRanges = [];
-  let currentCol = CONFIG.FIRST_DAY_COL;
-  let weekStartCol = CONFIG.FIRST_DAY_COL;
+	const daysInMonth = new Date(year, month + 1, 0).getDate();
+	const dayColumns = {};
+	const validatedColumns = [];
+	const weekOverrideColumns = [];
+	const weekRanges = [];
+	let currentCol = CONFIG.FIRST_DAY_COL;
+	let weekStartCol = CONFIG.FIRST_DAY_COL;
 
-  for (let day = 1; day <= daysInMonth; day++) {
-    const date = new Date(year, month, day);
-    const dayOfWeek = date.getDay();
-    dayColumns[day] = currentCol;
-    currentCol++;
-    if (dayOfWeek === 5) {
-      // Friday - add validated column and week override column after
-      const validatedCol = currentCol;
-      validatedColumns.push(validatedCol);
-      currentCol++;
-      const overrideCol = currentCol;
-      weekOverrideColumns.push(overrideCol);
-      currentCol++;
+	for (let day = 1; day <= daysInMonth; day++) {
+		const date = new Date(year, month, day);
+		const dayOfWeek = date.getDay();
+		dayColumns[day] = currentCol;
+		currentCol++;
+		if (dayOfWeek === 5) {
+			// Friday - add validated column and week override column after
+			const validatedCol = currentCol;
+			validatedColumns.push(validatedCol);
+			currentCol++;
+			const overrideCol = currentCol;
+			weekOverrideColumns.push(overrideCol);
+			currentCol++;
 
-      weekRanges.push({
-        startCol: weekStartCol,
-        endCol: validatedCol - 1,
-        validatedCol: validatedCol,
-        overrideCol: overrideCol,
-      });
-      weekStartCol = currentCol;
-    }
-  }
+			weekRanges.push({
+				startCol: weekStartCol,
+				endCol: validatedCol - 1,
+				validatedCol: validatedCol,
+				overrideCol: overrideCol,
+			});
+			weekStartCol = currentCol;
+		}
+	}
 
-  // Add validated and override columns after the last day if there are weekdays after the last Friday
-  const lastDayOfMonth = new Date(year, month, daysInMonth);
-  const lastDayOfWeek = lastDayOfMonth.getDay();
+	// Add validated and override columns after the last day if there are weekdays after the last Friday
+	const lastDayOfMonth = new Date(year, month, daysInMonth);
+	const lastDayOfWeek = lastDayOfMonth.getDay();
 
-  if (lastDayOfWeek >= 1 && lastDayOfWeek <= 4) {
-    const validatedCol = currentCol;
-    validatedColumns.push(validatedCol);
-    currentCol++;
-    const overrideCol = currentCol;
-    weekOverrideColumns.push(overrideCol);
+	if (lastDayOfWeek >= 1 && lastDayOfWeek <= 4) {
+		const validatedCol = currentCol;
+		validatedColumns.push(validatedCol);
+		currentCol++;
+		const overrideCol = currentCol;
+		weekOverrideColumns.push(overrideCol);
 
-    weekRanges.push({
-      startCol: weekStartCol,
-      endCol: validatedCol - 1,
-      validatedCol: validatedCol,
-      overrideCol: overrideCol,
-    });
-  }
+		weekRanges.push({
+			startCol: weekStartCol,
+			endCol: validatedCol - 1,
+			validatedCol: validatedCol,
+			overrideCol: overrideCol,
+		});
+	}
 
-  return { dayColumns, validatedColumns, weekOverrideColumns, weekRanges };
+	return { dayColumns, validatedColumns, weekOverrideColumns, weekRanges };
 }
 
 /**
@@ -151,40 +151,40 @@ function calculateDayColumns(month, year) {
  * @returns {Object} Day to column mapping
  */
 function getDayColumns(sheet, daysInMonth, month, year) {
-  if (month !== undefined && year !== undefined) {
-    const result = calculateDayColumns(month, year);
-    Logger.log(
-      `getDayColumns calculated ${
-        Object.keys(result.dayColumns).length
-      } day columns for ${month + 1}/${year}`,
-    );
-    return result.dayColumns;
-  }
+	if (month !== undefined && year !== undefined) {
+		const result = calculateDayColumns(month, year);
+		Logger.log(
+			`getDayColumns calculated ${
+				Object.keys(result.dayColumns).length
+			} day columns for ${month + 1}/${year}`,
+		);
+		return result.dayColumns;
+	}
 
-  // Fallback: read from header row
-  const dayColumns = {};
-  const lastCol = sheet.getLastColumn();
-  if (lastCol >= CONFIG.FIRST_DAY_COL) {
-    const numColsToRead = Math.min(50, lastCol - CONFIG.FIRST_DAY_COL + 1);
-    const headerRow = sheet
-      .getRange(CONFIG.HEADER_ROW, CONFIG.FIRST_DAY_COL, 1, numColsToRead)
-      .getValues()[0];
+	// Fallback: read from header row
+	const dayColumns = {};
+	const lastCol = sheet.getLastColumn();
+	if (lastCol >= CONFIG.FIRST_DAY_COL) {
+		const numColsToRead = Math.min(50, lastCol - CONFIG.FIRST_DAY_COL + 1);
+		const headerRow = sheet
+			.getRange(CONFIG.HEADER_ROW, CONFIG.FIRST_DAY_COL, 1, numColsToRead)
+			.getValues()[0];
 
-    for (let i = 0; i < headerRow.length; i++) {
-      const value = headerRow[i];
-      const dayNum = parseInt(value);
-      if (!isNaN(dayNum) && dayNum >= 1 && dayNum <= 31) {
-        dayColumns[dayNum] = CONFIG.FIRST_DAY_COL + i;
-      }
-    }
-  }
+		for (let i = 0; i < headerRow.length; i++) {
+			const value = headerRow[i];
+			const dayNum = parseInt(value);
+			if (!isNaN(dayNum) && dayNum >= 1 && dayNum <= 31) {
+				dayColumns[dayNum] = CONFIG.FIRST_DAY_COL + i;
+			}
+		}
+	}
 
-  Logger.log(
-    `getDayColumns found ${
-      Object.keys(dayColumns).length
-    } day columns from header`,
-  );
-  return dayColumns;
+	Logger.log(
+		`getDayColumns found ${
+			Object.keys(dayColumns).length
+		} day columns from header`,
+	);
+	return dayColumns;
 }
 
 /**
@@ -193,34 +193,34 @@ function getDayColumns(sheet, daysInMonth, month, year) {
  * @returns {Object} Lookup with byId and byName
  */
 function buildEmployeeLookup(sheet) {
-  const lastRow = sheet.getLastRow();
-  const lookup = {
-    byId: {},
-    byName: {},
-  };
+	const lastRow = sheet.getLastRow();
+	const lookup = {
+		byId: {},
+		byName: {},
+	};
 
-  for (let row = CONFIG.FIRST_DATA_ROW; row <= lastRow; row++) {
-    const id = sheet.getRange(row, CONFIG.EMPLOYEE_ID_COL).getValue();
-    const name = sheet.getRange(row, CONFIG.EMPLOYEE_NAME_COL).getValue();
+	for (let row = CONFIG.FIRST_DATA_ROW; row <= lastRow; row++) {
+		const id = sheet.getRange(row, CONFIG.EMPLOYEE_ID_COL).getValue();
+		const name = sheet.getRange(row, CONFIG.EMPLOYEE_NAME_COL).getValue();
 
-    if (id) {
-      const idUpper = String(id).trim().toUpperCase();
-      if (!lookup.byId[idUpper]) {
-        lookup.byId[idUpper] = [];
-      }
-      lookup.byId[idUpper].push(row);
-    }
+		if (id) {
+			const idUpper = String(id).trim().toUpperCase();
+			if (!lookup.byId[idUpper]) {
+				lookup.byId[idUpper] = [];
+			}
+			lookup.byId[idUpper].push(row);
+		}
 
-    if (name) {
-      const nameLower = String(name).trim().toLowerCase();
-      if (!lookup.byName[nameLower]) {
-        lookup.byName[nameLower] = [];
-      }
-      lookup.byName[nameLower].push(row);
-    }
-  }
+		if (name) {
+			const nameLower = String(name).trim().toLowerCase();
+			if (!lookup.byName[nameLower]) {
+				lookup.byName[nameLower] = [];
+			}
+			lookup.byName[nameLower].push(row);
+		}
+	}
 
-  return lookup;
+	return lookup;
 }
 
 /**
@@ -233,38 +233,38 @@ function buildEmployeeLookup(sheet) {
  * @returns {Array} Array of row numbers
  */
 function findEmployeeRows(
-  lookup,
-  employeeId,
-  employeeName,
-  exactMatchOnly,
-  idOnly,
+	lookup,
+	employeeId,
+	employeeName,
+	exactMatchOnly,
+	idOnly,
 ) {
-  // Try by ID first
-  if (employeeId) {
-    const idUpper = String(employeeId).trim().toUpperCase();
-    const rows = lookup.byId[idUpper];
-    if (rows && rows.length > 0) return rows;
-  }
+	// Try by ID first
+	if (employeeId) {
+		const idUpper = String(employeeId).trim().toUpperCase();
+		const rows = lookup.byId[idUpper];
+		if (rows && rows.length > 0) return rows;
+	}
 
-  if (idOnly) return [];
+	if (idOnly) return [];
 
-  // Try by exact name
-  if (employeeName) {
-    const nameLower = employeeName.trim().toLowerCase();
-    const rows = lookup.byName[nameLower];
-    if (rows && rows.length > 0) return rows;
+	// Try by exact name
+	if (employeeName) {
+		const nameLower = employeeName.trim().toLowerCase();
+		const rows = lookup.byName[nameLower];
+		if (rows && rows.length > 0) return rows;
 
-    // Partial match only when allowed (can wrongly match e.g. 'Selva Kumaran' to 'Pavithira Selvakumaran' and apply wrong hire/termination grey-out)
-    if (!exactMatchOnly) {
-      for (const [sheetName, rows] of Object.entries(lookup.byName)) {
-        if (sheetName.includes(nameLower) || nameLower.includes(sheetName)) {
-          return rows;
-        }
-      }
-    }
-  }
+		// Partial match only when allowed (can wrongly match e.g. 'Selva Kumaran' to 'Pavithira Selvakumaran' and apply wrong hire/termination grey-out)
+		if (!exactMatchOnly) {
+			for (const [sheetName, rows] of Object.entries(lookup.byName)) {
+				if (sheetName.includes(nameLower) || nameLower.includes(sheetName)) {
+					return rows;
+				}
+			}
+		}
+	}
 
-  return [];
+	return [];
 }
 
 /**
@@ -274,40 +274,40 @@ function findEmployeeRows(
  * @returns {Array} Array of cell A1 notations
  */
 function scanForLeaveCells(sheet, dayColumns) {
-  const leaveCells = [];
-  const lastRow = sheet.getLastRow();
-  const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
+	const leaveCells = [];
+	const lastRow = sheet.getLastRow();
+	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
 
-  if (numRows <= 0) return leaveCells;
+	if (numRows <= 0) return leaveCells;
 
-  const cols = Object.values(dayColumns);
-  if (cols.length === 0) return leaveCells;
+	const cols = Object.values(dayColumns);
+	if (cols.length === 0) return leaveCells;
 
-  const minCol = Math.min(...cols);
-  const maxCol = Math.max(...cols);
-  const numCols = maxCol - minCol + 1;
+	const minCol = Math.min(...cols);
+	const maxCol = Math.max(...cols);
+	const numCols = maxCol - minCol + 1;
 
-  const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
-  const backgrounds = range.getBackgrounds();
+	const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
+	const backgrounds = range.getBackgrounds();
 
-  const fullDayColor = CONFIG.COLORS.FULL_DAY.toUpperCase();
-  const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
+	const fullDayColor = CONFIG.COLORS.FULL_DAY.toUpperCase();
+	const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
 
-  for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
-    for (let colIdx = 0; colIdx < numCols; colIdx++) {
-      const bg = backgrounds[rowIdx][colIdx].toUpperCase();
+	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
+		for (let colIdx = 0; colIdx < numCols; colIdx++) {
+			const bg = backgrounds[rowIdx][colIdx].toUpperCase();
 
-      if (bg === fullDayColor || bg === halfDayColor) {
-        const col = minCol + colIdx;
-        const row = CONFIG.FIRST_DATA_ROW + rowIdx;
-        const cellA1 = columnToLetter(col) + row;
-        leaveCells.push(cellA1);
-      }
-    }
-  }
+			if (bg === fullDayColor || bg === halfDayColor) {
+				const col = minCol + colIdx;
+				const row = CONFIG.FIRST_DATA_ROW + rowIdx;
+				const cellA1 = columnToLetter(col) + row;
+				leaveCells.push(cellA1);
+			}
+		}
+	}
 
-  Logger.log(`Found ${leaveCells.length} existing leave cells in sheet`);
-  return leaveCells;
+	Logger.log(`Found ${leaveCells.length} existing leave cells in sheet`);
+	return leaveCells;
 }
 
 /**
@@ -321,111 +321,111 @@ function scanForLeaveCells(sheet, dayColumns) {
  * @param {Set} holidayDays - Set of holiday day numbers
  */
 function clearLeaveCellsRespectingOverride(
-  sheet,
-  dayColumns,
-  dayToOverrideCol,
-  month,
-  year,
-  holidayDays,
+	sheet,
+	dayColumns,
+	dayToOverrideCol,
+	month,
+	year,
+	holidayDays,
 ) {
-  const lastRow = sheet.getLastRow();
-  const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
+	const lastRow = sheet.getLastRow();
+	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
 
-  if (numRows <= 0) return;
+	if (numRows <= 0) return;
 
-  const cols = Object.values(dayColumns);
-  if (cols.length === 0) return;
+	const cols = Object.values(dayColumns);
+	if (cols.length === 0) return;
 
-  const minCol = Math.min(...cols);
-  const maxCol = Math.max(...cols);
-  const numCols = maxCol - minCol + 1;
+	const minCol = Math.min(...cols);
+	const maxCol = Math.max(...cols);
+	const numCols = maxCol - minCol + 1;
 
-  const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
-  const backgrounds = range.getBackgrounds();
-  const values = range.getValues();
-  const fontColors = range.getFontColors();
-  const fontWeights = range.getFontWeights();
+	const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
+	const backgrounds = range.getBackgrounds();
+	const values = range.getValues();
+	const fontColors = range.getFontColors();
+	const fontWeights = range.getFontWeights();
 
-  // Get team data from column C to check for Operations team
-  const teamData = sheet
-    .getRange(CONFIG.FIRST_DATA_ROW, CONFIG.PROJECT_COL, numRows, 1)
-    .getValues()
-    .map((row) => row[0]);
+	// Get team data from column C to check for Operations team
+	const teamData = sheet
+		.getRange(CONFIG.FIRST_DATA_ROW, CONFIG.PROJECT_COL, numRows, 1)
+		.getValues()
+		.map((row) => row[0]);
 
-  // Pre-fetch all override column values (batch read)
-  const overrideColValues = {};
-  const uniqueOverrideCols = [...new Set(Object.values(dayToOverrideCol))];
-  for (const overrideCol of uniqueOverrideCols) {
-    overrideColValues[overrideCol] = sheet
-      .getRange(CONFIG.FIRST_DATA_ROW, overrideCol, numRows, 1)
-      .getValues()
-      .map((row) => row[0]);
-  }
+	// Pre-fetch all override column values (batch read)
+	const overrideColValues = {};
+	const uniqueOverrideCols = [...new Set(Object.values(dayToOverrideCol))];
+	for (const overrideCol of uniqueOverrideCols) {
+		overrideColValues[overrideCol] = sheet
+			.getRange(CONFIG.FIRST_DATA_ROW, overrideCol, numRows, 1)
+			.getValues()
+			.map((row) => row[0]);
+	}
 
-  // Build reverse lookup: col -> dayStr for faster access
-  const colToDayStr = {};
-  for (const [dayStr, col] of Object.entries(dayColumns)) {
-    colToDayStr[col] = dayStr;
-  }
+	// Build reverse lookup: col -> dayStr for faster access
+	const colToDayStr = {};
+	for (const [dayStr, col] of Object.entries(dayColumns)) {
+		colToDayStr[col] = dayStr;
+	}
 
-  const fullDayColor = CONFIG.COLORS.FULL_DAY.toUpperCase();
-  const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
+	const fullDayColor = CONFIG.COLORS.FULL_DAY.toUpperCase();
+	const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
 
-  let clearedCount = 0;
+	let clearedCount = 0;
 
-  for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
-    const isOperations =
-      teamData[rowIdx] &&
-      teamData[rowIdx].toString().toLowerCase() === "operations";
+	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
+		const isOperations =
+			teamData[rowIdx] &&
+			teamData[rowIdx].toString().toLowerCase() === 'operations';
 
-    for (let colIdx = 0; colIdx < numCols; colIdx++) {
-      const bg = backgrounds[rowIdx][colIdx].toUpperCase();
+		for (let colIdx = 0; colIdx < numCols; colIdx++) {
+			const bg = backgrounds[rowIdx][colIdx].toUpperCase();
 
-      // Only process cells with leave colors
-      if (bg !== fullDayColor && bg !== halfDayColor) continue;
+			// Only process cells with leave colors
+			if (bg !== fullDayColor && bg !== halfDayColor) continue;
 
-      const col = minCol + colIdx;
-      const dayStr = colToDayStr[col];
-      if (!dayStr) continue;
+			const col = minCol + colIdx;
+			const dayStr = colToDayStr[col];
+			if (!dayStr) continue;
 
-      const dayNum = parseInt(dayStr);
+			const dayNum = parseInt(dayStr);
 
-      // Check if Time off Override is checked for this day's week (using pre-fetched values)
-      const overrideCol = dayToOverrideCol[dayStr];
-      if (overrideCol && overrideColValues[overrideCol]) {
-        if (overrideColValues[overrideCol][rowIdx] === true) {
-          continue; // Skip - Time off Override is checked
-        }
-      }
+			// Check if Time off Override is checked for this day's week (using pre-fetched values)
+			const overrideCol = dayToOverrideCol[dayStr];
+			if (overrideCol && overrideColValues[overrideCol]) {
+				if (overrideColValues[overrideCol][rowIdx] === true) {
+					continue; // Skip - Time off Override is checked
+				}
+			}
 
-      // Check if it's a weekend
-      const date = new Date(year, month, dayNum);
-      const dayOfWeek = date.getDay();
-      if (dayOfWeek === 0 || dayOfWeek === 6) continue; // Skip weekends
+			// Check if it's a weekend
+			const date = new Date(year, month, dayNum);
+			const dayOfWeek = date.getDay();
+			if (dayOfWeek === 0 || dayOfWeek === 6) continue; // Skip weekends
 
-      // Check if it's a holiday
-      if (holidayDays.has(dayNum)) continue; // Skip holidays
+			// Check if it's a holiday
+			if (holidayDays.has(dayNum)) continue; // Skip holidays
 
-      // Clear the leave marking (batch update arrays)
-      backgrounds[rowIdx][colIdx] = null;
-      fontColors[rowIdx][colIdx] = "#000000";
-      fontWeights[rowIdx][colIdx] = "normal";
-      values[rowIdx][colIdx] = isOperations ? 8 : 0;
-      clearedCount++;
-    }
-  }
+			// Clear the leave marking (batch update arrays)
+			backgrounds[rowIdx][colIdx] = null;
+			fontColors[rowIdx][colIdx] = '#000000';
+			fontWeights[rowIdx][colIdx] = 'normal';
+			values[rowIdx][colIdx] = isOperations ? 8 : 0;
+			clearedCount++;
+		}
+	}
 
-  // Batch write all changes at once
-  if (clearedCount > 0) {
-    range.setValues(values);
-    range.setBackgrounds(backgrounds);
-    range.setFontColors(fontColors);
-    range.setFontWeights(fontWeights);
-  }
+	// Batch write all changes at once
+	if (clearedCount > 0) {
+		range.setValues(values);
+		range.setBackgrounds(backgrounds);
+		range.setFontColors(fontColors);
+		range.setFontWeights(fontWeights);
+	}
 
-  Logger.log(
-    `Cleared ${clearedCount} leave cells (respecting Time off Override)`,
-  );
+	Logger.log(
+		`Cleared ${clearedCount} leave cells (respecting Time off Override)`,
+	);
 }
 
 /**
@@ -440,150 +440,150 @@ function clearLeaveCellsRespectingOverride(
  * @param {Set} holidayDays - Set of holiday day numbers
  */
 function fixManuallyAddedRows(
-  sheet,
-  dayColumns,
-  validatedColumns,
-  weekOverrideColumns,
-  month,
-  year,
-  holidayDays,
+	sheet,
+	dayColumns,
+	validatedColumns,
+	weekOverrideColumns,
+	month,
+	year,
+	holidayDays,
 ) {
-  const lastRow = sheet.getLastRow();
-  const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
+	const lastRow = sheet.getLastRow();
+	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
 
-  if (numRows <= 0) return;
+	if (numRows <= 0) return;
 
-  // Get team data from column C
-  const teamData = sheet
-    .getRange(CONFIG.FIRST_DATA_ROW, CONFIG.PROJECT_COL, numRows, 1)
-    .getValues()
-    .map((row) => row[0]);
+	// Get team data from column C
+	const teamData = sheet
+		.getRange(CONFIG.FIRST_DATA_ROW, CONFIG.PROJECT_COL, numRows, 1)
+		.getValues()
+		.map((row) => row[0]);
 
-  const cols = Object.values(dayColumns);
-  if (cols.length === 0) return;
+	const cols = Object.values(dayColumns);
+	if (cols.length === 0) return;
 
-  const minCol = Math.min(...cols);
-  const maxCol = Math.max(...cols);
+	const minCol = Math.min(...cols);
+	const maxCol = Math.max(...cols);
 
-  // Include validated and override columns in the range
-  const allCols = [...cols, ...validatedColumns, ...weekOverrideColumns];
-  const totalLastCol = Math.max(...allCols);
-  const numCols = totalLastCol - minCol + 1;
+	// Include validated and override columns in the range
+	const allCols = [...cols, ...validatedColumns, ...weekOverrideColumns];
+	const totalLastCol = Math.max(...allCols);
+	const numCols = totalLastCol - minCol + 1;
 
-  const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
-  const values = range.getValues();
-  const backgrounds = range.getBackgrounds();
+	const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
+	const values = range.getValues();
+	const backgrounds = range.getBackgrounds();
 
-  // Build reverse lookup: col -> dayStr for faster access
-  const colToDayStr = {};
-  for (const [dayStr, col] of Object.entries(dayColumns)) {
-    colToDayStr[col] = dayStr;
-  }
+	// Build reverse lookup: col -> dayStr for faster access
+	const colToDayStr = {};
+	for (const [dayStr, col] of Object.entries(dayColumns)) {
+		colToDayStr[col] = dayStr;
+	}
 
-  // Convert arrays to Sets for O(1) lookup
-  const validatedColSet = new Set(validatedColumns);
-  const weekOverrideColSet = new Set(weekOverrideColumns);
+	// Convert arrays to Sets for O(1) lookup
+	const validatedColSet = new Set(validatedColumns);
+	const weekOverrideColSet = new Set(weekOverrideColumns);
 
-  const weekendColor = "#efefef";
-  const holidayColor = "#FFCCCB";
+	const weekendColor = '#efefef';
+	const holidayColor = '#FFCCCB';
 
-  let fixedCount = 0;
+	let fixedCount = 0;
 
-  for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
-    const isOperations =
-      teamData[rowIdx] &&
-      teamData[rowIdx].toString().toLowerCase() === "operations";
+	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
+		const isOperations =
+			teamData[rowIdx] &&
+			teamData[rowIdx].toString().toLowerCase() === 'operations';
 
-    for (let col = minCol; col <= totalLastCol; col++) {
-      const colIdx = col - minCol;
-      const dayStr = colToDayStr[col];
+		for (let col = minCol; col <= totalLastCol; col++) {
+			const colIdx = col - minCol;
+			const dayStr = colToDayStr[col];
 
-      if (dayStr) {
-        const dayNum = parseInt(dayStr);
-        const date = new Date(year, month, dayNum);
-        const dayOfWeek = date.getDay();
-        const isHoliday = holidayDays.has(dayNum);
-        const currentValue = values[rowIdx][colIdx];
-        const currentBg = backgrounds[rowIdx][colIdx];
+			if (dayStr) {
+				const dayNum = parseInt(dayStr);
+				const date = new Date(year, month, dayNum);
+				const dayOfWeek = date.getDay();
+				const isHoliday = holidayDays.has(dayNum);
+				const currentValue = values[rowIdx][colIdx];
+				const currentBg = backgrounds[rowIdx][colIdx];
 
-        if (dayOfWeek === 0 || dayOfWeek === 6) {
-          // Weekend - ensure empty value and grey background
-          if (
-            currentValue === "" ||
-            currentValue === null ||
-            currentBg === "" ||
-            currentBg === null ||
-            currentBg === "#ffffff"
-          ) {
-            values[rowIdx][colIdx] = "";
-            backgrounds[rowIdx][colIdx] = weekendColor;
-            fixedCount++;
-          }
-        } else if (isHoliday) {
-          // Holiday - ensure empty value and pastel red background
-          if (
-            currentValue === "" ||
-            currentValue === null ||
-            currentBg === "" ||
-            currentBg === null ||
-            currentBg === "#ffffff"
-          ) {
-            values[rowIdx][colIdx] = "";
-            backgrounds[rowIdx][colIdx] = holidayColor;
-            fixedCount++;
-          }
-        } else {
-          // Weekday - set default hours if empty
-          if (currentValue === "" || currentValue === null) {
-            values[rowIdx][colIdx] = isOperations ? 8 : 0;
-            fixedCount++;
-          }
-        }
-      } else if (validatedColSet.has(col)) {
-        // Validated checkbox column - ensure FALSE if empty
-        const currentValue = values[rowIdx][colIdx];
-        if (currentValue === "" || currentValue === null) {
-          values[rowIdx][colIdx] = false;
-          fixedCount++;
-        }
-      } else if (weekOverrideColSet.has(col)) {
-        // Week override checkbox column - ensure FALSE if empty
-        const currentValue = values[rowIdx][colIdx];
-        if (currentValue === "" || currentValue === null) {
-          values[rowIdx][colIdx] = false;
-          fixedCount++;
-        }
-      }
-    }
-  }
+				if (dayOfWeek === 0 || dayOfWeek === 6) {
+					// Weekend - ensure empty value and grey background
+					if (
+						currentValue === '' ||
+						currentValue === null ||
+						currentBg === '' ||
+						currentBg === null ||
+						currentBg === '#ffffff'
+					) {
+						values[rowIdx][colIdx] = '';
+						backgrounds[rowIdx][colIdx] = weekendColor;
+						fixedCount++;
+					}
+				} else if (isHoliday) {
+					// Holiday - ensure empty value and pastel red background
+					if (
+						currentValue === '' ||
+						currentValue === null ||
+						currentBg === '' ||
+						currentBg === null ||
+						currentBg === '#ffffff'
+					) {
+						values[rowIdx][colIdx] = '';
+						backgrounds[rowIdx][colIdx] = holidayColor;
+						fixedCount++;
+					}
+				} else {
+					// Weekday - set default hours if empty
+					if (currentValue === '' || currentValue === null) {
+						values[rowIdx][colIdx] = isOperations ? 8 : 0;
+						fixedCount++;
+					}
+				}
+			} else if (validatedColSet.has(col)) {
+				// Validated checkbox column - ensure FALSE if empty
+				const currentValue = values[rowIdx][colIdx];
+				if (currentValue === '' || currentValue === null) {
+					values[rowIdx][colIdx] = false;
+					fixedCount++;
+				}
+			} else if (weekOverrideColSet.has(col)) {
+				// Week override checkbox column - ensure FALSE if empty
+				const currentValue = values[rowIdx][colIdx];
+				if (currentValue === '' || currentValue === null) {
+					values[rowIdx][colIdx] = false;
+					fixedCount++;
+				}
+			}
+		}
+	}
 
-  // Write back updated values and backgrounds
-  if (fixedCount > 0) {
-    range.setValues(values);
-    range.setBackgrounds(backgrounds);
+	// Write back updated values and backgrounds
+	if (fixedCount > 0) {
+		range.setValues(values);
+		range.setBackgrounds(backgrounds);
 
-    // Ensure checkboxes are set up for validated and override columns
-    for (const col of validatedColumns) {
-      const checkboxRange = sheet.getRange(
-        CONFIG.FIRST_DATA_ROW,
-        col,
-        numRows,
-        1,
-      );
-      checkboxRange.insertCheckboxes();
-    }
-    for (const col of weekOverrideColumns) {
-      const checkboxRange = sheet.getRange(
-        CONFIG.FIRST_DATA_ROW,
-        col,
-        numRows,
-        1,
-      );
-      checkboxRange.insertCheckboxes();
-    }
+		// Ensure checkboxes are set up for validated and override columns
+		for (const col of validatedColumns) {
+			const checkboxRange = sheet.getRange(
+				CONFIG.FIRST_DATA_ROW,
+				col,
+				numRows,
+				1,
+			);
+			checkboxRange.insertCheckboxes();
+		}
+		for (const col of weekOverrideColumns) {
+			const checkboxRange = sheet.getRange(
+				CONFIG.FIRST_DATA_ROW,
+				col,
+				numRows,
+				1,
+			);
+			checkboxRange.insertCheckboxes();
+		}
 
-    Logger.log(`Fixed ${fixedCount} cells in manually added rows`);
-  }
+		Logger.log(`Fixed ${fixedCount} cells in manually added rows`);
+	}
 }
 
 /**
@@ -598,130 +598,132 @@ function fixManuallyAddedRows(
  * @param {Set} holidayDays - Set of holiday day numbers
  */
 function setOperationsDefaultHours(
-  sheet,
-  dayColumns,
-  month,
-  year,
-  holidayDays,
+	sheet,
+	dayColumns,
+	month,
+	year,
+	holidayDays,
 ) {
-  const lastRow = sheet.getLastRow();
-  const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
+	const lastRow = sheet.getLastRow();
+	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
 
-  if (numRows <= 0) return;
+	if (numRows <= 0) return;
 
-  // Get team data from column C
-  const teamData = sheet
-    .getRange(CONFIG.FIRST_DATA_ROW, CONFIG.PROJECT_COL, numRows, 1)
-    .getValues()
-    .map((row) => row[0]);
+	// Get team data from column C
+	const teamData = sheet
+		.getRange(CONFIG.FIRST_DATA_ROW, CONFIG.PROJECT_COL, numRows, 1)
+		.getValues()
+		.map((row) => row[0]);
 
-  // Build day -> override column mapping
-  const { weekRanges } = calculateDayColumns(month, year);
-  const dayToOverrideCol = {};
-  for (const weekRange of weekRanges) {
-    for (const [dayStr, col] of Object.entries(dayColumns)) {
-      if (col >= weekRange.startCol && col <= weekRange.endCol) {
-        dayToOverrideCol[dayStr] = weekRange.overrideCol;
-      }
-    }
-  }
+	// Build day -> override column mapping
+	const { weekRanges } = calculateDayColumns(month, year);
+	const dayToOverrideCol = {};
+	for (const weekRange of weekRanges) {
+		for (const [dayStr, col] of Object.entries(dayColumns)) {
+			if (col >= weekRange.startCol && col <= weekRange.endCol) {
+				dayToOverrideCol[dayStr] = weekRange.overrideCol;
+			}
+		}
+	}
 
-  // Pre-fetch all override column values (batch read)
-  const overrideColValues = {};
-  const uniqueOverrideCols = [...new Set(Object.values(dayToOverrideCol))];
-  for (const overrideCol of uniqueOverrideCols) {
-    overrideColValues[overrideCol] = sheet
-      .getRange(CONFIG.FIRST_DATA_ROW, overrideCol, numRows, 1)
-      .getValues()
-      .map((row) => row[0]);
-  }
+	// Pre-fetch all override column values (batch read)
+	const overrideColValues = {};
+	const uniqueOverrideCols = [...new Set(Object.values(dayToOverrideCol))];
+	for (const overrideCol of uniqueOverrideCols) {
+		overrideColValues[overrideCol] = sheet
+			.getRange(CONFIG.FIRST_DATA_ROW, overrideCol, numRows, 1)
+			.getValues()
+			.map((row) => row[0]);
+	}
 
-  // Build reverse lookup: col -> dayStr for faster access
-  const colToDayStr = {};
-  for (const [dayStr, col] of Object.entries(dayColumns)) {
-    colToDayStr[col] = dayStr;
-  }
+	// Build reverse lookup: col -> dayStr for faster access
+	const colToDayStr = {};
+	for (const [dayStr, col] of Object.entries(dayColumns)) {
+		colToDayStr[col] = dayStr;
+	}
 
-  const cols = Object.values(dayColumns);
-  if (cols.length === 0) return;
+	const cols = Object.values(dayColumns);
+	if (cols.length === 0) return;
 
-  const minCol = Math.min(...cols);
-  const maxCol = Math.max(...cols);
-  const numCols = maxCol - minCol + 1;
+	const minCol = Math.min(...cols);
+	const maxCol = Math.max(...cols);
+	const numCols = maxCol - minCol + 1;
 
-  const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
-  const values = range.getValues();
-  const backgrounds = range.getBackgrounds();
+	const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
+	const values = range.getValues();
+	const backgrounds = range.getBackgrounds();
 
-  const fullDayColor = CONFIG.COLORS.FULL_DAY.toUpperCase();
-  const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
-  const weekendColor = "#EFEFEF";
-  const holidayColor = "#FFCCCB";
+	const fullDayColor = CONFIG.COLORS.FULL_DAY.toUpperCase();
+	const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
+	const weekendColor = '#EFEFEF';
+	const holidayColor = '#FFCCCB';
 
-  let updatedCount = 0;
+	let updatedCount = 0;
 
-  for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
-    const isOperations =
-      teamData[rowIdx] &&
-      teamData[rowIdx].toString().toLowerCase() === "operations";
+	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
+		const team = teamData[rowIdx]
+			? teamData[rowIdx].toString().toLowerCase()
+			: '';
+		const isOperations = team.includes('operations');
+		const isAstro = team.includes('astro');
 
-    for (let colIdx = 0; colIdx < numCols; colIdx++) {
-      const col = minCol + colIdx;
-      const dayStr = colToDayStr[col];
-      if (!dayStr) continue;
+		for (let colIdx = 0; colIdx < numCols; colIdx++) {
+			const col = minCol + colIdx;
+			const dayStr = colToDayStr[col];
+			if (!dayStr) continue;
 
-      const dayNum = parseInt(dayStr);
+			const dayNum = parseInt(dayStr);
 
-      // Check if Time off Override is checked (using pre-fetched values)
-      const overrideCol = dayToOverrideCol[dayStr];
-      if (overrideCol && overrideColValues[overrideCol]) {
-        if (overrideColValues[overrideCol][rowIdx] === true) {
-          continue; // Skip - Time off Override is checked
-        }
-      }
+			// Check if Time off Override is checked (using pre-fetched values)
+			const overrideCol = dayToOverrideCol[dayStr];
+			if (overrideCol && overrideColValues[overrideCol]) {
+				if (overrideColValues[overrideCol][rowIdx] === true) {
+					continue; // Skip - Time off Override is checked
+				}
+			}
 
-      // Check if it's a weekend
-      const date = new Date(year, month, dayNum);
-      const dayOfWeek = date.getDay();
-      if (dayOfWeek === 0 || dayOfWeek === 6) {
-        // Weekend - ensure empty value and grey background
-        if (values[rowIdx][colIdx] === "" || values[rowIdx][colIdx] === null) {
-          backgrounds[rowIdx][colIdx] = weekendColor;
-        }
-        continue;
-      }
+			// Check if it's a weekend
+			const date = new Date(year, month, dayNum);
+			const dayOfWeek = date.getDay();
+			if (dayOfWeek === 0 || dayOfWeek === 6) {
+				// Weekend - ensure empty value and grey background
+				if (values[rowIdx][colIdx] === '' || values[rowIdx][colIdx] === null) {
+					backgrounds[rowIdx][colIdx] = weekendColor;
+				}
+				continue;
+			}
 
-      // Check if it's a holiday
-      if (holidayDays.has(dayNum)) {
-        // Holiday - ensure empty value and pastel red background
-        if (values[rowIdx][colIdx] === "" || values[rowIdx][colIdx] === null) {
-          backgrounds[rowIdx][colIdx] = holidayColor;
-        }
-        continue;
-      }
+			// Check if it's a holiday
+			if (holidayDays.has(dayNum)) {
+				// Holiday - ensure empty value and pastel red background
+				if (values[rowIdx][colIdx] === '' || values[rowIdx][colIdx] === null) {
+					backgrounds[rowIdx][colIdx] = holidayColor;
+				}
+				continue;
+			}
 
-      // Check if cell has leave color (don't overwrite leave cells)
-      const bg = backgrounds[rowIdx][colIdx].toUpperCase();
-      if (bg === fullDayColor || bg === halfDayColor) continue;
+			// Check if cell has leave color (don't overwrite leave cells)
+			const bg = backgrounds[rowIdx][colIdx].toUpperCase();
+			if (bg === fullDayColor || bg === halfDayColor) continue;
 
-      // Only update if current value is empty
-      const currentValue = values[rowIdx][colIdx];
-      if (currentValue === "" || currentValue === null) {
-        // Set default: 8 for Operations, 0 for others
-        values[rowIdx][colIdx] = isOperations ? 8 : 0;
-        updatedCount++;
-      }
-    }
-  }
+			// Only update if current value is empty
+			const currentValue = values[rowIdx][colIdx];
+			if (currentValue === '' || currentValue === null) {
+				// Set default: 8 for Operations or Astro, 0 for others
+				values[rowIdx][colIdx] = isOperations || isAstro ? 8 : 0;
+				updatedCount++;
+			}
+		}
+	}
 
-  // Write back updated values and backgrounds
-  if (updatedCount > 0) {
-    range.setValues(values);
-    range.setBackgrounds(backgrounds);
-    Logger.log(
-      `Set default hours for ${updatedCount} cells (Operations: 8, Others: 0)`,
-    );
-  }
+	// Write back updated values and backgrounds
+	if (updatedCount > 0) {
+		range.setValues(values);
+		range.setBackgrounds(backgrounds);
+		Logger.log(
+			`Set default hours for ${updatedCount} cells (Operations/Astro: 8, Others: 0)`,
+		);
+	}
 }
 
 /**
@@ -734,18 +736,18 @@ function setOperationsDefaultHours(
  * @returns {boolean} True if half-day
  */
 function determineHalfDay(
-  isSingleDay,
-  isFirstDay,
-  isLastDay,
-  effectiveDuration,
-  endDuration,
+	isSingleDay,
+	isFirstDay,
+	isLastDay,
+	effectiveDuration,
+	endDuration,
 ) {
-  const isHalfDuration = (d) => d === 2 || d === 3;
+	const isHalfDuration = (d) => d === 2 || d === 3;
 
-  if (isSingleDay) return isHalfDuration(effectiveDuration);
-  if (isFirstDay) return isHalfDuration(effectiveDuration);
-  if (isLastDay) return isHalfDuration(endDuration);
-  return false;
+	if (isSingleDay) return isHalfDuration(effectiveDuration);
+	if (isFirstDay) return isHalfDuration(effectiveDuration);
+	if (isLastDay) return isHalfDuration(endDuration);
+	return false;
 }
 
 /**
@@ -756,24 +758,24 @@ function determineHalfDay(
  * @returns {Object} Row to hours mapping
  */
 function buildRowHoursFromSheet(sheet, rows, dayColumns) {
-  const rowHoursMap = {};
+	const rowHoursMap = {};
 
-  for (const row of rows) {
-    let foundHours = null;
+	for (const row of rows) {
+		let foundHours = null;
 
-    for (const col of Object.values(dayColumns)) {
-      const cellValue = sheet.getRange(row, col).getValue();
-      if (typeof cellValue === "number" && cellValue > 0) {
-        foundHours = cellValue;
-        break;
-      }
-    }
+		for (const col of Object.values(dayColumns)) {
+			const cellValue = sheet.getRange(row, col).getValue();
+			if (typeof cellValue === 'number' && cellValue > 0) {
+				foundHours = cellValue;
+				break;
+			}
+		}
 
-    rowHoursMap[row] = foundHours || CONFIG.DEFAULT_HOURS;
-    Logger.log(`Row ${row}: ${rowHoursMap[row]} hours from sheet`);
-  }
+		rowHoursMap[row] = foundHours || CONFIG.DEFAULT_HOURS;
+		Logger.log(`Row ${row}: ${rowHoursMap[row]} hours from sheet`);
+	}
 
-  return rowHoursMap;
+	return rowHoursMap;
 }
 
 /**
@@ -784,30 +786,30 @@ function buildRowHoursFromSheet(sheet, rows, dayColumns) {
  * @returns {Object} Row to hours mapping
  */
 function buildRowHoursFromAttendance(sheet, rows, empAttendance) {
-  const rowHoursMap = {};
+	const rowHoursMap = {};
 
-  for (const row of rows) {
-    const projectName = String(sheet.getRange(row, 3).getValue() || "")
-      .trim()
-      .toUpperCase();
+	for (const row of rows) {
+		const projectName = String(sheet.getRange(row, 3).getValue() || '')
+			.trim()
+			.toUpperCase();
 
-    const matchingAtt = empAttendance.find(
-      (att) =>
-        String(att.project || "")
-          .trim()
-          .toUpperCase() === projectName,
-    );
+		const matchingAtt = empAttendance.find(
+			(att) =>
+				String(att.project || '')
+					.trim()
+					.toUpperCase() === projectName,
+		);
 
-    const hours =
-      matchingAtt && matchingAtt.hours > 0
-        ? matchingAtt.hours
-        : CONFIG.DEFAULT_HOURS;
+		const hours =
+			matchingAtt && matchingAtt.hours > 0
+				? matchingAtt.hours
+				: CONFIG.DEFAULT_HOURS;
 
-    rowHoursMap[row] = hours;
-    Logger.log(`Row ${row} (${projectName}): ${hours} hours`);
-  }
+		rowHoursMap[row] = hours;
+		Logger.log(`Row ${row} (${projectName}): ${hours} hours`);
+	}
 
-  return rowHoursMap;
+	return rowHoursMap;
 }
 
 /**
@@ -819,21 +821,21 @@ function buildRowHoursFromAttendance(sheet, rows, empAttendance) {
  * @returns {Array} Active row numbers
  */
 function getActiveRows(sheet, rows, overrideCol, leaveDate) {
-  if (!overrideCol) {
-    Logger.log(`No override column for day ${leaveDate}, all rows active`);
-    return rows;
-  }
+	if (!overrideCol) {
+		Logger.log(`No override column for day ${leaveDate}, all rows active`);
+		return rows;
+	}
 
-  return rows.filter((row) => {
-    const overrideValue = sheet.getRange(row, overrideCol).getValue();
-    if (overrideValue === true) {
-      Logger.log(
-        `Skipping row ${row} for day ${leaveDate} - Week Override checked`,
-      );
-      return false;
-    }
-    return true;
-  });
+	return rows.filter((row) => {
+		const overrideValue = sheet.getRange(row, overrideCol).getValue();
+		if (overrideValue === true) {
+			Logger.log(
+				`Skipping row ${row} for day ${leaveDate} - Week Override checked`,
+			);
+			return false;
+		}
+		return true;
+	});
 }
 
 /**
@@ -845,29 +847,29 @@ function getActiveRows(sheet, rows, overrideCol, leaveDate) {
  * @param {Object} halfDayCellsMap - Half-day cells map (mutated)
  */
 function assignLeaveCells(
-  leave,
-  activeRows,
-  col,
-  fullDayCells,
-  halfDayCellsMap,
+	leave,
+	activeRows,
+	col,
+	fullDayCells,
+	halfDayCellsMap,
 ) {
-  if (!leave.is_half_day) {
-    for (const row of activeRows) {
-      fullDayCells.push(columnToLetter(col) + row);
-    }
-    return;
-  }
+	if (!leave.is_half_day) {
+		for (const row of activeRows) {
+			fullDayCells.push(columnToLetter(col) + row);
+		}
+		return;
+	}
 
-  const hoursPerProject = CONFIG.HALF_DAY_HOURS / activeRows.length;
-  Logger.log(
-    `Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each`,
-  );
+	const hoursPerProject = CONFIG.HALF_DAY_HOURS / activeRows.length;
+	Logger.log(
+		`Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each`,
+	);
 
-  for (const row of activeRows) {
-    const cellA1 = columnToLetter(col) + row;
-    halfDayCellsMap[cellA1] = hoursPerProject;
-    Logger.log(`Row ${row}: ${hoursPerProject}hr (ORANGE)`);
-  }
+	for (const row of activeRows) {
+		const cellA1 = columnToLetter(col) + row;
+		halfDayCellsMap[cellA1] = hoursPerProject;
+		Logger.log(`Row ${row}: ${hoursPerProject}hr (ORANGE)`);
+	}
 }
 
 /**
@@ -879,31 +881,31 @@ function assignLeaveCells(
  * @param {Array} halfDayCells - Half-day cells array with {cell, value} (mutated)
  */
 function assignLeaveCellsWithObjects(
-  leave,
-  activeRows,
-  col,
-  fullDayCells,
-  halfDayCells,
+	leave,
+	activeRows,
+	col,
+	fullDayCells,
+	halfDayCells,
 ) {
-  if (!leave.is_half_day) {
-    for (const row of activeRows) {
-      fullDayCells.push(columnToLetter(col) + row);
-    }
-    return;
-  }
+	if (!leave.is_half_day) {
+		for (const row of activeRows) {
+			fullDayCells.push(columnToLetter(col) + row);
+		}
+		return;
+	}
 
-  const hoursPerProject = CONFIG.HALF_DAY_HOURS / activeRows.length;
-  Logger.log(
-    `Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each`,
-  );
+	const hoursPerProject = CONFIG.HALF_DAY_HOURS / activeRows.length;
+	Logger.log(
+		`Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each`,
+	);
 
-  for (const row of activeRows) {
-    halfDayCells.push({
-      cell: columnToLetter(col) + row,
-      value: hoursPerProject,
-    });
-    Logger.log(`Row ${row}: ${hoursPerProject}hr (ORANGE)`);
-  }
+	for (const row of activeRows) {
+		halfDayCells.push({
+			cell: columnToLetter(col) + row,
+			value: hoursPerProject,
+		});
+		Logger.log(`Row ${row}: ${hoursPerProject}hr (ORANGE)`);
+	}
 }
 
 /**
@@ -919,50 +921,50 @@ function assignLeaveCellsWithObjects(
  * @returns {ConditionalFormatRule|null} Rule or null
  */
 function buildWeekConditionalRule(
-  sheet,
-  weekRange,
-  dayColumns,
-  month,
-  year,
-  lastRow,
-  numRows,
-  leaveCellSet,
+	sheet,
+	weekRange,
+	dayColumns,
+	month,
+	year,
+	lastRow,
+	numRows,
+	leaveCellSet,
 ) {
-  const { startCol, endCol, validatedCol } = weekRange;
-  const checkboxColLetter = columnToLetter(validatedCol);
-  const weekdayRanges = [];
+	const { startCol, endCol, validatedCol } = weekRange;
+	const checkboxColLetter = columnToLetter(validatedCol);
+	const weekdayRanges = [];
 
-  for (const [dayStr, col] of Object.entries(dayColumns)) {
-    if (col < startCol || col > endCol) continue;
+	for (const [dayStr, col] of Object.entries(dayColumns)) {
+		if (col < startCol || col > endCol) continue;
 
-    const day = parseInt(dayStr);
-    const date = new Date(year, month, day);
-    const dayOfWeek = date.getDay();
+		const day = parseInt(dayStr);
+		const date = new Date(year, month, day);
+		const dayOfWeek = date.getDay();
 
-    if (dayOfWeek < 1 || dayOfWeek > 5) continue;
+		if (dayOfWeek < 1 || dayOfWeek > 5) continue;
 
-    const colLetter = columnToLetter(col);
-    const ranges = buildNonLeaveRanges(
-      sheet,
-      col,
-      colLetter,
-      lastRow,
-      leaveCellSet,
-    );
-    weekdayRanges.push(...ranges);
-  }
+		const colLetter = columnToLetter(col);
+		const ranges = buildNonLeaveRanges(
+			sheet,
+			col,
+			colLetter,
+			lastRow,
+			leaveCellSet,
+		);
+		weekdayRanges.push(...ranges);
+	}
 
-  weekdayRanges.push(
-    sheet.getRange(CONFIG.FIRST_DATA_ROW, validatedCol, numRows, 1),
-  );
+	weekdayRanges.push(
+		sheet.getRange(CONFIG.FIRST_DATA_ROW, validatedCol, numRows, 1),
+	);
 
-  if (weekdayRanges.length === 0) return null;
+	if (weekdayRanges.length === 0) return null;
 
-  return SpreadsheetApp.newConditionalFormatRule()
-    .whenFormulaSatisfied(`=$${checkboxColLetter}${CONFIG.FIRST_DATA_ROW}=TRUE`)
-    .setBackground("#B8E1CD")
-    .setRanges(weekdayRanges)
-    .build();
+	return SpreadsheetApp.newConditionalFormatRule()
+		.whenFormulaSatisfied(`=$${checkboxColLetter}${CONFIG.FIRST_DATA_ROW}=TRUE`)
+		.setBackground('#B8E1CD')
+		.setRanges(weekdayRanges)
+		.build();
 }
 
 /**
@@ -975,30 +977,30 @@ function buildWeekConditionalRule(
  * @returns {Array} Array of Range objects
  */
 function buildNonLeaveRanges(sheet, col, colLetter, lastRow, leaveCellSet) {
-  const ranges = [];
-  let rangeStart = null;
+	const ranges = [];
+	let rangeStart = null;
 
-  for (let row = CONFIG.FIRST_DATA_ROW; row <= lastRow + 1; row++) {
-    const cellA1 = `${colLetter}${row}`;
-    const isLeave = leaveCellSet.has(cellA1.toUpperCase());
-    const isLastRow = row > lastRow;
+	for (let row = CONFIG.FIRST_DATA_ROW; row <= lastRow + 1; row++) {
+		const cellA1 = `${colLetter}${row}`;
+		const isLeave = leaveCellSet.has(cellA1.toUpperCase());
+		const isLastRow = row > lastRow;
 
-    const shouldEndRange = isLeave || isLastRow;
-    const shouldStartRange = !isLeave && !isLastRow && rangeStart === null;
+		const shouldEndRange = isLeave || isLastRow;
+		const shouldStartRange = !isLeave && !isLastRow && rangeStart === null;
 
-    if (shouldStartRange) {
-      rangeStart = row;
-      continue;
-    }
+		if (shouldStartRange) {
+			rangeStart = row;
+			continue;
+		}
 
-    if (shouldEndRange && rangeStart !== null) {
-      const rangeEnd = row - 1;
-      ranges.push(
-        sheet.getRange(rangeStart, col, rangeEnd - rangeStart + 1, 1),
-      );
-      rangeStart = null;
-    }
-  }
+		if (shouldEndRange && rangeStart !== null) {
+			const rangeEnd = row - 1;
+			ranges.push(
+				sheet.getRange(rangeStart, col, rangeEnd - rangeStart + 1, 1),
+			);
+			rangeStart = null;
+		}
+	}
 
-  return ranges;
+	return ranges;
 }

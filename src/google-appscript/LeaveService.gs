@@ -84,16 +84,14 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
 			const empName = data.empName;
 			const calendar = data.calendar || {};
 
-			// Include approved (3) and pending (1, 2) leaves; exclude rejected (4), cancelled (5), for_cancellation (6)
-			const activeRequests = (calendar.time_off_request || []).filter(
-				(r) => r.status === 1 || r.status === 2 || r.status === 3,
-			);
+			// Include all leave requests regardless of status
+			const allRequests = calendar.time_off_request || [];
 
-			if (activeRequests.length === 0) continue;
+			if (allRequests.length === 0) continue;
 
 			const leaveDays = [];
 
-			for (const request of activeRequests) {
+			for (const request of allRequests) {
 				const leaveStart = parseDateDMY(request.effective_date);
 				const leaveEnd = request.end_date
 					? parseDateDMY(request.end_date)
