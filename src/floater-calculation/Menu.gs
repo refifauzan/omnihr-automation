@@ -246,13 +246,16 @@ function scheduledWeeklyFloaterUpdate() {
 			workingDays,
 		);
 
-		floaterData.sort((a, b) => {
+		// Only include employees with floater % > 0
+		const floatersOnly = floaterData.filter((emp) => emp.floaterPct > 0);
+
+		floatersOnly.sort((a, b) => {
 			if (a.isLeaver && !b.isLeaver) return 1;
 			if (!a.isLeaver && b.isLeaver) return -1;
 			return b.floaterPct - a.floaterPct;
 		});
 
-		writeFloaterSheet(sheet, floaterData, monthNames[month], year, isUpdate);
+		writeFloaterSheet(sheet, floatersOnly, monthNames[month], year, isUpdate);
 		SpreadsheetApp.flush();
 
 		Logger.log(

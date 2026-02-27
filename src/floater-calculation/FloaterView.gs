@@ -81,15 +81,18 @@ function generateFloaterView(month, year) {
 			workingDays,
 		);
 
+		// Only include employees with floater % > 0
+		const floatersOnly = floaterData.filter((emp) => emp.floaterPct > 0);
+
 		// Sort: leavers at bottom, then by floater % descending
-		floaterData.sort((a, b) => {
+		floatersOnly.sort((a, b) => {
 			if (a.isLeaver && !b.isLeaver) return 1;
 			if (!a.isLeaver && b.isLeaver) return -1;
 			return b.floaterPct - a.floaterPct;
 		});
 
 		// Write to sheet (update only columns A-E if sheet already existed)
-		writeFloaterSheet(sheet, floaterData, monthNames[month], year, isUpdate);
+		writeFloaterSheet(sheet, floatersOnly, monthNames[month], year, isUpdate);
 
 		SpreadsheetApp.flush();
 
