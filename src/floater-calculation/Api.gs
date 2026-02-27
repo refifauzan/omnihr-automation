@@ -16,7 +16,7 @@ function getAccessToken() {
 
 	if (!baseUrl || !subdomain || !username || !password) {
 		throw new Error(
-			'API credentials not configured. Use Floater > Setup API Credentials'
+			'API credentials not configured. Use Floater > Setup API Credentials',
 		);
 	}
 
@@ -24,7 +24,7 @@ function getAccessToken() {
 		method: 'post',
 		contentType: 'application/x-www-form-urlencoded',
 		payload: `username=${encodeURIComponent(
-			username
+			username,
 		)}&password=${encodeURIComponent(password)}`,
 		headers: {
 			'x-subdomain': subdomain,
@@ -170,7 +170,7 @@ function fetchTerminationDates(token) {
 	Logger.log(
 		`Found ${
 			Object.keys(terminationDates).length
-		} employees with termination dates`
+		} employees with termination dates`,
 	);
 	return terminationDates;
 }
@@ -192,7 +192,7 @@ function fetchAllEmployeesWithDetails(token) {
 	const employees = allEmployees.filter((emp) => {
 		const fullName = emp.full_name || emp.name || '';
 		const isExcluded = CONFIG.EXCLUDED_EMPLOYEES.some(
-			(excluded) => fullName.toLowerCase() === excluded.toLowerCase()
+			(excluded) => fullName.toLowerCase() === excluded.toLowerCase(),
 		);
 		if (isExcluded) {
 			Logger.log(`Excluding employee: ${fullName}`);
@@ -201,7 +201,7 @@ function fetchAllEmployeesWithDetails(token) {
 	});
 
 	Logger.log(
-		`Filtered ${allEmployees.length - employees.length} excluded employees`
+		`Filtered ${allEmployees.length - employees.length} excluded employees`,
 	);
 
 	const employeeDetails = [];
@@ -211,17 +211,15 @@ function fetchAllEmployeesWithDetails(token) {
 	const terminationDates = fetchTerminationDates(token);
 
 	// Fetch team and project contribution data
-	const { teamData, projectContribution } = fetchEmployeeJobData(
-		token,
-		employees
-	);
+	const { teamData, departmentData, projectContribution } =
+		fetchEmployeeJobData(token, employees);
 
 	for (let i = 0; i < employees.length; i += BATCH_SIZE) {
 		const batch = employees.slice(i, i + BATCH_SIZE);
 		Logger.log(
 			`Fetching employee details batch ${
 				Math.floor(i / BATCH_SIZE) + 1
-			}/${Math.ceil(employees.length / BATCH_SIZE)}`
+			}/${Math.ceil(employees.length / BATCH_SIZE)}`,
 		);
 
 		const { requests } = buildBaseDataRequests(token, batch);
@@ -250,6 +248,7 @@ function fetchAllEmployeesWithDetails(token) {
 					hired_date: emp.hired_date || null,
 					termination_date: terminationDate,
 					team: teamData[userId] || '',
+					department: departmentData[userId] || '',
 					project_contribution: projectContribution[userId] || '',
 					employment_status: emp.employment_status || null,
 					employment_status_display: emp.employment_status_display || null,
@@ -265,6 +264,7 @@ function fetchAllEmployeesWithDetails(token) {
 					hired_date: emp.hired_date || null,
 					termination_date: terminationDates[userId] || null,
 					team: teamData[userId] || '',
+					department: departmentData[userId] || '',
 					project_contribution: projectContribution[userId] || '',
 					employment_status: emp.employment_status || null,
 					employment_status_display: emp.employment_status_display || null,
@@ -295,19 +295,20 @@ function fetchEmployeeJobData(token, employees) {
 	};
 
 	const teamData = {};
+	const departmentData = {};
 	const projectContribution = {};
 	const BATCH_SIZE = 50;
 
 	Logger.log(
-		'Fetching job data (team & project contribution) for employees...'
+		'Fetching job data (team, department & project contribution) for employees...',
 	);
 
 	for (let i = 0; i < employees.length; i += BATCH_SIZE) {
 		const batch = employees.slice(i, i + BATCH_SIZE);
 		Logger.log(
 			`Fetching job data batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(
-				employees.length / BATCH_SIZE
-			)}`
+				employees.length / BATCH_SIZE,
+			)}`,
 		);
 
 		const requests = batch.map((emp) => {
@@ -338,9 +339,13 @@ function fetchEmployeeJobData(token, employees) {
 							teamData[userId] = currentJob.team_display;
 						}
 
+						if (currentJob.department_display) {
+							departmentData[userId] = currentJob.department_display;
+						}
+
 						const customAttrs = currentJob.custom_data_attributes_values || [];
 						const contributionAttr = customAttrs.find(
-							(attr) => attr.attr === PROJECT_CONTRIBUTION_ATTR_ID
+							(attr) => attr.attr === PROJECT_CONTRIBUTION_ATTR_ID,
 						);
 						if (
 							contributionAttr &&
@@ -359,11 +364,14 @@ function fetchEmployeeJobData(token, employees) {
 
 	Logger.log(`Fetched team data for ${Object.keys(teamData).length} employees`);
 	Logger.log(
+		`Fetched department data for ${Object.keys(departmentData).length} employees`,
+	);
+	Logger.log(
 		`Fetched project contribution for ${
 			Object.keys(projectContribution).length
-		} employees`
+		} employees`,
 	);
-	return { teamData, projectContribution };
+	return { teamData, departmentData, projectContribution };
 }
 
 /**
@@ -387,7 +395,11 @@ function parseDateDMY(dateStr) {
 	if (!dateStr) return null;
 	const parts = dateStr.split('/');
 	if (parts.length !== 3) return null;
-	return new Date(parseInt(parts[2]), parseInt(parts[1]) - 1, parseInt(parts[0]));
+	return new Date(
+		parseInt(parts[2]),
+		parseInt(parts[1]) - 1,
+		parseInt(parts[0]),
+	);
 }
 
 /**
@@ -444,23 +456,33 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
 				if (allRequests.length === 0) continue;
 
 				const emp = batch[j];
-				const employeeId = String(emp.employee_id || '').trim().toUpperCase();
+				const employeeId = String(emp.employee_id || '')
+					.trim()
+					.toUpperCase();
 				const empName = (emp.full_name || emp.name || '').trim().toLowerCase();
 
 				const empLeaveDays = new Map();
 
 				for (const request of allRequests) {
 					const effDate = parseDateDMY(request.effective_date);
-					const endReqDate = parseDateDMY(request.end_date || request.effective_date);
+					const endReqDate = parseDateDMY(
+						request.end_date || request.effective_date,
+					);
 					if (!effDate) continue;
 
 					const rangeStart = effDate;
 					const rangeEnd = endReqDate || effDate;
 
-					for (let d = new Date(rangeStart); d <= rangeEnd; d.setDate(d.getDate() + 1)) {
+					for (
+						let d = new Date(rangeStart);
+						d <= rangeEnd;
+						d.setDate(d.getDate() + 1)
+					) {
 						if (d.getMonth() !== month || d.getFullYear() !== year) continue;
 						const day = d.getDate();
-						const isHalfDay = request.effective_date_duration === 2 || request.effective_date_duration === 3;
+						const isHalfDay =
+							request.effective_date_duration === 2 ||
+							request.effective_date_duration === 3;
 						empLeaveDays.set(day, { is_half_day: isHalfDay });
 					}
 				}
@@ -512,7 +534,7 @@ function fetchHolidaysForMonth(token, month, year) {
 		const calendar = apiRequest(
 			token,
 			`/employee/1.1/${userId}/time-off-calendar/`,
-			{ start_date: startDateStr, end_date: endDateStr }
+			{ start_date: startDateStr, end_date: endDateStr },
 		);
 
 		const holidayGroups = calendar.holiday || [];
@@ -541,7 +563,7 @@ function fetchHolidaysForMonth(token, month, year) {
 		}
 
 		Logger.log(
-			`Found ${holidayDays.length} public holidays for ${month + 1}/${year}`
+			`Found ${holidayDays.length} public holidays for ${month + 1}/${year}`,
 		);
 		return holidayDays;
 	} catch (e) {
