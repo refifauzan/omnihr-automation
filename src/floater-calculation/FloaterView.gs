@@ -400,29 +400,6 @@ function writeFloaterSheet(sheet, floaterData, monthName, year) {
 			.setNumberFormat('0.0%')
 			.setHorizontalAlignment('center');
 
-		// Apply conditional scale colors based on floater cost
-		for (let i = 0; i < floaterData.length; i++) {
-			const row = CONFIG.FIRST_DATA_ROW + i;
-			const emp = floaterData[i];
-			const rowRange = sheet.getRange(row, 1, 1, headers.length);
-
-			let scale;
-			if (emp.isLeaver) {
-				scale = CONFIG.SCALES.LEAVERS;
-			} else if (emp.floaterCost >= 10000) {
-				scale = CONFIG.SCALES.ABOVE_10K;
-			} else if (emp.floaterCost >= 7000) {
-				scale = CONFIG.SCALES.FROM_7K_TO_10K;
-			} else if (emp.floaterCost >= 4000) {
-				scale = CONFIG.SCALES.FROM_4K_TO_7K;
-			} else {
-				scale = CONFIG.SCALES.BELOW_4K;
-			}
-
-			rowRange.setBackground(scale.color);
-			rowRange.setFontColor(scale.fontColor);
-		}
-
 		// Add borders to data area
 		sheet
 			.getRange(CONFIG.FIRST_DATA_ROW, 1, dataRows.length, headers.length)
@@ -437,9 +414,6 @@ function writeFloaterSheet(sheet, floaterData, monthName, year) {
 				SpreadsheetApp.BorderStyle.SOLID,
 			);
 	}
-
-	// Write Conditional Scales legend
-	writeLegend(sheet);
 
 	// Set column widths
 	sheet.setColumnWidth(CONFIG.EMP_ID_COL, 120);

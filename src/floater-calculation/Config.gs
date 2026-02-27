@@ -36,8 +36,8 @@ const CONFIG = {
 			color: '#F4CCCC',
 			fontColor: '#000000',
 		},
-		BELOW_4K: { label: 'Below 4k', color: '#FCE5CD', fontColor: '#000000' },
-		LEAVERS: { label: 'Leavers', color: '#CFE2F3', fontColor: '#000000' },
+		BELOW_4K: { label: 'Below 4k', color: '#FFFFFF', fontColor: '#000000' },
+		LEAVERS: { label: 'Leavers', color: '#D9D9D9', fontColor: '#000000' },
 	},
 
 	// Header styling
