@@ -1,10 +1,9 @@
-name: Deploy Google Apps Script
+name: Deploy Floater Calculation
 
 on:
   push:
     branches:
-      - main
-      - dev
+      - floater-calculation
   workflow_dispatch:
 
 jobs:
@@ -36,24 +35,21 @@ jobs:
           chmod 600 ~/.clasprc.json
           echo "Credentials file size: $(wc -c < ~/.clasprc.json) bytes"
 
-      - name: Set Script ID based on branch
+      - name: Set Floater Script ID
         env:
-          SCRIPT_ID_PROD: ${{ secrets.SCRIPT_ID_PROD }}
-          SCRIPT_ID_DEV: ${{ secrets.SCRIPT_ID_DEV }}
+          SCRIPT_ID_FLOATER: ${{ secrets.SCRIPT_ID_FLOATER }}
         run: |
-          if [ "${{ github.ref_name }}" = "main" ]; then
-            echo "SCRIPT_ID=$SCRIPT_ID_PROD" >> $GITHUB_ENV
-            echo "DEPLOY_ENV=production" >> $GITHUB_ENV
-          else
-            echo "SCRIPT_ID=$SCRIPT_ID_DEV" >> $GITHUB_ENV
-            echo "DEPLOY_ENV=development" >> $GITHUB_ENV
+          if [ -z "$SCRIPT_ID_FLOATER" ]; then
+            echo "ERROR: SCRIPT_ID_FLOATER secret is not set!"
+            exit 1
           fi
+          echo "SCRIPT_ID=$SCRIPT_ID_FLOATER" >> $GITHUB_ENV
 
       - name: Update script ID
         run: |
-          cd src/google-appscript
+          cd src/floater-calculation
           echo "{\"scriptId\":\"$SCRIPT_ID\",\"rootDir\":\".\"}" > .clasp.json
-          echo "Script ID configured for $DEPLOY_ENV"
+          echo "Floater script ID configured"
 
       - name: Verify config files
         run: |
@@ -61,12 +57,12 @@ jobs:
           cat ~/.clasprc.json | head -c 50
           echo "..."
           echo "Checking .clasp.json..."
-          cat src/google-appscript/.clasp.json
+          cat src/floater-calculation/.clasp.json
 
       - name: Push to Apps Script
         run: |
-          cd src/google-appscript
+          cd src/floater-calculation
           clasp push --force
 
       - name: Deploy notification
-        run: echo "✅ Successfully deployed google-appscript to Apps Script ($DEPLOY_ENV)!"
+        run: echo "✅ Successfully deployed floater-calculation to Apps Script!"
