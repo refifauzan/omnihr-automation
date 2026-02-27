@@ -33,17 +33,18 @@ function generateFloaterView(month, year) {
 
 	// Check if sheet already exists
 	let sheet = ss.getSheetByName(sheetName);
+	let isUpdate = false;
 	if (sheet) {
 		const response = ui.alert(
 			'Sheet Exists',
-			`Sheet "${sheetName}" already exists. Overwrite?`,
+			`Sheet "${sheetName}" already exists. Update columns A-E only?`,
 			ui.ButtonSet.YES_NO,
 		);
 		if (response !== ui.Button.YES) return;
-		ss.deleteSheet(sheet);
+		isUpdate = true;
+	} else {
+		sheet = ss.insertSheet(sheetName);
 	}
-
-	sheet = ss.insertSheet(sheetName);
 
 	Logger.log(`Generating Floater View for ${monthNames[month]} ${year}`);
 
@@ -87,8 +88,8 @@ function generateFloaterView(month, year) {
 			return b.floaterPct - a.floaterPct;
 		});
 
-		// Write to sheet
-		writeFloaterSheet(sheet, floaterData, monthNames[month], year);
+		// Write to sheet (update only columns A-E if sheet already existed)
+		writeFloaterSheet(sheet, floaterData, monthNames[month], year, isUpdate);
 
 		SpreadsheetApp.flush();
 
@@ -328,24 +329,15 @@ function buildFloaterData(employees, cvData, month, year, workingDays) {
 
 /**
  * Write floater data to the sheet
+ * When isUpdate=true, only clears and rewrites columns A-E (data area),
+ * leaving any content beyond column E untouched.
  * @param {Sheet} sheet - Target sheet
  * @param {Array} floaterData - Array of floater data objects
  * @param {string} monthName - Month name
  * @param {number} year - Year
+ * @param {boolean} [isUpdate=false] - If true, only update columns A-E data rows
  */
-function writeFloaterSheet(sheet, floaterData, monthName, year) {
-	// Title row
-	sheet.getRange(CONFIG.TITLE_ROW, 1, 1, CONFIG.DATA_COLS).merge();
-	sheet
-		.getRange(CONFIG.TITLE_ROW, 1)
-		.setValue('Monthly Floaters & Floater Cost Breakdown');
-	sheet.getRange(CONFIG.TITLE_ROW, 1).setFontSize(14).setFontWeight('bold');
-
-	// Month row
-	sheet.getRange(CONFIG.MONTH_ROW, 1).setValue(monthName);
-	sheet.getRange(CONFIG.MONTH_ROW, 1).setFontSize(11).setFontWeight('bold');
-
-	// Headers
+function writeFloaterSheet(sheet, floaterData, monthName, year, isUpdate) {
 	const headers = [
 		'Employee ID',
 		'Name',
@@ -353,56 +345,43 @@ function writeFloaterSheet(sheet, floaterData, monthName, year) {
 		'Floater %',
 		'Current Project',
 	];
-	sheet.getRange(CONFIG.HEADER_ROW, 1, 1, headers.length).setValues([headers]);
-	sheet
-		.getRange(CONFIG.HEADER_ROW, 1, 1, headers.length)
-		.setBackground(CONFIG.HEADER_BG)
-		.setFontColor(CONFIG.HEADER_FONT_COLOR)
-		.setFontWeight('bold')
-		.setHorizontalAlignment('center')
-		.setBorder(
-			true,
-			true,
-			true,
-			true,
-			true,
-			true,
-			'#000000',
-			SpreadsheetApp.BorderStyle.SOLID,
-		);
 
-	// Write data rows
-	if (floaterData.length > 0) {
-		const dataRows = floaterData.map((emp) => [
-			emp.employeeId,
-			emp.name,
-			emp.department,
-			emp.floaterPct / 100, // Store as decimal for percentage formatting
-			emp.currentProject,
-		]);
-
-		const dataRange = sheet.getRange(
-			CONFIG.FIRST_DATA_ROW,
-			1,
-			dataRows.length,
-			headers.length,
-		);
-		dataRange.setValues(dataRows);
-
-		// Format Floater % column as percentage
+	if (isUpdate) {
+		// Clear only the data area in columns A-E (preserve everything else)
+		const lastRow = sheet.getLastRow();
+		if (lastRow >= CONFIG.FIRST_DATA_ROW) {
+			sheet
+				.getRange(
+					CONFIG.FIRST_DATA_ROW,
+					1,
+					lastRow - CONFIG.FIRST_DATA_ROW + 1,
+					CONFIG.DATA_COLS,
+				)
+				.clearContent()
+				.clearFormat();
+		}
+	} else {
+		// Title row
+		sheet.getRange(CONFIG.TITLE_ROW, 1, 1, CONFIG.DATA_COLS).merge();
 		sheet
-			.getRange(
-				CONFIG.FIRST_DATA_ROW,
-				CONFIG.FLOATER_PCT_COL,
-				dataRows.length,
-				1,
-			)
-			.setNumberFormat('0.0%')
-			.setHorizontalAlignment('center');
+			.getRange(CONFIG.TITLE_ROW, 1)
+			.setValue('Monthly Floaters & Floater Cost Breakdown');
+		sheet.getRange(CONFIG.TITLE_ROW, 1).setFontSize(14).setFontWeight('bold');
 
-		// Add borders to data area
+		// Month row
+		sheet.getRange(CONFIG.MONTH_ROW, 1).setValue(monthName);
+		sheet.getRange(CONFIG.MONTH_ROW, 1).setFontSize(11).setFontWeight('bold');
+
+		// Headers
 		sheet
-			.getRange(CONFIG.FIRST_DATA_ROW, 1, dataRows.length, headers.length)
+			.getRange(CONFIG.HEADER_ROW, 1, 1, headers.length)
+			.setValues([headers]);
+		sheet
+			.getRange(CONFIG.HEADER_ROW, 1, 1, headers.length)
+			.setBackground(CONFIG.HEADER_BG)
+			.setFontColor(CONFIG.HEADER_FONT_COLOR)
+			.setFontWeight('bold')
+			.setHorizontalAlignment('center')
 			.setBorder(
 				true,
 				true,
@@ -415,15 +394,57 @@ function writeFloaterSheet(sheet, floaterData, monthName, year) {
 			);
 	}
 
-	// Set column widths
-	sheet.setColumnWidth(CONFIG.EMP_ID_COL, 120);
-	sheet.setColumnWidth(CONFIG.NAME_COL, 200);
-	sheet.setColumnWidth(CONFIG.DEPARTMENT_COL, 150);
-	sheet.setColumnWidth(CONFIG.FLOATER_PCT_COL, 100);
-	sheet.setColumnWidth(CONFIG.CURRENT_PROJECT_COL, 200);
+	// Write data rows (columns A-E only)
+	if (floaterData.length > 0) {
+		const dataRows = floaterData.map((emp) => [
+			emp.employeeId,
+			emp.name,
+			emp.department,
+			emp.floaterPct / 100, // Store as decimal for percentage formatting
+			emp.currentProject,
+		]);
 
-	// Freeze header rows
-	sheet.setFrozenRows(CONFIG.HEADER_ROW);
+		sheet
+			.getRange(CONFIG.FIRST_DATA_ROW, 1, dataRows.length, CONFIG.DATA_COLS)
+			.setValues(dataRows);
+
+		// Format Floater % column as percentage
+		sheet
+			.getRange(
+				CONFIG.FIRST_DATA_ROW,
+				CONFIG.FLOATER_PCT_COL,
+				dataRows.length,
+				1,
+			)
+			.setNumberFormat('0.0%')
+			.setHorizontalAlignment('center');
+
+		// Add borders to data area (columns A-E)
+		sheet
+			.getRange(CONFIG.FIRST_DATA_ROW, 1, dataRows.length, CONFIG.DATA_COLS)
+			.setBorder(
+				true,
+				true,
+				true,
+				true,
+				true,
+				true,
+				'#000000',
+				SpreadsheetApp.BorderStyle.SOLID,
+			);
+	}
+
+	if (!isUpdate) {
+		// Set column widths (only on first create)
+		sheet.setColumnWidth(CONFIG.EMP_ID_COL, 120);
+		sheet.setColumnWidth(CONFIG.NAME_COL, 200);
+		sheet.setColumnWidth(CONFIG.DEPARTMENT_COL, 150);
+		sheet.setColumnWidth(CONFIG.FLOATER_PCT_COL, 100);
+		sheet.setColumnWidth(CONFIG.CURRENT_PROJECT_COL, 200);
+
+		// Freeze header rows
+		sheet.setFrozenRows(CONFIG.HEADER_ROW);
+	}
 }
 
 /**

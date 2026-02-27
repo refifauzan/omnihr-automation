@@ -219,13 +219,12 @@ function scheduledWeeklyFloaterUpdate() {
 		];
 		const sheetName = `Floaters ${monthNames[month]} ${year}`;
 
-		// Delete existing sheet if it exists
-		const existingSheet = ss.getSheetByName(sheetName);
-		if (existingSheet) {
-			ss.deleteSheet(existingSheet);
+		// Reuse existing sheet if it exists (only update columns A-E)
+		let sheet = ss.getSheetByName(sheetName);
+		const isUpdate = !!sheet;
+		if (!sheet) {
+			sheet = ss.insertSheet(sheetName);
 		}
-
-		const sheet = ss.insertSheet(sheetName);
 
 		const token = getAccessToken();
 		if (!token) {
@@ -253,7 +252,7 @@ function scheduledWeeklyFloaterUpdate() {
 			return b.floaterPct - a.floaterPct;
 		});
 
-		writeFloaterSheet(sheet, floaterData, monthNames[month], year);
+		writeFloaterSheet(sheet, floaterData, monthNames[month], year, isUpdate);
 		SpreadsheetApp.flush();
 
 		Logger.log(
