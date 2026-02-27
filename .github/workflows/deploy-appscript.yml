@@ -7,11 +7,16 @@ on:
       - dev
     paths:
       - 'src/google-appscript/**'
+      - 'src/floater-calculation/**'
   workflow_dispatch: # Allow manual trigger
 
 jobs:
-  deploy:
+  deploy-appscript:
     runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      contains(join(github.event.commits.*.modified, ','), 'src/google-appscript') ||
+      contains(join(github.event.commits.*.added, ','), 'src/google-appscript')
 
     steps:
       - name: Checkout repository
@@ -71,4 +76,64 @@ jobs:
           clasp push --force
 
       - name: Deploy notification
-        run: echo "✅ Successfully deployed to Google Apps Script ($DEPLOY_ENV)!"
+        run: echo "✅ Successfully deployed google-appscript to Apps Script ($DEPLOY_ENV)!"
+
+  deploy-floater:
+    runs-on: ubuntu-latest
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      contains(join(github.event.commits.*.modified, ','), 'src/floater-calculation') ||
+      contains(join(github.event.commits.*.added, ','), 'src/floater-calculation')
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install clasp
+        run: npm install -g @google/clasp
+
+      - name: Create clasp credentials
+        env:
+          CLASP_CREDENTIALS: ${{ secrets.CLASP_CREDENTIALS }}
+        run: |
+          echo "Secret length: ${#CLASP_CREDENTIALS}"
+          if [ -z "$CLASP_CREDENTIALS" ]; then
+            echo "ERROR: CLASP_CREDENTIALS secret is empty!"
+            exit 1
+          fi
+          printf '%s' "$CLASP_CREDENTIALS" > ~/.clasprc.json
+          chmod 600 ~/.clasprc.json
+          echo "Credentials file size: $(wc -c < ~/.clasprc.json) bytes"
+
+      - name: Set Floater Script ID
+        env:
+          SCRIPT_ID_FLOATER: ${{ secrets.SCRIPT_ID_FLOATER }}
+        run: |
+          echo "SCRIPT_ID=$SCRIPT_ID_FLOATER" >> $GITHUB_ENV
+
+      - name: Update script ID
+        run: |
+          cd src/floater-calculation
+          echo "{\"scriptId\":\"$SCRIPT_ID\",\"rootDir\":\".\"}" > .clasp.json
+          echo "Floater script ID configured"
+
+      - name: Verify config files
+        run: |
+          echo "Checking .clasprc.json..."
+          cat ~/.clasprc.json | head -c 50
+          echo "..."
+          echo "Checking .clasp.json..."
+          cat src/floater-calculation/.clasp.json
+
+      - name: Push to Apps Script
+        run: |
+          cd src/floater-calculation
+          clasp push --force
+
+      - name: Deploy notification
+        run: echo "✅ Successfully deployed floater-calculation to Apps Script!"
