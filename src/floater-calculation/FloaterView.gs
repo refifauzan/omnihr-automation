@@ -16,8 +16,18 @@ function generateFloaterView(month, year) {
 	const ui = SpreadsheetApp.getUi();
 
 	const monthNames = [
-		'January', 'February', 'March', 'April', 'May', 'June',
-		'July', 'August', 'September', 'October', 'November', 'December',
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December',
 	];
 	const sheetName = `Floaters ${monthNames[month]} ${year}`;
 
@@ -27,7 +37,7 @@ function generateFloaterView(month, year) {
 		const response = ui.alert(
 			'Sheet Exists',
 			`Sheet "${sheetName}" already exists. Overwrite?`,
-			ui.ButtonSet.YES_NO
+			ui.ButtonSet.YES_NO,
 		);
 		if (response !== ui.Button.YES) return;
 		ss.deleteSheet(sheet);
@@ -49,7 +59,12 @@ function generateFloaterView(month, year) {
 		Logger.log(`Fetched ${employeesWithDetails.length} employees`);
 
 		// Fetch leave data for this month
-		const leaveData = fetchLeaveDataForMonth(token, employeesWithDetails, month, year);
+		const leaveData = fetchLeaveDataForMonth(
+			token,
+			employeesWithDetails,
+			month,
+			year,
+		);
 
 		// Fetch holidays
 		const holidays = fetchHolidaysForMonth(token, month, year);
@@ -61,7 +76,13 @@ function generateFloaterView(month, year) {
 		Logger.log(`Working days in ${monthNames[month]} ${year}: ${workingDays}`);
 
 		// Read project sheet data to determine allocation
-		const allocationData = readProjectSheetAllocation(ss, month, year, holidayDays, workingDays);
+		const allocationData = readProjectSheetAllocation(
+			ss,
+			month,
+			year,
+			holidayDays,
+			workingDays,
+		);
 
 		// Build floater data for each employee
 		const floaterData = buildFloaterData(
@@ -71,7 +92,7 @@ function generateFloaterView(month, year) {
 			month,
 			year,
 			holidayDays,
-			workingDays
+			workingDays,
 		);
 
 		// Sort: leavers at bottom, then by floater % descending
@@ -90,10 +111,12 @@ function generateFloaterView(month, year) {
 			`Floater View generated!\n\n` +
 				`Sheet: "${sheetName}"\n` +
 				`Employees: ${floaterData.length}\n` +
-				`Working days: ${workingDays}`
+				`Working days: ${workingDays}`,
 		);
 	} catch (error) {
-		Logger.log('Error generating Floater View: ' + error.message + '\n' + error.stack);
+		Logger.log(
+			'Error generating Floater View: ' + error.message + '\n' + error.stack,
+		);
 		ui.alert('Error: ' + error.message);
 	}
 }
@@ -128,7 +151,7 @@ function countWorkingDays(month, year, holidayDays) {
  * @param {number} year - Year
  * @param {Set} holidayDays - Set of holiday day numbers
  * @param {number} workingDays - Total working days
- * @returns {Map} Map of employeeName (lowercase) -> { totalHours, maxPossibleHours }
+ * @returns {Map} Map of employeeName (lowercase) -> { totalHours, empId, empName, projects }
  */
 function readProjectSheetAllocation(ss, month, year, holidayDays, workingDays) {
 	const allocationData = new Map();
@@ -136,16 +159,35 @@ function readProjectSheetAllocation(ss, month, year, holidayDays, workingDays) {
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
 
 	const monthNames = [
-		'January', 'February', 'March', 'April', 'May', 'June',
-		'July', 'August', 'September', 'October', 'November', 'December',
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December',
 	];
 	const monthAbbrevs = [
-		'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-		'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
+		'Jan',
+		'Feb',
+		'Mar',
+		'Apr',
+		'May',
+		'Jun',
+		'Jul',
+		'Aug',
+		'Sep',
+		'Oct',
+		'Nov',
+		'Dec',
 	];
 
 	// Find project sheets for this month
-	// Match patterns like "Feb 2026", "February 2026", etc.
 	const projectSheets = allSheets.filter((s) => {
 		const name = s.getName().toLowerCase();
 		const monthFull = monthNames[month].toLowerCase();
@@ -163,7 +205,9 @@ function readProjectSheetAllocation(ss, month, year, holidayDays, workingDays) {
 		);
 	});
 
-	Logger.log(`Found ${projectSheets.length} project sheets for ${monthNames[month]} ${year}`);
+	Logger.log(
+		`Found ${projectSheets.length} project sheets for ${monthNames[month]} ${year}`,
+	);
 
 	for (const projectSheet of projectSheets) {
 		Logger.log(`Reading project sheet: ${projectSheet.getName()}`);
@@ -171,38 +215,41 @@ function readProjectSheetAllocation(ss, month, year, holidayDays, workingDays) {
 		try {
 			const lastRow = projectSheet.getLastRow();
 			const lastCol = projectSheet.getLastColumn();
-			if (lastRow < 3 || lastCol < 11) continue; // Skip empty/small sheets
+			if (lastRow < 3 || lastCol < 11) continue;
 
-			// Read employee names from column B (row 3 onwards)
-			const numRows = lastRow - 2; // FIRST_DATA_ROW = 3, so rows 3..lastRow
-			const names = projectSheet
-				.getRange(3, 2, numRows, 1)
-				.getValues()
-				.map((row) => row[0]);
+			const numRows = lastRow - 2;
 
-			// Read employee IDs from column A
-			const ids = projectSheet
-				.getRange(3, 1, numRows, 1)
-				.getValues()
-				.map((row) => row[0]);
+			// Batch read columns A (ID), B (Name), C (Project)
+			const metaData = projectSheet.getRange(3, 1, numRows, 3).getValues();
 
 			// Find day columns by reading header row (row 2)
 			const headerValues = projectSheet
 				.getRange(2, 11, 1, lastCol - 10)
 				.getValues()[0];
 
-			const dayColumns = {};
+			const dayColIndices = []; // Array of { day, colIdx } for working days only
 			for (let colIdx = 0; colIdx < headerValues.length; colIdx++) {
 				const val = headerValues[colIdx];
 				if (typeof val === 'number' && val >= 1 && val <= daysInMonth) {
-					dayColumns[val] = 11 + colIdx; // Column number
+					const date = new Date(year, month, val);
+					const dayOfWeek = date.getDay();
+					// Only include working days (not weekends or holidays)
+					if (dayOfWeek >= 1 && dayOfWeek <= 5 && !holidayDays.has(val)) {
+						dayColIndices.push({ day: val, colIdx: colIdx });
+					}
 				}
 			}
 
-			// Read hours data for all day columns
+			// Batch read all hour values from column K onwards
+			const numDataCols = lastCol - 10;
+			const allHoursData = projectSheet
+				.getRange(3, 11, numRows, numDataCols)
+				.getValues();
+
 			for (let i = 0; i < numRows; i++) {
-				const empName = String(names[i] || '').trim();
-				const empId = String(ids[i] || '').trim();
+				const empId = String(metaData[i][0] || '').trim();
+				const empName = String(metaData[i][1] || '').trim();
+				const project = String(metaData[i][2] || '').trim();
 				if (!empName) continue;
 
 				const key = empName.toLowerCase();
@@ -211,26 +258,26 @@ function readProjectSheetAllocation(ss, month, year, holidayDays, workingDays) {
 						totalHours: 0,
 						empId: empId,
 						empName: empName,
+						projects: new Set(),
 					});
 				}
 
-				for (let day = 1; day <= daysInMonth; day++) {
-					const col = dayColumns[day];
-					if (!col) continue;
+				// Track project name from Column C
+				if (project) {
+					allocationData.get(key).projects.add(project);
+				}
 
-					// Skip weekends and holidays
-					const date = new Date(year, month, day);
-					const dayOfWeek = date.getDay();
-					if (dayOfWeek === 0 || dayOfWeek === 6) continue;
-					if (holidayDays.has(day)) continue;
-
-					const cellValue = projectSheet.getRange(3 + i, col).getValue();
+				// Sum hours for working days only
+				for (const { colIdx } of dayColIndices) {
+					const cellValue = allHoursData[i][colIdx];
 					const hours = typeof cellValue === 'number' ? cellValue : 0;
 					allocationData.get(key).totalHours += hours;
 				}
 			}
 		} catch (e) {
-			Logger.log(`Error reading project sheet ${projectSheet.getName()}: ${e.message}`);
+			Logger.log(
+				`Error reading project sheet ${projectSheet.getName()}: ${e.message}`,
+			);
 		}
 	}
 
@@ -249,7 +296,15 @@ function readProjectSheetAllocation(ss, month, year, holidayDays, workingDays) {
  * @param {number} workingDays - Total working days in the month
  * @returns {Array} Array of floater data objects
  */
-function buildFloaterData(employees, allocationData, leaveData, month, year, holidayDays, workingDays) {
+function buildFloaterData(
+	employees,
+	allocationData,
+	leaveData,
+	month,
+	year,
+	holidayDays,
+	workingDays,
+) {
 	const floaterData = [];
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
 	const maxHours = workingDays * 8;
@@ -257,7 +312,9 @@ function buildFloaterData(employees, allocationData, leaveData, month, year, hol
 	for (const emp of employees) {
 		const empName = (emp.full_name || '').trim();
 		const empNameLower = empName.toLowerCase();
-		const empId = String(emp.employee_id || '').trim().toUpperCase();
+		const empId = String(emp.employee_id || '')
+			.trim()
+			.toUpperCase();
 
 		// Check if leaver (has termination date in this month or before)
 		let isLeaver = false;
@@ -292,7 +349,10 @@ function buildFloaterData(employees, allocationData, leaveData, month, year, hol
 		// Floater % = (unallocated hours / effective max hours) * 100
 		let floaterPct = 0;
 		if (effectiveMaxHours > 0) {
-			const unallocatedHours = Math.max(0, effectiveMaxHours - totalAllocatedHours);
+			const unallocatedHours = Math.max(
+				0,
+				effectiveMaxHours - totalAllocatedHours,
+			);
 			floaterPct = (unallocatedHours / effectiveMaxHours) * 100;
 		}
 
@@ -307,8 +367,11 @@ function buildFloaterData(employees, allocationData, leaveData, month, year, hol
 		// Get department/team
 		const department = emp.team || '';
 
-		// Get current project (from project contribution or allocation data)
-		const currentProject = emp.project_contribution || '';
+		// Get current project from allocation data (Column C of project sheets)
+		let currentProject = '';
+		if (allocation && allocation.projects && allocation.projects.size > 0) {
+			currentProject = [...allocation.projects].join(', ');
+		}
 
 		floaterData.push({
 			name: empName,
@@ -336,7 +399,9 @@ function buildFloaterData(employees, allocationData, leaveData, month, year, hol
 function writeFloaterSheet(sheet, floaterData, monthName, year) {
 	// Title row
 	sheet.getRange(CONFIG.TITLE_ROW, 1, 1, 4).merge();
-	sheet.getRange(CONFIG.TITLE_ROW, 1).setValue('Monthly Floaters & Floater Cost Breakdown');
+	sheet
+		.getRange(CONFIG.TITLE_ROW, 1)
+		.setValue('Monthly Floaters & Floater Cost Breakdown');
 	sheet.getRange(CONFIG.TITLE_ROW, 1).setFontSize(14).setFontWeight('bold');
 
 	// Month row
@@ -352,7 +417,16 @@ function writeFloaterSheet(sheet, floaterData, monthName, year) {
 		.setFontColor(CONFIG.HEADER_FONT_COLOR)
 		.setFontWeight('bold')
 		.setHorizontalAlignment('center')
-		.setBorder(true, true, true, true, true, true, '#000000', SpreadsheetApp.BorderStyle.SOLID);
+		.setBorder(
+			true,
+			true,
+			true,
+			true,
+			true,
+			true,
+			'#000000',
+			SpreadsheetApp.BorderStyle.SOLID,
+		);
 
 	// Write data rows
 	if (floaterData.length > 0) {
@@ -367,13 +441,18 @@ function writeFloaterSheet(sheet, floaterData, monthName, year) {
 			CONFIG.FIRST_DATA_ROW,
 			1,
 			dataRows.length,
-			headers.length
+			headers.length,
 		);
 		dataRange.setValues(dataRows);
 
 		// Format Floater % column as percentage
 		sheet
-			.getRange(CONFIG.FIRST_DATA_ROW, CONFIG.FLOATER_PCT_COL, dataRows.length, 1)
+			.getRange(
+				CONFIG.FIRST_DATA_ROW,
+				CONFIG.FLOATER_PCT_COL,
+				dataRows.length,
+				1,
+			)
 			.setNumberFormat('0.0%')
 			.setHorizontalAlignment('center');
 
@@ -403,7 +482,16 @@ function writeFloaterSheet(sheet, floaterData, monthName, year) {
 		// Add borders to data area
 		sheet
 			.getRange(CONFIG.FIRST_DATA_ROW, 1, dataRows.length, headers.length)
-			.setBorder(true, true, true, true, true, true, '#000000', SpreadsheetApp.BorderStyle.SOLID);
+			.setBorder(
+				true,
+				true,
+				true,
+				true,
+				true,
+				true,
+				'#000000',
+				SpreadsheetApp.BorderStyle.SOLID,
+			);
 	}
 
 	// Write Conditional Scales legend
@@ -430,7 +518,8 @@ function writeLegend(sheet) {
 
 	// Legend title
 	sheet.getRange(legendStartRow, labelCol, 1, 2).merge();
-	sheet.getRange(legendStartRow, labelCol)
+	sheet
+		.getRange(legendStartRow, labelCol)
 		.setValue('Conditional Scales')
 		.setFontWeight('bold')
 		.setFontSize(11);
@@ -448,8 +537,18 @@ function writeLegend(sheet) {
 		const row = legendStartRow + 1 + i;
 		sheet.getRange(row, labelCol).setValue(scales[i].label);
 		sheet.getRange(row, colorCol).setBackground(scales[i].color);
-		sheet.getRange(row, labelCol, 1, 2)
-			.setBorder(true, true, true, true, true, true, '#000000', SpreadsheetApp.BorderStyle.SOLID);
+		sheet
+			.getRange(row, labelCol, 1, 2)
+			.setBorder(
+				true,
+				true,
+				true,
+				true,
+				true,
+				true,
+				'#000000',
+				SpreadsheetApp.BorderStyle.SOLID,
+			);
 	}
 
 	// Set legend column widths
@@ -474,8 +573,18 @@ function updateFloaterView() {
 
 	// Parse month/year from sheet name (e.g., "Floaters February 2026")
 	const monthNames = [
-		'January', 'February', 'March', 'April', 'May', 'June',
-		'July', 'August', 'September', 'October', 'November', 'December',
+		'January',
+		'February',
+		'March',
+		'April',
+		'May',
+		'June',
+		'July',
+		'August',
+		'September',
+		'October',
+		'November',
+		'December',
 	];
 
 	let month = -1;
