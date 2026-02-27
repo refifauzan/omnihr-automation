@@ -13,10 +13,6 @@ on:
 jobs:
   deploy-appscript:
     runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      contains(join(github.event.commits.*.modified, ','), 'src/google-appscript') ||
-      contains(join(github.event.commits.*.added, ','), 'src/google-appscript')
 
     steps:
       - name: Checkout repository
@@ -80,10 +76,6 @@ jobs:
 
   deploy-floater:
     runs-on: ubuntu-latest
-    if: >
-      github.event_name == 'workflow_dispatch' ||
-      contains(join(github.event.commits.*.modified, ','), 'src/floater-calculation') ||
-      contains(join(github.event.commits.*.added, ','), 'src/floater-calculation')
 
     steps:
       - name: Checkout repository
