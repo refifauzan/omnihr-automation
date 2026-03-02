@@ -319,6 +319,7 @@ function scanForLeaveCells(sheet, dayColumns) {
  * @param {number} month - Month (0-11)
  * @param {number} year - Year
  * @param {Set} holidayDays - Set of holiday day numbers
+ * @param {Set} [activeRows] - Optional set of row numbers for active employees. If provided, only these rows are cleared.
  */
 function clearLeaveCellsRespectingOverride(
 	sheet,
@@ -327,6 +328,7 @@ function clearLeaveCellsRespectingOverride(
 	month,
 	year,
 	holidayDays,
+	activeRows,
 ) {
 	const lastRow = sheet.getLastRow();
 	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
@@ -372,8 +374,18 @@ function clearLeaveCellsRespectingOverride(
 	const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
 
 	let clearedCount = 0;
+	let skippedInactiveCount = 0;
 
 	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
+		const row = CONFIG.FIRST_DATA_ROW + rowIdx;
+
+		// If activeRows is provided, only clear rows belonging to active employees
+		// This preserves leave markings for terminated/removed employees
+		if (activeRows && !activeRows.has(row)) {
+			skippedInactiveCount++;
+			continue;
+		}
+
 		const isOperations =
 			teamData[rowIdx] &&
 			teamData[rowIdx].toString().toLowerCase() === 'operations';
@@ -423,6 +435,11 @@ function clearLeaveCellsRespectingOverride(
 		range.setFontWeights(fontWeights);
 	}
 
+	if (skippedInactiveCount > 0) {
+		Logger.log(
+			`Skipped ${skippedInactiveCount} rows (inactive/terminated employees - leave preserved)`,
+		);
+	}
 	Logger.log(
 		`Cleared ${clearedCount} leave cells (respecting Time off Override)`,
 	);

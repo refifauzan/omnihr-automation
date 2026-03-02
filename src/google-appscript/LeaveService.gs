@@ -161,6 +161,7 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
  * @param {number} year - Year
  * @param {boolean} useSheetHours - If true, read hours from sheet cells
  * @param {Set} holidayDays - Optional set of holiday day numbers to exclude from total
+ * @param {Array} [employees] - Optional full employee list from API. Used to build activeRows so only active employee rows are cleared.
  */
 function updateSheetWithLeaveData(
 	sheet,
@@ -169,6 +170,7 @@ function updateSheetWithLeaveData(
 	year,
 	useSheetHours = false,
 	holidayDays = new Set(),
+	employees,
 ) {
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
 	const employeeLookup = buildEmployeeLookup(sheet);
@@ -213,6 +215,23 @@ function updateSheetWithLeaveData(
 		holidayDays,
 	);
 
+	// Build a set of active employee rows from the full employee list
+	// Only these rows will have leave markings cleared during sync
+	// Rows for terminated/removed employees will have their leave markings preserved
+	let activeRows;
+	if (employees && employees.length > 0) {
+		activeRows = new Set();
+		for (const emp of employees) {
+			const empId = emp.employee_id || emp.id || emp.user_id;
+			const empName = emp.full_name || emp.name || '';
+			const rows = findEmployeeRows(employeeLookup, empId, empName);
+			for (const row of rows) {
+				activeRows.add(row);
+			}
+		}
+		Logger.log(`Active employee rows for leave clear: ${activeRows.size}`);
+	}
+
 	// Clear existing leave markings before applying new ones (respects Time off Override)
 	Logger.log('Clearing existing leave markings...');
 	clearLeaveCellsRespectingOverride(
@@ -222,6 +241,7 @@ function updateSheetWithLeaveData(
 		month,
 		year,
 		holidayDays,
+		activeRows,
 	);
 
 	// Set default hours for Operations team (8 hours on working days without existing values)

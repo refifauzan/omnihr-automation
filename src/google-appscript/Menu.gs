@@ -246,6 +246,7 @@ function scheduledLeaveOnlySync() {
 				year,
 				true,
 				holidayDays,
+				employees,
 			);
 
 			// Apply grey-out for employees who joined/left mid-month

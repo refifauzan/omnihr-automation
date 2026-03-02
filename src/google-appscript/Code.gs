@@ -128,7 +128,15 @@ function syncLeaveOnly() {
 		const holidays = fetchHolidaysForMonth(token, month, year);
 		const holidayDays = new Set(holidays.map((h) => h.date));
 
-		updateSheetWithLeaveData(sheet, leaveData, month, year, true, holidayDays);
+		updateSheetWithLeaveData(
+			sheet,
+			leaveData,
+			month,
+			year,
+			true,
+			holidayDays,
+			employees,
+		);
 
 		// Apply grey-out for employees who joined/left mid-month
 		Logger.log('Applying grey-out for hire/termination dates...');
@@ -284,7 +292,15 @@ function syncLeaveDataToSheet(sheet, month, year) {
 
 		// Apply leave data
 		Logger.log('Applying leave data...');
-		updateSheetWithLeaveData(sheet, leaveData, month, year, true, holidayDays);
+		updateSheetWithLeaveData(
+			sheet,
+			leaveData,
+			month,
+			year,
+			true,
+			holidayDays,
+			employees,
+		);
 
 		// Apply grey-out for employees who joined/left mid-month
 		Logger.log('Applying grey-out for hire/termination dates...');
