@@ -386,10 +386,10 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 			);
 		}
 
-		// Add Total Free D and Total Free H columns
-		headerRow1.push('', '');
-		headerRow2.push('Total Free D', 'Total Free H');
-		headerBgColors.push('#356854', '#356854');
+		// Add Total Free D, Total Free H, and Over H columns
+		headerRow1.push('', '', '');
+		headerRow2.push('Total Free D', 'Total Free H', 'Over H');
+		headerBgColors.push('#356854', '#356854', '#356854');
 
 		// Write headers
 		capacitySheet.getRange(1, 1, 1, headerRow1.length).setValues([headerRow1]);
@@ -413,6 +413,7 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 				.join(', ');
 			const row = [employeeId, empInfo.name, teamsDisplay];
 			const bgRow = [null, null, null];
+			let overHours = 0; // Track total over-allocated hours
 
 			// Get termination/hire day for this employee
 			const terminationDay = terminationMap.get(employeeId);
@@ -458,7 +459,9 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 						if (leaveInfo.is_half_day) {
 							// Half-day leave - capacity = 4 - total assigned hours
 							const totalHours = empInfo.totalHoursPerDay[day] || 0;
-							capacity = Math.max(0, 4 - totalHours);
+							const rawCapacity = 4 - totalHours;
+							if (rawCapacity < 0) overHours += Math.abs(rawCapacity);
+							capacity = Math.max(0, rawCapacity);
 							Logger.log(
 								`  Half-day leave: total assigned hours=${totalHours}, capacity=${capacity}`,
 							);
@@ -474,7 +477,9 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 					} else {
 						// Calculate total capacity: 8 - sum of all project hours
 						const totalHours = empInfo.totalHoursPerDay[day] || 0;
-						const capacity = Math.max(0, 8 - totalHours);
+						const rawCapacity = 8 - totalHours;
+						if (rawCapacity < 0) overHours += Math.abs(rawCapacity);
+						const capacity = Math.max(0, rawCapacity);
 
 						Logger.log(
 							`Employee ${empInfo.name} day ${day}: total assigned hours=${totalHours}, capacity=${capacity}`,
@@ -494,9 +499,9 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 				}
 			}
 
-			// Add Total Free D and Total Free H formula placeholders (will be set as formulas)
-			row.push(0, 0);
-			bgRow.push(null, null);
+			// Add Total Free D, Total Free H, and Over H placeholders
+			row.push(0, 0, overHours);
+			bgRow.push(null, null, overHours > 0 ? '#FFE6E6' : null);
 
 			dataRows.push(row);
 			bgRows.push(bgRow);
@@ -516,6 +521,7 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 			// Set Total Free D (count of days with free capacity > 0) and Total Free H (sum of free hours)
 			const totalFreeDCol = 4 + daysInMonth;
 			const totalFreeHCol = totalFreeDCol + 1;
+			const overHCol = totalFreeHCol + 1;
 			const firstDayColLetter = columnToLetter(4);
 			const lastDayColLetter = columnToLetter(3 + daysInMonth);
 			const formulas = [];
@@ -531,6 +537,9 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 			capacitySheet
 				.getRange(3, totalFreeDCol, dataRows.length, 2)
 				.setFormulas(formulas);
+
+			// Over H column is already written as values (not formulas) via dataRows
+			capacitySheet.setColumnWidth(overHCol, 60);
 		}
 
 		// Set column widths
@@ -540,7 +549,9 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 		for (let i = 4; i <= 3 + daysInMonth; i++) {
 			capacitySheet.setColumnWidth(i, 35);
 		}
-		capacitySheet.setColumnWidth(4 + daysInMonth, 80); // Total
+		capacitySheet.setColumnWidth(4 + daysInMonth, 80); // Total Free D
+		capacitySheet.setColumnWidth(5 + daysInMonth, 80); // Total Free H
+		capacitySheet.setColumnWidth(6 + daysInMonth, 60); // Over H
 
 		// Freeze header rows and employee columns
 		capacitySheet.setFrozenRows(2);
