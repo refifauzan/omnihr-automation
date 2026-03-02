@@ -15,7 +15,7 @@ function getAccessToken() {
 
 	if (!baseUrl || !subdomain || !username || !password) {
 		throw new Error(
-			'API credentials not configured. Use OmniHR > Setup API Credentials'
+			'API credentials not configured. Use OmniHR > Setup API Credentials',
 		);
 	}
 
@@ -23,7 +23,7 @@ function getAccessToken() {
 		method: 'post',
 		contentType: 'application/x-www-form-urlencoded',
 		payload: `username=${encodeURIComponent(
-			username
+			username,
 		)}&password=${encodeURIComponent(password)}`,
 		headers: {
 			'x-subdomain': subdomain,
@@ -137,7 +137,7 @@ function buildBatchRequests(token, employees, startDate, endDate) {
 
 		// Time-off calendar request
 		const calendarUrl = `${baseUrl}/employee/1.1/${userId}/time-off-calendar/?start_date=${formatDateDMY(
-			startDate
+			startDate,
 		)}&end_date=${formatDateDMY(endDate)}`;
 		requests.push({
 			url: calendarUrl,
@@ -219,7 +219,7 @@ function fetchHolidaysForMonth(token, month, year) {
 		const calendar = apiRequest(
 			token,
 			`/employee/1.1/${userId}/time-off-calendar/`,
-			{ start_date: startDateStr, end_date: endDateStr }
+			{ start_date: startDateStr, end_date: endDateStr },
 		);
 
 		// Extract holidays from the 'holiday' field (not 'public_holiday')
@@ -249,14 +249,14 @@ function fetchHolidaysForMonth(token, month, year) {
 					Logger.log(
 						`Holiday found: ${holidayDate.getDate()}/${month + 1}/${year} - ${
 							holiday.name
-						}`
+						}`,
 					);
 				}
 			}
 		}
 
 		Logger.log(
-			`Found ${holidayDays.length} public holidays for ${month + 1}/${year}`
+			`Found ${holidayDays.length} public holidays for ${month + 1}/${year}`,
 		);
 		return holidayDays;
 	} catch (e) {
@@ -284,7 +284,7 @@ function fetchAllEmployeesWithDetails(token) {
 	const employees = allEmployees.filter((emp) => {
 		const fullName = emp.full_name || emp.name || '';
 		const isExcluded = EXCLUDED_EMPLOYEES.some(
-			(excluded) => fullName.toLowerCase() === excluded.toLowerCase()
+			(excluded) => fullName.toLowerCase() === excluded.toLowerCase(),
 		);
 		if (isExcluded) {
 			Logger.log(`Excluding employee: ${fullName}`);
@@ -293,19 +293,28 @@ function fetchAllEmployeesWithDetails(token) {
 	});
 
 	Logger.log(
-		`Filtered ${allEmployees.length - employees.length} excluded employees`
+		`Filtered ${allEmployees.length - employees.length} excluded employees`,
 	);
 
 	const employeeDetails = [];
 	const BATCH_SIZE = 50;
 
-	// First, fetch termination dates from onboarding/workflow-dashboard
-	const terminationDates = fetchTerminationDates(token);
+	// Fetch termination data (dates + full employee objects) from workflow-dashboard
+	const termData = fetchTerminationData(token);
+	const terminationDates = termData.dates;
+	const terminatedEmployees = termData.employees;
+
+	// Build a set of active user IDs so we can identify terminated-only employees later
+	const activeUserIds = new Set(
+		employees.map(function (e) {
+			return e.id || e.user_id;
+		}),
+	);
 
 	// Fetch team and project contribution data for all employees
 	const { teamData, projectContribution } = fetchEmployeeJobData(
 		token,
-		employees
+		employees,
 	);
 
 	for (let i = 0; i < employees.length; i += BATCH_SIZE) {
@@ -313,7 +322,7 @@ function fetchAllEmployeesWithDetails(token) {
 		Logger.log(
 			`Fetching employee details batch ${
 				Math.floor(i / BATCH_SIZE) + 1
-			}/${Math.ceil(employees.length / BATCH_SIZE)}`
+			}/${Math.ceil(employees.length / BATCH_SIZE)}`,
 		);
 
 		const { requests } = buildBaseDataRequests(token, batch);
@@ -367,7 +376,72 @@ function fetchAllEmployeesWithDetails(token) {
 		}
 	}
 
-	Logger.log(`Fetched details for ${employeeDetails.length} employees`);
+	// Merge in terminated employees that are no longer in /employee/list/
+	// These employees are only available from the workflow-dashboard
+	let mergedCount = 0;
+	for (const termEmp of terminatedEmployees) {
+		const userId = termEmp.id;
+		if (activeUserIds.has(userId)) continue; // Already included
+
+		const fullName = termEmp.full_name || termEmp.name || `User ${userId}`;
+		const isExcluded = EXCLUDED_EMPLOYEES.some(
+			(excluded) => fullName.toLowerCase() === excluded.toLowerCase(),
+		);
+		if (isExcluded) continue;
+
+		// Fetch employee_id from base-data (may fail for terminated employees)
+		let employeeId = '';
+		try {
+			const props = PropertiesService.getScriptProperties();
+			const baseUrl = props.getProperty('OMNIHR_BASE_URL');
+			const subdomain = props.getProperty('OMNIHR_SUBDOMAIN');
+			const response = UrlFetchApp.fetch(
+				`${baseUrl}/employee/2.0/users/${userId}/base-data/`,
+				{
+					method: 'get',
+					headers: {
+						Authorization: `Bearer ${token}`,
+						'x-subdomain': subdomain,
+						'Content-Type': 'application/json',
+					},
+					muteHttpExceptions: true,
+				},
+			);
+			if (response.getResponseCode() === 200) {
+				const data = JSON.parse(response.getContentText());
+				const baseData = data.data || data;
+				employeeId = baseData.employee_id || '';
+			}
+		} catch (e) {
+			Logger.log(
+				`Could not fetch base-data for terminated employee ${fullName}: ${e.message}`,
+			);
+		}
+
+		employeeDetails.push({
+			user_id: userId,
+			employee_id: employeeId,
+			full_name: fullName,
+			hired_date: termEmp.hired_date || null,
+			termination_date: termEmp.termination_date,
+			team: (termEmp.job && termEmp.job.department) || '',
+			project_contribution: '',
+			employment_status: null,
+			employment_status_display: 'Terminated',
+		});
+		mergedCount++;
+		Logger.log(
+			`Merged terminated employee: ${fullName} (terminated: ${termEmp.termination_date})`,
+		);
+	}
+
+	if (mergedCount > 0) {
+		Logger.log(
+			`Merged ${mergedCount} terminated employees from workflow-dashboard`,
+		);
+	}
+
+	Logger.log(`Fetched details for ${employeeDetails.length} employees total`);
 	return employeeDetails;
 }
 
@@ -398,15 +472,15 @@ function fetchEmployeeJobData(token, employees) {
 	const BATCH_SIZE = 50;
 
 	Logger.log(
-		'Fetching job data (team & project contribution) for employees...'
+		'Fetching job data (team & project contribution) for employees...',
 	);
 
 	for (let i = 0; i < employees.length; i += BATCH_SIZE) {
 		const batch = employees.slice(i, i + BATCH_SIZE);
 		Logger.log(
 			`Fetching job data batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(
-				employees.length / BATCH_SIZE
-			)}`
+				employees.length / BATCH_SIZE,
+			)}`,
 		);
 
 		const requests = batch.map((emp) => {
@@ -442,7 +516,7 @@ function fetchEmployeeJobData(token, employees) {
 						// Get project contribution from custom_data_attributes_values
 						const customAttrs = currentJob.custom_data_attributes_values || [];
 						const contributionAttr = customAttrs.find(
-							(attr) => attr.attr === PROJECT_CONTRIBUTION_ATTR_ID
+							(attr) => attr.attr === PROJECT_CONTRIBUTION_ATTR_ID,
 						);
 						if (
 							contributionAttr &&
@@ -463,22 +537,24 @@ function fetchEmployeeJobData(token, employees) {
 	Logger.log(
 		`Fetched project contribution for ${
 			Object.keys(projectContribution).length
-		} employees`
+		} employees`,
 	);
 	return { teamData, projectContribution };
 }
 
 /**
- * Fetch termination dates from onboarding/workflow-dashboard endpoint
+ * Fetch termination data from onboarding/workflow-dashboard endpoint
+ * Returns both a simple date map and full employee info for terminated employees
  * @param {string} token - Access token
- * @returns {Object} Map of user_id -> termination_date
+ * @returns {Object} { dates: Map of user_id -> termination_date, employees: Array of workflow-dashboard entries with termination_date }
  */
-function fetchTerminationDates(token) {
-	const terminationDates = {};
+function fetchTerminationData(token) {
+	const dates = {};
+	const employees = [];
 	let page = 1;
 	let hasMore = true;
 
-	Logger.log('Fetching termination dates from workflow-dashboard...');
+	Logger.log('Fetching termination data from workflow-dashboard...');
 
 	while (hasMore) {
 		try {
@@ -490,22 +566,29 @@ function fetchTerminationDates(token) {
 			const results = response.results || [];
 			for (const emp of results) {
 				if (emp.termination_date) {
-					terminationDates[emp.id] = emp.termination_date;
+					dates[emp.id] = emp.termination_date;
+					employees.push(emp);
 				}
 			}
 
 			hasMore = response.next !== null && response.next !== undefined;
 			page++;
 		} catch (e) {
-			Logger.log('Error fetching termination dates: ' + e.message);
+			Logger.log('Error fetching termination data: ' + e.message);
 			hasMore = false;
 		}
 	}
 
-	Logger.log(
-		`Found ${
-			Object.keys(terminationDates).length
-		} employees with termination dates`
-	);
-	return terminationDates;
+	Logger.log(`Found ${employees.length} employees with termination dates`);
+	return { dates: dates, employees: employees };
+}
+
+/**
+ * Fetch termination dates from onboarding/workflow-dashboard endpoint
+ * Backward-compatible wrapper around fetchTerminationData
+ * @param {string} token - Access token
+ * @returns {Object} Map of user_id -> termination_date
+ */
+function fetchTerminationDates(token) {
+	return fetchTerminationData(token).dates;
 }

@@ -26,7 +26,7 @@ function parseDateDMY(dateStr) {
 	return new Date(
 		parseInt(parts[2]),
 		parseInt(parts[1]) - 1,
-		parseInt(parts[0])
+		parseInt(parts[0]),
 	);
 }
 
@@ -146,7 +146,7 @@ function getDayColumns(sheet, daysInMonth, month, year) {
 		Logger.log(
 			`getDayColumns calculated ${
 				Object.keys(result.dayColumns).length
-			} day columns for ${month + 1}/${year}`
+			} day columns for ${month + 1}/${year}`,
 		);
 		return result.dayColumns;
 	}
@@ -172,7 +172,7 @@ function getDayColumns(sheet, daysInMonth, month, year) {
 	Logger.log(
 		`getDayColumns found ${
 			Object.keys(dayColumns).length
-		} day columns from header`
+		} day columns from header`,
 	);
 	return dayColumns;
 }
@@ -296,6 +296,7 @@ function scanForLeaveCells(sheet, dayColumns) {
  * @param {number} month - Month (0-11)
  * @param {number} year - Year
  * @param {Set} holidayDays - Set of holiday day numbers
+ * @param {Set} [activeRows] - Optional set of row numbers for active employees. If provided, only these rows are cleared.
  */
 function clearLeaveCellsRespectingOverride(
 	sheet,
@@ -303,7 +304,8 @@ function clearLeaveCellsRespectingOverride(
 	dayToOverrideCol,
 	month,
 	year,
-	holidayDays
+	holidayDays,
+	activeRows,
 ) {
 	const lastRow = sheet.getLastRow();
 	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
@@ -325,9 +327,17 @@ function clearLeaveCellsRespectingOverride(
 	const halfDayColor = CONFIG.COLORS.HALF_DAY.toUpperCase();
 
 	let clearedCount = 0;
+	let skippedInactiveCount = 0;
 
 	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
 		const row = CONFIG.FIRST_DATA_ROW + rowIdx;
+
+		// If activeRows is provided, only clear rows belonging to active employees
+		// This preserves leave markings for terminated/removed employees
+		if (activeRows && !activeRows.has(row)) {
+			skippedInactiveCount++;
+			continue;
+		}
 
 		for (let colIdx = 0; colIdx < numCols; colIdx++) {
 			const bg = backgrounds[rowIdx][colIdx].toUpperCase();
@@ -349,7 +359,7 @@ function clearLeaveCellsRespectingOverride(
 				const overrideValue = sheet.getRange(row, overrideCol).getValue();
 				if (overrideValue === true) {
 					Logger.log(
-						`Row ${row}, day ${dayNum}: Time off Override checked, keeping leave marking`
+						`Row ${row}, day ${dayNum}: Time off Override checked, keeping leave marking`,
 					);
 					continue; // Skip - don't clear this cell
 				}
@@ -374,9 +384,73 @@ function clearLeaveCellsRespectingOverride(
 		}
 	}
 
+	if (skippedInactiveCount > 0) {
+		Logger.log(
+			`Skipped ${skippedInactiveCount} rows (inactive/terminated employees - leave preserved)`,
+		);
+	}
 	Logger.log(
-		`Cleared ${clearedCount} leave cells (respecting Time off Override)`
+		`Cleared ${clearedCount} leave cells (respecting Time off Override)`,
 	);
+}
+
+/**
+ * Clear grey-out cells for active employees only.
+ * Rows not in activeRows (e.g. terminated/removed employees) are preserved.
+ * This follows the same protective logic as clearLeaveCellsRespectingOverride.
+ * @param {Sheet} sheet - The sheet
+ * @param {Object} dayColumns - Day to column mapping
+ * @param {string} greyColor - The grey color code to match
+ * @param {Set} activeRows - Set of row numbers for active employees
+ */
+function clearGreyOutCells(sheet, dayColumns, greyColor, activeRows) {
+	const lastRow = sheet.getLastRow();
+	const numRows = lastRow - CONFIG.FIRST_DATA_ROW + 1;
+
+	if (numRows <= 0) return;
+
+	const cols = Object.values(dayColumns);
+	if (cols.length === 0) return;
+
+	const minCol = Math.min(...cols);
+	const maxCol = Math.max(...cols);
+	const numCols = maxCol - minCol + 1;
+
+	const range = sheet.getRange(CONFIG.FIRST_DATA_ROW, minCol, numRows, numCols);
+	const backgrounds = range.getBackgrounds();
+
+	const greyUpper = greyColor.toUpperCase();
+	let clearedCount = 0;
+	let skippedCount = 0;
+
+	for (let rowIdx = 0; rowIdx < numRows; rowIdx++) {
+		const row = CONFIG.FIRST_DATA_ROW + rowIdx;
+
+		// Only clear rows belonging to active employees
+		// Terminated/removed employees keep their grey-out preserved
+		if (activeRows && !activeRows.has(row)) {
+			skippedCount++;
+			continue;
+		}
+
+		for (let colIdx = 0; colIdx < numCols; colIdx++) {
+			const bg = backgrounds[rowIdx][colIdx].toUpperCase();
+			if (bg !== greyUpper) continue;
+
+			const col = minCol + colIdx;
+			const cellRange = sheet.getRange(row, col);
+			cellRange.setBackground(null);
+			cellRange.setValue(0);
+			clearedCount++;
+		}
+	}
+
+	if (skippedCount > 0) {
+		Logger.log(
+			`Skipped ${skippedCount} rows (inactive/terminated employees - grey-out preserved)`,
+		);
+	}
+	Logger.log(`Cleared ${clearedCount} grey-out cells for active employees`);
 }
 
 /**
@@ -393,7 +467,7 @@ function determineHalfDay(
 	isFirstDay,
 	isLastDay,
 	effectiveDuration,
-	endDuration
+	endDuration,
 ) {
 	const isHalfDuration = (d) => d === 2 || d === 3;
 
@@ -450,7 +524,7 @@ function buildRowHoursFromAttendance(sheet, rows, empAttendance) {
 			(att) =>
 				String(att.project || '')
 					.trim()
-					.toUpperCase() === projectName
+					.toUpperCase() === projectName,
 		);
 
 		const hours =
@@ -483,7 +557,7 @@ function getActiveRows(sheet, rows, overrideCol, leaveDate) {
 		const overrideValue = sheet.getRange(row, overrideCol).getValue();
 		if (overrideValue === true) {
 			Logger.log(
-				`Skipping row ${row} for day ${leaveDate} - Week Override checked`
+				`Skipping row ${row} for day ${leaveDate} - Week Override checked`,
 			);
 			return false;
 		}
@@ -504,7 +578,7 @@ function assignLeaveCells(
 	activeRows,
 	col,
 	fullDayCells,
-	halfDayCellsMap
+	halfDayCellsMap,
 ) {
 	if (!leave.is_half_day) {
 		for (const row of activeRows) {
@@ -515,7 +589,7 @@ function assignLeaveCells(
 
 	const hoursPerProject = CONFIG.HALF_DAY_HOURS / activeRows.length;
 	Logger.log(
-		`Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each`
+		`Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each`,
 	);
 
 	for (const row of activeRows) {
@@ -538,7 +612,7 @@ function assignLeaveCellsWithObjects(
 	activeRows,
 	col,
 	fullDayCells,
-	halfDayCells
+	halfDayCells,
 ) {
 	if (!leave.is_half_day) {
 		for (const row of activeRows) {
@@ -549,7 +623,7 @@ function assignLeaveCellsWithObjects(
 
 	const hoursPerProject = CONFIG.HALF_DAY_HOURS / activeRows.length;
 	Logger.log(
-		`Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each`
+		`Half-day leave: ${activeRows.length} projects, ${hoursPerProject}hr each`,
 	);
 
 	for (const row of activeRows) {
@@ -581,7 +655,7 @@ function buildWeekConditionalRule(
 	year,
 	lastRow,
 	numRows,
-	leaveCellSet
+	leaveCellSet,
 ) {
 	const { startCol, endCol, validatedCol } = weekRange;
 	const checkboxColLetter = columnToLetter(validatedCol);
@@ -602,13 +676,13 @@ function buildWeekConditionalRule(
 			col,
 			colLetter,
 			lastRow,
-			leaveCellSet
+			leaveCellSet,
 		);
 		weekdayRanges.push(...ranges);
 	}
 
 	weekdayRanges.push(
-		sheet.getRange(CONFIG.FIRST_DATA_ROW, validatedCol, numRows, 1)
+		sheet.getRange(CONFIG.FIRST_DATA_ROW, validatedCol, numRows, 1),
 	);
 
 	if (weekdayRanges.length === 0) return null;
@@ -649,7 +723,7 @@ function buildNonLeaveRanges(sheet, col, colLetter, lastRow, leaveCellSet) {
 		if (shouldEndRange && rangeStart !== null) {
 			const rangeEnd = row - 1;
 			ranges.push(
-				sheet.getRange(rangeStart, col, rangeEnd - rangeStart + 1, 1)
+				sheet.getRange(rangeStart, col, rangeEnd - rangeStart + 1, 1),
 			);
 			rangeStart = null;
 		}

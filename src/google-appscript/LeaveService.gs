@@ -21,15 +21,15 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
 		const batch = employees.slice(i, i + BATCH_SIZE);
 		Logger.log(
 			`Processing batch ${Math.floor(i / BATCH_SIZE) + 1}/${Math.ceil(
-				employees.length / BATCH_SIZE
-			)} (${batch.length} employees)`
+				employees.length / BATCH_SIZE,
+			)} (${batch.length} employees)`,
 		);
 
 		const { requests, requestMeta } = buildBatchRequests(
 			token,
 			batch,
 			startDate,
-			endDate
+			endDate,
 		);
 
 		const responses = UrlFetchApp.fetchAll(requests);
@@ -48,7 +48,7 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
 					Logger.log(
 						`API error for ${meta.empName} (${
 							meta.type
-						}): HTTP ${responseCode} - ${responseText.substring(0, 200)}`
+						}): HTTP ${responseCode} - ${responseText.substring(0, 200)}`,
 					);
 					continue;
 				}
@@ -59,7 +59,7 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
 					Logger.log(
 						`API error for ${meta.empName}: ${
 							data.error || data.detail || data.message
-						}`
+						}`,
 					);
 					continue;
 				}
@@ -85,7 +85,7 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
 			const calendar = data.calendar || {};
 
 			const approvedRequests = (calendar.time_off_request || []).filter(
-				(r) => r.status === 3
+				(r) => r.status === 3,
 			);
 
 			if (approvedRequests.length === 0) continue;
@@ -125,11 +125,11 @@ function fetchLeaveDataForMonth(token, employees, month, year) {
 						isFirstDay,
 						isLastDay,
 						effectiveDuration,
-						endDuration
+						endDuration,
 					);
 
 					Logger.log(
-						`Leave for ${empName} on day ${dateToProcess.getDate()}: effectiveDuration=${effectiveDuration}, endDuration=${endDuration}, isHalfDay=${isHalfDay}`
+						`Leave for ${empName} on day ${dateToProcess.getDate()}: effectiveDuration=${effectiveDuration}, endDuration=${endDuration}, isHalfDay=${isHalfDay}`,
 					);
 
 					leaveDays.push({
@@ -168,7 +168,7 @@ function updateSheetWithLeaveData(
 	month,
 	year,
 	useSheetHours = false,
-	holidayDays = new Set()
+	holidayDays = new Set(),
 ) {
 	const daysInMonth = new Date(year, month + 1, 0).getDate();
 	const employeeLookup = buildEmployeeLookup(sheet);
@@ -200,6 +200,22 @@ function updateSheetWithLeaveData(
 		}
 	}
 
+	// Build a set of active employee rows from leaveData
+	// Only these rows will have leave markings cleared during sync
+	// Rows for terminated/removed employees will have their leave markings preserved
+	const activeRows = new Set();
+	for (const [key, empData] of Object.entries(leaveData)) {
+		const rows = findEmployeeRows(
+			employeeLookup,
+			empData.employee_id,
+			empData.employee_name,
+		);
+		for (const row of rows) {
+			activeRows.add(row);
+		}
+	}
+	Logger.log(`Active employee rows for leave clear: ${activeRows.size}`);
+
 	// Clear existing leave markings before applying new ones (respects Time off Override)
 	Logger.log('Clearing existing leave markings...');
 	clearLeaveCellsRespectingOverride(
@@ -208,7 +224,8 @@ function updateSheetWithLeaveData(
 		dayToOverrideCol,
 		month,
 		year,
-		holidayDays
+		holidayDays,
+		activeRows,
 	);
 
 	const fullDayCells = [];
@@ -229,8 +246,8 @@ function updateSheetWithLeaveData(
 			`Found ${
 				rows.length
 			} rows for ${employee_name} (ID: ${employee_id}) at rows: ${rows.join(
-				', '
-			)}`
+				', ',
+			)}`,
 		);
 
 		// Build row -> hours mapping
@@ -241,8 +258,8 @@ function updateSheetWithLeaveData(
 			: buildRowHoursFromAttendance(
 					sheet,
 					rows,
-					attendanceByEmployee[employee_id.toUpperCase()] || []
-			  );
+					attendanceByEmployee[employee_id.toUpperCase()] || [],
+				);
 
 		for (const [row, hours] of Object.entries(rowHoursSource)) {
 			rowHoursMap[row] = hours;
@@ -256,13 +273,13 @@ function updateSheetWithLeaveData(
 			// Skip visual marking if it's a public holiday
 			if (holidayDays.has(leave.date)) {
 				Logger.log(
-					`Skipping leave marking for ${employee_name} on day ${leave.date} - it's a public holiday`
+					`Skipping leave marking for ${employee_name} on day ${leave.date} - it's a public holiday`,
 				);
 				continue;
 			}
 
 			Logger.log(
-				`Processing leave for ${employee_name} on day ${leave.date}, is_half_day: ${leave.is_half_day}`
+				`Processing leave for ${employee_name} on day ${leave.date}, is_half_day: ${leave.is_half_day}`,
 			);
 
 			const overrideCol = dayToOverrideCol[leave.date];
@@ -271,7 +288,7 @@ function updateSheetWithLeaveData(
 
 			if (activeRows.length === 0) {
 				Logger.log(
-					`All rows have Week Override checked for day ${leave.date}, skipping`
+					`All rows have Week Override checked for day ${leave.date}, skipping`,
 				);
 				continue;
 			}
@@ -283,7 +300,7 @@ function updateSheetWithLeaveData(
 	// Apply leave values and colors
 	if (fullDayCells.length > 0) {
 		Logger.log(
-			`Applying full-day leave to ${fullDayCells.length} cells (value 0, red)`
+			`Applying full-day leave to ${fullDayCells.length} cells (value 0, red)`,
 		);
 		const fullDayRanges = sheet.getRangeList(fullDayCells);
 		fullDayRanges.setValue(0);
@@ -295,7 +312,7 @@ function updateSheetWithLeaveData(
 	const halfDayCellEntries = Object.entries(halfDayCellsMap);
 	if (halfDayCellEntries.length > 0) {
 		Logger.log(
-			`Applying half-day leave to ${halfDayCellEntries.length} cells (orange)`
+			`Applying half-day leave to ${halfDayCellEntries.length} cells (orange)`,
 		);
 		for (const [cellA1, value] of halfDayCellEntries) {
 			const range = sheet.getRange(cellA1);
@@ -317,7 +334,7 @@ function updateSheetWithLeaveData(
 			// Skip if leave falls on a public holiday
 			if (holidayDays.has(leave.date)) {
 				Logger.log(
-					`Skipping leave on day ${leave.date} - it's a public holiday`
+					`Skipping leave on day ${leave.date} - it's a public holiday`,
 				);
 				continue;
 			}
@@ -348,7 +365,7 @@ function updateSheetWithLeaveData(
 		Logger.log(
 			`Updating Total Days Off for ${
 				Object.keys(totalDaysOffMap).length
-			} employee rows`
+			} employee rows`,
 		);
 		for (const [rowStr, daysOff] of Object.entries(totalDaysOffMap)) {
 			const row = parseInt(rowStr);
@@ -361,7 +378,7 @@ function updateSheetWithLeaveData(
 	const existingLeaveCells = scanForLeaveCells(sheet, dayColumns);
 	const allLeaveCells = [...new Set([...newLeaveCells, ...existingLeaveCells])];
 	Logger.log(
-		`Total leave cells to exclude: ${allLeaveCells.length} (${newLeaveCells.length} new, ${existingLeaveCells.length} existing)`
+		`Total leave cells to exclude: ${allLeaveCells.length} (${newLeaveCells.length} new, ${existingLeaveCells.length} existing)`,
 	);
 	addValidatedConditionalFormatting(sheet, month, year, allLeaveCells);
 
@@ -370,7 +387,7 @@ function updateSheetWithLeaveData(
 	Logger.log(
 		`Matched ${matchedEmployees} employees, updated ${
 			fullDayCells.length + halfDayCellEntries.length
-		} cells`
+		} cells`,
 	);
 }
 
@@ -401,7 +418,7 @@ function applyLeaveColorsToSheet(sheet, leaveData, month, year) {
 			CONFIG.FIRST_DATA_ROW,
 			1,
 			lastRow - CONFIG.FIRST_DATA_ROW + 1,
-			3
+			3,
 		);
 		const employeeValues = employeeRange.getValues();
 
@@ -478,7 +495,7 @@ function applyLeaveColorsToSheet(sheet, leaveData, month, year) {
 				activeRows,
 				col,
 				fullDayCells,
-				halfDayCells
+				halfDayCells,
 			);
 		}
 	}
@@ -494,7 +511,7 @@ function applyLeaveColorsToSheet(sheet, leaveData, month, year) {
 
 	if (halfDayCells.length > 0) {
 		Logger.log(
-			`Applying orange to ${halfDayCells.length} half-day leave cells`
+			`Applying orange to ${halfDayCells.length} half-day leave cells`,
 		);
 		for (const { cell, value } of halfDayCells) {
 			const range = sheet.getRange(cell);
@@ -506,7 +523,7 @@ function applyLeaveColorsToSheet(sheet, leaveData, month, year) {
 	}
 
 	Logger.log(
-		`Applied leave colors: ${matchedEmployees} employees, ${fullDayCells.length} full-day, ${halfDayCells.length} half-day`
+		`Applied leave colors: ${matchedEmployees} employees, ${fullDayCells.length} full-day, ${halfDayCells.length} half-day`,
 	);
 }
 
@@ -521,7 +538,7 @@ function addValidatedConditionalFormatting(
 	sheet,
 	month,
 	year,
-	leaveCells = []
+	leaveCells = [],
 ) {
 	const { dayColumns, weekRanges } = calculateDayColumns(month, year);
 	const lastRow = sheet.getLastRow();
@@ -534,7 +551,7 @@ function addValidatedConditionalFormatting(
 
 	const leaveCellSet = new Set(leaveCells.map((c) => c.toUpperCase()));
 	Logger.log(
-		`Excluding ${leaveCellSet.size} leave cells from green formatting`
+		`Excluding ${leaveCellSet.size} leave cells from green formatting`,
 	);
 
 	sheet.setConditionalFormatRules([]);
@@ -550,13 +567,13 @@ function addValidatedConditionalFormatting(
 			year,
 			lastRow,
 			numRows,
-			leaveCellSet
+			leaveCellSet,
 		);
 		if (rule) rules.push(rule);
 	}
 
 	sheet.setConditionalFormatRules(rules);
 	Logger.log(
-		`Applied ${rules.length} conditional formatting rules (validated weeks only)`
+		`Applied ${rules.length} conditional formatting rules (validated weeks only)`,
 	);
 }
