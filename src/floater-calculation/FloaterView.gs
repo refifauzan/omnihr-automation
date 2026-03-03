@@ -146,7 +146,7 @@ function countWorkingDays(month, year, holidayDays) {
  *
  * @param {number} month - Month (0-11)
  * @param {number} year - Year
- * @returns {Map} Map of empId -> { empId, empName, projects, totalFreeHours }
+ * @returns {Map} Map of empId -> { empId, empName, projects, totalFreeHours, totalOverHours }
  */
 function readCapacityViewData(month, year) {
 	const cvData = new Map();
@@ -206,9 +206,11 @@ function readCapacityViewData(month, year) {
 
 			if (!empId && !empName) continue;
 
-			// Total Free H is the last column (0-indexed: lastCol - 1)
-			const totalFreeH = allData[i][lastCol - 1];
+			// Total Free H is the second-to-last column, Total Over H is the last column
+			const totalFreeH = allData[i][lastCol - 2];
 			const totalFreeHours = typeof totalFreeH === 'number' ? totalFreeH : 0;
+			const totalOverH = allData[i][lastCol - 1];
+			const totalOverHours = typeof totalOverH === 'number' ? totalOverH : 0;
 
 			// Parse teams/projects from Column C (comma-separated)
 			const projects = new Set(
@@ -225,6 +227,7 @@ function readCapacityViewData(month, year) {
 				empName: empName,
 				projects: projects,
 				totalFreeHours: totalFreeHours,
+				totalOverHours: totalOverHours,
 			});
 
 			// Also set by lowercase name for matching with API data
@@ -234,6 +237,7 @@ function readCapacityViewData(month, year) {
 					empName: empName,
 					projects: projects,
 					totalFreeHours: totalFreeHours,
+					totalOverHours: totalOverHours,
 				});
 			}
 		}
@@ -284,12 +288,15 @@ function buildFloaterData(employees, cvData, month, year, workingDays) {
 		// Look up CV data by employee ID first, then by name
 		const cvEntry = cvData.get(empId) || cvData.get(empNameLower);
 		const totalFreeHours = cvEntry ? cvEntry.totalFreeHours : maxHours;
+		const totalOverHours = cvEntry ? cvEntry.totalOverHours : 0;
 
-		// Calculate floater percentage from CV's Total Free H
-		// Floater % = (free hours / max hours) * 100
+		// Calculate floater percentage from CV's Total Free H, offset by Total Over H
+		// Over hours reduce the effective free hours (employee worked beyond 100% capacity)
+		// Floater % = max(0, (free hours - over hours) / max hours) * 100
 		let floaterPct = 0;
 		if (maxHours > 0) {
-			floaterPct = (totalFreeHours / maxHours) * 100;
+			const adjustedFreeHours = Math.max(0, totalFreeHours - totalOverHours);
+			floaterPct = (adjustedFreeHours / maxHours) * 100;
 		}
 
 		// If leaver, set floater to 100%
@@ -323,6 +330,7 @@ function buildFloaterData(employees, cvData, month, year, workingDays) {
 			currentProject: currentProject,
 			isLeaver: isLeaver,
 			totalFreeHours: totalFreeHours,
+			totalOverHours: totalOverHours,
 			maxHours: maxHours,
 		});
 	}
