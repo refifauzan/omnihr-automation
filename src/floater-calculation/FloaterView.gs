@@ -196,6 +196,13 @@ function readCapacityViewData(month, year) {
 
 		const numRows = lastRow - 2; // Data starts at row 3
 
+		// Read header row (row 2) to detect if "Total Over H" column exists
+		const headerRow = cvSheet.getRange(2, 1, 1, lastCol).getValues()[0];
+		const lastHeader = String(headerRow[lastCol - 1] || '').trim();
+		const hasOverHoursCol = lastHeader === 'Total Over H';
+
+		Logger.log(`CV sheet has Total Over H column: ${hasOverHoursCol}`);
+
 		// Batch read ALL data at once (row 3 to lastRow, col 1 to lastCol)
 		const allData = cvSheet.getRange(3, 1, numRows, lastCol).getValues();
 
@@ -206,11 +213,20 @@ function readCapacityViewData(month, year) {
 
 			if (!empId && !empName) continue;
 
-			// Total Free H is the second-to-last column, Total Over H is the last column
-			const totalFreeH = allData[i][lastCol - 2];
-			const totalFreeHours = typeof totalFreeH === 'number' ? totalFreeH : 0;
-			const totalOverH = allData[i][lastCol - 1];
-			const totalOverHours = typeof totalOverH === 'number' ? totalOverH : 0;
+			// Read Total Free H and Total Over H based on CV sheet layout
+			let totalFreeHours = 0;
+			let totalOverHours = 0;
+			if (hasOverHoursCol) {
+				// Layout: ... | Total Free D | Total Free H | Total Over H
+				const totalFreeH = allData[i][lastCol - 2];
+				totalFreeHours = typeof totalFreeH === 'number' ? totalFreeH : 0;
+				const totalOverH = allData[i][lastCol - 1];
+				totalOverHours = typeof totalOverH === 'number' ? totalOverH : 0;
+			} else {
+				// Layout: ... | Total Free D | Total Free H
+				const totalFreeH = allData[i][lastCol - 1];
+				totalFreeHours = typeof totalFreeH === 'number' ? totalFreeH : 0;
+			}
 
 			// Parse teams/projects from Column C (comma-separated)
 			const projects = new Set(
