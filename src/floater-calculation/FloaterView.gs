@@ -199,7 +199,8 @@ function readCapacityViewData(month, year) {
 		// Read header row (row 2) to detect if "Total Over H" column exists
 		const headerRow = cvSheet.getRange(2, 1, 1, lastCol).getValues()[0];
 		const lastHeader = String(headerRow[lastCol - 1] || '').trim();
-		const hasOverHoursCol = lastHeader === 'Total Over H';
+		const hasOverHoursCol =
+			lastHeader === 'Total Over H' || lastHeader === 'Over H';
 
 		Logger.log(`CV sheet has Total Over H column: ${hasOverHoursCol}`);
 
