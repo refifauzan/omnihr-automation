@@ -242,7 +242,13 @@ function scheduledWeeklyFloaterUpdate() {
 			year,
 		);
 		const workingDays = countWorkingDays(month, year, holidayDays);
-		const cvData = readCapacityViewData(month, year, leaveData, holidayDays);
+		const cvData = readCapacityViewData(
+			month,
+			year,
+			employeesWithDetails,
+			leaveData,
+			holidayDays,
+		);
 
 		const floaterData = buildFloaterData(
 			employeesWithDetails,
@@ -250,6 +256,7 @@ function scheduledWeeklyFloaterUpdate() {
 			month,
 			year,
 			workingDays,
+			holidayDays,
 		);
 
 		// Only include employees with floater % > 0

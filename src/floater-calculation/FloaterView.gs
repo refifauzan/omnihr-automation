@@ -75,7 +75,13 @@ function generateFloaterView(month, year) {
 
 		// Read capacity view data from source spreadsheet (read-only)
 		// CV sheet already has aggregated free capacity per employee per day
-		const cvData = readCapacityViewData(month, year, leaveData, holidayDays);
+		const cvData = readCapacityViewData(
+			month,
+			year,
+			employeesWithDetails,
+			leaveData,
+			holidayDays,
+		);
 		Logger.log(`Read CV data for ${cvData.size} employees`);
 
 		// Build floater data by merging API data (department, termination) with CV data (free hours, projects)
@@ -85,6 +91,7 @@ function generateFloaterView(month, year) {
 			month,
 			year,
 			workingDays,
+			holidayDays,
 		);
 
 		// Only include employees with floater % > 0
@@ -162,50 +169,145 @@ function hasFloaterTag(value) {
 		.includes('floater');
 }
 
-function addProjectToEmployeeMap(projectMap, key, project) {
-	if (!key || !project) return;
+function buildEmployeeDetailsLookup(employees) {
+	const employeeDetailsLookup = new Map();
 
-	let projects = projectMap.get(key);
-	if (!projects) {
-		projects = new Set();
-		projectMap.set(key, projects);
-	}
-
-	projects.add(project);
-}
-
-function readAttendanceProjects(sourceSS) {
-	const attendanceProjects = new Map();
-	const attendanceSheet = sourceSS.getSheetByName('Attendance');
-
-	if (!attendanceSheet) {
-		return attendanceProjects;
-	}
-
-	const lastRow = attendanceSheet.getLastRow();
-	if (lastRow < 2) {
-		return attendanceProjects;
-	}
-
-	const numRows = lastRow - 1;
-	const attendanceData = attendanceSheet.getRange(2, 1, numRows, 4).getValues();
-
-	for (let i = 0; i < numRows; i++) {
-		const empId = String(attendanceData[i][0] || '')
+	for (const emp of employees || []) {
+		const empId = String(emp.employee_id || '')
 			.trim()
 			.toUpperCase();
-		const empName = String(attendanceData[i][1] || '').trim();
-		const project = String(attendanceData[i][2] || '').trim();
+		const empName = String(emp.full_name || emp.name || '')
+			.trim()
+			.toLowerCase();
 
-		if ((!empId && !empName) || !project || hasFloaterTag(project)) {
+		if (empId) {
+			employeeDetailsLookup.set(empId, emp);
+		}
+		if (empName) {
+			employeeDetailsLookup.set(empName, emp);
+		}
+	}
+
+	return employeeDetailsLookup;
+}
+
+function resolveEmployeeDetails(employeeDetailsLookup, empId, empNameLower) {
+	return (
+		(employeeDetailsLookup && empId && employeeDetailsLookup.get(empId)) ||
+		(employeeDetailsLookup &&
+			empNameLower &&
+			employeeDetailsLookup.get(empNameLower)) ||
+		null
+	);
+}
+
+function normalizeDateOnly(date) {
+	if (!date) return null;
+	return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function isEmployeeActiveOnDay(employeeDetails, year, month, day) {
+	if (!employeeDetails) return true;
+
+	const currentDate = new Date(year, month, day);
+	const hireDate = employeeDetails.hired_date
+		? normalizeDateOnly(parseDateDMY(employeeDetails.hired_date))
+		: null;
+	const terminationDate = employeeDetails.termination_date
+		? normalizeDateOnly(parseDateDMY(employeeDetails.termination_date))
+		: null;
+
+	if (hireDate && currentDate < hireDate) {
+		return false;
+	}
+
+	if (terminationDate && currentDate > terminationDate) {
+		return false;
+	}
+
+	return true;
+}
+
+function mergeLeaveInfo(sourceLeaveInfo, apiLeaveInfo) {
+	if (!sourceLeaveInfo && !apiLeaveInfo) {
+		return null;
+	}
+
+	if (
+		(sourceLeaveInfo && !sourceLeaveInfo.is_half_day) ||
+		(apiLeaveInfo && !apiLeaveInfo.is_half_day)
+	) {
+		return { is_half_day: false };
+	}
+
+	return { is_half_day: true };
+}
+
+function countEmployeeWorkingDays(employeeDetails, month, year, holidayDays) {
+	const daysInMonth = new Date(year, month + 1, 0).getDate();
+	let totalWorkingDays = 0;
+
+	for (let day = 1; day <= daysInMonth; day++) {
+		const date = new Date(year, month, day);
+		const dayOfWeek = date.getDay();
+		if (dayOfWeek === 0 || dayOfWeek === 6 || holidayDays.has(day)) {
 			continue;
 		}
 
-		addProjectToEmployeeMap(attendanceProjects, empId, project);
-		addProjectToEmployeeMap(attendanceProjects, empName.toLowerCase(), project);
+		if (!isEmployeeActiveOnDay(employeeDetails, year, month, day)) {
+			continue;
+		}
+
+		totalWorkingDays++;
 	}
 
-	return attendanceProjects;
+	return totalWorkingDays;
+}
+
+function findMonthlyProjectColumn(sheet, firstDayCol) {
+	const metaColumnCount = Math.max(firstDayCol - 1, 0);
+	if (metaColumnCount === 0) {
+		return null;
+	}
+
+	const headerRow1 = sheet.getRange(1, 1, 1, metaColumnCount).getValues()[0];
+	const headerRow2 = sheet.getRange(2, 1, 1, metaColumnCount).getValues()[0];
+
+	for (let col = 1; col <= metaColumnCount; col++) {
+		const header1 = String(headerRow1[col - 1] || '')
+			.trim()
+			.toLowerCase();
+		const header2 = String(headerRow2[col - 1] || '')
+			.trim()
+			.toLowerCase();
+		const combinedHeader = `${header1} ${header2}`.trim();
+
+		if (combinedHeader.includes('current project')) {
+			return col;
+		}
+	}
+
+	for (let col = 1; col <= metaColumnCount; col++) {
+		const header1 = String(headerRow1[col - 1] || '')
+			.trim()
+			.toLowerCase();
+		const header2 = String(headerRow2[col - 1] || '')
+			.trim()
+			.toLowerCase();
+		const combinedHeader = `${header1} ${header2}`.trim();
+
+		if (
+			combinedHeader === 'project' ||
+			combinedHeader.endsWith(' project') ||
+			combinedHeader.startsWith('project ')
+		) {
+			if (!combinedHeader.includes('project contribution')) {
+				return col;
+			}
+		}
+	}
+
+	return null;
 }
 
 /**
@@ -225,13 +327,14 @@ function readAttendanceProjects(sourceSS) {
  * @returns {Map} Map of empId -> { empId, empName, projects, totalFreeHours, totalOverHours }
  */
 
-function readCapacityViewData(month, year, leaveData, holidayDays) {
+function readCapacityViewData(month, year, employees, leaveData, holidayDays) {
 	const cvData = new Map();
 	const uniqueEntries = [];
 	const fullDayLeaveColor = '#ff0000';
 	const halfDayLeaveColor = '#ffa500';
 	const sourceFirstDataRow = 3;
 	const sourceFirstDayCol = 11;
+	const employeeDetailsLookup = buildEmployeeDetailsLookup(employees);
 
 	const monthNames = [
 		'January',
@@ -257,8 +360,6 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 		return cvData;
 	}
 
-	const attendanceProjects = readAttendanceProjects(sourceSS);
-
 	const cvSheetName = `${monthNames[month]} ${year}`;
 	const cvSheet = sourceSS.getSheetByName(cvSheetName);
 
@@ -283,8 +384,12 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 		const dayColumns = buildProjectSheetDayColumns(month, year);
 		const normalizedHolidayDays = holidayDays || new Set();
 		const numRows = lastRow - sourceFirstDataRow + 1;
+		const sourceProjectColumn = findMonthlyProjectColumn(
+			cvSheet,
+			sourceFirstDayCol,
+		);
 		const employeeData = cvSheet
-			.getRange(sourceFirstDataRow, 1, numRows, 4)
+			.getRange(sourceFirstDataRow, 1, numRows, sourceFirstDayCol - 1)
 			.getValues();
 		const hoursData = {};
 		const backgroundData = {};
@@ -303,8 +408,11 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 				.trim()
 				.toUpperCase();
 			const empName = String(employeeData[i][1] || '').trim();
-			const project = String(employeeData[i][2] || '').trim();
-			const assignmentType = String(employeeData[i][3] || '').trim();
+			const sourceColC = String(employeeData[i][2] || '').trim();
+			const sourceColD = String(employeeData[i][3] || '').trim();
+			const currentProject = sourceProjectColumn
+				? String(employeeData[i][sourceProjectColumn - 1] || '').trim()
+				: '';
 			const empNameLower = empName.toLowerCase();
 
 			if (!empId && !empName) continue;
@@ -322,8 +430,14 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 					projects: new Set(),
 					totalFreeHours: 0,
 					totalOverHours: 0,
+					maxHours: 0,
 					perDayRegularHours: perDayRegularHours,
 					perDaySourceLeave: new Map(),
+					employeeDetails: resolveEmployeeDetails(
+						employeeDetailsLookup,
+						empId,
+						empNameLower,
+					),
 				};
 				uniqueEntries.push(entry);
 			}
@@ -334,6 +448,13 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 			if (!entry.empName && empName) {
 				entry.empName = empName;
 			}
+			if (!entry.employeeDetails) {
+				entry.employeeDetails = resolveEmployeeDetails(
+					employeeDetailsLookup,
+					empId,
+					empNameLower,
+				);
+			}
 
 			if (empId) {
 				cvData.set(empId, entry);
@@ -341,9 +462,14 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 			if (empName) {
 				cvData.set(empNameLower, entry);
 			}
+			if (currentProject) {
+				entry.projects.add(currentProject);
+			}
 
 			const isFloaterAssignment =
-				hasFloaterTag(project) || hasFloaterTag(assignmentType);
+				hasFloaterTag(sourceColC) ||
+				hasFloaterTag(sourceColD) ||
+				hasFloaterTag(currentProject);
 
 			for (let day = 1; day <= daysInMonth; day++) {
 				const date = new Date(year, month, day);
@@ -353,6 +479,10 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 					dayOfWeek === 6 ||
 					normalizedHolidayDays.has(day)
 				) {
+					continue;
+				}
+
+				if (!isEmployeeActiveOnDay(entry.employeeDetails, year, month, day)) {
 					continue;
 				}
 
@@ -384,13 +514,6 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 		}
 
 		for (const entry of uniqueEntries) {
-			const displayProjects =
-				(entry.empId && attendanceProjects.get(entry.empId)) ||
-				attendanceProjects.get(String(entry.empName || '').toLowerCase());
-			if (displayProjects && displayProjects.size > 0) {
-				entry.projects = new Set(displayProjects);
-			}
-
 			const entryLeaveDays =
 				(leaveData &&
 					(entry.empId
@@ -409,9 +532,15 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 					continue;
 				}
 
+				if (!isEmployeeActiveOnDay(entry.employeeDetails, year, month, day)) {
+					continue;
+				}
+
+				entry.maxHours += 8;
+
 				const sourceLeaveInfo = entry.perDaySourceLeave.get(day);
 				const apiLeaveInfo = entryLeaveDays && entryLeaveDays.get(day);
-				const leaveInfo = sourceLeaveInfo || apiLeaveInfo;
+				const leaveInfo = mergeLeaveInfo(sourceLeaveInfo, apiLeaveInfo);
 				const standardHours = leaveInfo ? (leaveInfo.is_half_day ? 4 : 0) : 8;
 				const assignedHours = entry.perDayRegularHours[day] || 0;
 
@@ -438,11 +567,18 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
  * @param {number} month - Month (0-11)
  * @param {number} year - Year
  * @param {number} workingDays - Total working days in the month
+ * @param {Set} holidayDays - Set of holiday day numbers
  * @returns {Array} Array of floater data objects
  */
-function buildFloaterData(employees, cvData, month, year, workingDays) {
+function buildFloaterData(
+	employees,
+	cvData,
+	month,
+	year,
+	workingDays,
+	holidayDays,
+) {
 	const floaterData = [];
-	const maxHours = workingDays * 8;
 
 	for (const emp of employees) {
 		const empName = (emp.full_name || '').trim();
@@ -465,25 +601,24 @@ function buildFloaterData(employees, cvData, month, year, workingDays) {
 
 		// Look up CV data by employee ID first, then by name
 		const cvEntry = cvData.get(empId) || cvData.get(empNameLower);
-		const totalFreeHours = cvEntry ? cvEntry.totalFreeHours : maxHours;
+		const employeeMaxHours = cvEntry
+			? cvEntry.maxHours
+			: countEmployeeWorkingDays(emp, month, year, holidayDays || new Set()) *
+				8;
+		const totalFreeHours = cvEntry ? cvEntry.totalFreeHours : employeeMaxHours;
 		const totalOverHours = cvEntry ? cvEntry.totalOverHours : 0;
 
 		// Calculate floater percentage from CV's Total Free H, offset by Total Over H
 		// Over hours reduce the effective free hours (employee worked beyond 100% capacity)
 		// Floater % = max(0, (free hours - over hours) / max hours) * 100
 		let floaterPct = 0;
-		if (maxHours > 0) {
+		if (employeeMaxHours > 0) {
 			const adjustedFreeHours = Math.max(0, totalFreeHours - totalOverHours);
-			floaterPct = (adjustedFreeHours / maxHours) * 100;
-		}
-
-		// If leaver, set floater to 100%
-		if (isLeaver) {
-			floaterPct = 100;
+			floaterPct = (adjustedFreeHours / employeeMaxHours) * 100;
 		}
 
 		// If employee not found in CV, they're 100% floater (not allocated anywhere)
-		if (!cvEntry && !isLeaver) {
+		if (!cvEntry && employeeMaxHours > 0) {
 			floaterPct = 100;
 		}
 
@@ -509,7 +644,7 @@ function buildFloaterData(employees, cvData, month, year, workingDays) {
 			isLeaver: isLeaver,
 			totalFreeHours: totalFreeHours,
 			totalOverHours: totalOverHours,
-			maxHours: maxHours,
+			maxHours: employeeMaxHours,
 		});
 	}
 
