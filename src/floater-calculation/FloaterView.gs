@@ -198,9 +198,20 @@ function readCapacityViewData(month, year) {
 
 		// Read header row (row 2) to detect if "Total Over H" column exists
 		const headerRow = cvSheet.getRange(2, 1, 1, lastCol).getValues()[0];
-		const lastHeader = String(headerRow[lastCol - 1] || '').trim();
-		const hasOverHoursCol =
-			lastHeader === 'Total Over H' || lastHeader === 'Over H';
+		const normalizedHeaders = headerRow.map((header) =>
+			String(header || '').trim(),
+		);
+		const totalFreeHoursColIndex =
+			normalizedHeaders.lastIndexOf('Total Free H');
+		const totalOverHoursColIndex = normalizedHeaders.findIndex(
+			(header) => header === 'Total Over H' || header === 'Over H',
+		);
+		const hasOverHoursCol = totalOverHoursColIndex !== -1;
+
+		if (totalFreeHoursColIndex === -1) {
+			Logger.log('CV sheet is missing Total Free H column');
+			return cvData;
+		}
 
 		Logger.log(`CV sheet has Total Over H column: ${hasOverHoursCol}`);
 
@@ -217,16 +228,11 @@ function readCapacityViewData(month, year) {
 			// Read Total Free H and Total Over H based on CV sheet layout
 			let totalFreeHours = 0;
 			let totalOverHours = 0;
+			const totalFreeH = allData[i][totalFreeHoursColIndex];
+			totalFreeHours = typeof totalFreeH === 'number' ? totalFreeH : 0;
 			if (hasOverHoursCol) {
-				// Layout: ... | Total Free D | Total Free H | Total Over H
-				const totalFreeH = allData[i][lastCol - 2];
-				totalFreeHours = typeof totalFreeH === 'number' ? totalFreeH : 0;
-				const totalOverH = allData[i][lastCol - 1];
+				const totalOverH = allData[i][totalOverHoursColIndex];
 				totalOverHours = typeof totalOverH === 'number' ? totalOverH : 0;
-			} else {
-				// Layout: ... | Total Free D | Total Free H
-				const totalFreeH = allData[i][lastCol - 1];
-				totalFreeHours = typeof totalFreeH === 'number' ? totalFreeH : 0;
 			}
 
 			// Parse teams/projects from Column C (comma-separated)
