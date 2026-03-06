@@ -162,6 +162,52 @@ function hasFloaterTag(value) {
 		.includes('floater');
 }
 
+function addProjectToEmployeeMap(projectMap, key, project) {
+	if (!key || !project) return;
+
+	let projects = projectMap.get(key);
+	if (!projects) {
+		projects = new Set();
+		projectMap.set(key, projects);
+	}
+
+	projects.add(project);
+}
+
+function readAttendanceProjects(sourceSS) {
+	const attendanceProjects = new Map();
+	const attendanceSheet = sourceSS.getSheetByName('Attendance');
+
+	if (!attendanceSheet) {
+		return attendanceProjects;
+	}
+
+	const lastRow = attendanceSheet.getLastRow();
+	if (lastRow < 2) {
+		return attendanceProjects;
+	}
+
+	const numRows = lastRow - 1;
+	const attendanceData = attendanceSheet.getRange(2, 1, numRows, 4).getValues();
+
+	for (let i = 0; i < numRows; i++) {
+		const empId = String(attendanceData[i][0] || '')
+			.trim()
+			.toUpperCase();
+		const empName = String(attendanceData[i][1] || '').trim();
+		const project = String(attendanceData[i][2] || '').trim();
+
+		if ((!empId && !empName) || !project || hasFloaterTag(project)) {
+			continue;
+		}
+
+		addProjectToEmployeeMap(attendanceProjects, empId, project);
+		addProjectToEmployeeMap(attendanceProjects, empName.toLowerCase(), project);
+	}
+
+	return attendanceProjects;
+}
+
 /**
  * Read capacity view data from the source spreadsheet (read-only)
  * Opens the project attendance spreadsheet and reads the "CV [Month] [Year]" sheet.
@@ -211,6 +257,8 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 		return cvData;
 	}
 
+	const attendanceProjects = readAttendanceProjects(sourceSS);
+
 	const cvSheetName = `${monthNames[month]} ${year}`;
 	const cvSheet = sourceSS.getSheetByName(cvSheetName);
 
@@ -255,8 +303,8 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 				.trim()
 				.toUpperCase();
 			const empName = String(employeeData[i][1] || '').trim();
-			const team = String(employeeData[i][2] || '').trim();
-			const project = String(employeeData[i][3] || '').trim();
+			const project = String(employeeData[i][2] || '').trim();
+			const assignmentType = String(employeeData[i][3] || '').trim();
 			const empNameLower = empName.toLowerCase();
 
 			if (!empId && !empName) continue;
@@ -286,9 +334,6 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 			if (!entry.empName && empName) {
 				entry.empName = empName;
 			}
-			if (project) {
-				entry.projects.add(project);
-			}
 
 			if (empId) {
 				cvData.set(empId, entry);
@@ -297,7 +342,8 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 				cvData.set(empNameLower, entry);
 			}
 
-			const isFloaterAssignment = hasFloaterTag(team) || hasFloaterTag(project);
+			const isFloaterAssignment =
+				hasFloaterTag(project) || hasFloaterTag(assignmentType);
 
 			for (let day = 1; day <= daysInMonth; day++) {
 				const date = new Date(year, month, day);
@@ -338,6 +384,13 @@ function readCapacityViewData(month, year, leaveData, holidayDays) {
 		}
 
 		for (const entry of uniqueEntries) {
+			const displayProjects =
+				(entry.empId && attendanceProjects.get(entry.empId)) ||
+				attendanceProjects.get(String(entry.empName || '').toLowerCase());
+			if (displayProjects && displayProjects.size > 0) {
+				entry.projects = new Set(displayProjects);
+			}
+
 			const entryLeaveDays =
 				(leaveData &&
 					(entry.empId
