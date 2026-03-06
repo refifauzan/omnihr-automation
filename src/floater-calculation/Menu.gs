@@ -235,8 +235,14 @@ function scheduledWeeklyFloaterUpdate() {
 		const employeesWithDetails = fetchAllEmployeesWithDetails(token);
 		const holidays = fetchHolidaysForMonth(token, month, year);
 		const holidayDays = new Set(holidays.map((h) => h.date));
+		const leaveData = fetchLeaveDataForMonth(
+			token,
+			employeesWithDetails,
+			month,
+			year,
+		);
 		const workingDays = countWorkingDays(month, year, holidayDays);
-		const cvData = readCapacityViewData(month, year);
+		const cvData = readCapacityViewData(month, year, leaveData, holidayDays);
 
 		const floaterData = buildFloaterData(
 			employeesWithDetails,

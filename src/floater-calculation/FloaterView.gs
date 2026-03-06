@@ -62,6 +62,12 @@ function generateFloaterView(month, year) {
 		// Fetch holidays (to calculate working days for denominator)
 		const holidays = fetchHolidaysForMonth(token, month, year);
 		const holidayDays = new Set(holidays.map((h) => h.date));
+		const leaveData = fetchLeaveDataForMonth(
+			token,
+			employeesWithDetails,
+			month,
+			year,
+		);
 
 		// Calculate working days in the month
 		const workingDays = countWorkingDays(month, year, holidayDays);
@@ -69,7 +75,7 @@ function generateFloaterView(month, year) {
 
 		// Read capacity view data from source spreadsheet (read-only)
 		// CV sheet already has aggregated free capacity per employee per day
-		const cvData = readCapacityViewData(month, year);
+		const cvData = readCapacityViewData(month, year, leaveData, holidayDays);
 		Logger.log(`Read CV data for ${cvData.size} employees`);
 
 		// Build floater data by merging API data (department, termination) with CV data (free hours, projects)
@@ -132,6 +138,30 @@ function countWorkingDays(month, year, holidayDays) {
 	return workingDays;
 }
 
+function buildProjectSheetDayColumns(month, year) {
+	const daysInMonth = new Date(year, month + 1, 0).getDate();
+	const dayColumns = {};
+	let currentCol = 11;
+
+	for (let day = 1; day <= daysInMonth; day++) {
+		const date = new Date(year, month, day);
+		dayColumns[day] = currentCol;
+		currentCol++;
+		if (date.getDay() === 5) {
+			currentCol += 2;
+		}
+	}
+
+	return dayColumns;
+}
+
+function hasFloaterTag(value) {
+	return String(value || '')
+		.trim()
+		.toLowerCase()
+		.includes('floater');
+}
+
 /**
  * Read capacity view data from the source spreadsheet (read-only)
  * Opens the project attendance spreadsheet and reads the "CV [Month] [Year]" sheet.
@@ -148,8 +178,14 @@ function countWorkingDays(month, year, holidayDays) {
  * @param {number} year - Year
  * @returns {Map} Map of empId -> { empId, empName, projects, totalFreeHours, totalOverHours }
  */
-function readCapacityViewData(month, year) {
+
+function readCapacityViewData(month, year, leaveData, holidayDays) {
 	const cvData = new Map();
+	const uniqueEntries = [];
+	const fullDayLeaveColor = '#ff0000';
+	const halfDayLeaveColor = '#ffa500';
+	const sourceFirstDataRow = 3;
+	const sourceFirstDayCol = 11;
 
 	const monthNames = [
 		'January',
@@ -175,8 +211,7 @@ function readCapacityViewData(month, year) {
 		return cvData;
 	}
 
-	// Find the CV sheet: "CV [Month] [Year]"
-	const cvSheetName = `${CONFIG.CV_SHEET_PREFIX} ${monthNames[month]} ${year}`;
+	const cvSheetName = `${monthNames[month]} ${year}`;
 	const cvSheet = sourceSS.getSheetByName(cvSheetName);
 
 	if (!cvSheet) {
@@ -188,80 +223,147 @@ function readCapacityViewData(month, year) {
 
 	try {
 		const lastRow = cvSheet.getLastRow();
-		const lastCol = cvSheet.getLastColumn();
-		if (lastRow < 3 || lastCol < 4) {
+		if (
+			lastRow < sourceFirstDataRow ||
+			cvSheet.getLastColumn() < sourceFirstDayCol
+		) {
 			Logger.log('CV sheet has insufficient data');
 			return cvData;
 		}
 
-		const numRows = lastRow - 2; // Data starts at row 3
+		const daysInMonth = new Date(year, month + 1, 0).getDate();
+		const dayColumns = buildProjectSheetDayColumns(month, year);
+		const normalizedHolidayDays = holidayDays || new Set();
+		const numRows = lastRow - sourceFirstDataRow + 1;
+		const employeeData = cvSheet
+			.getRange(sourceFirstDataRow, 1, numRows, 4)
+			.getValues();
+		const hoursData = {};
+		const backgroundData = {};
 
-		// Read header row (row 2) to detect if "Total Over H" column exists
-		const headerRow = cvSheet.getRange(2, 1, 1, lastCol).getValues()[0];
-		const normalizedHeaders = headerRow.map((header) =>
-			String(header || '').trim(),
-		);
-		const totalFreeHoursColIndex =
-			normalizedHeaders.lastIndexOf('Total Free H');
-		const totalOverHoursColIndex = normalizedHeaders.findIndex(
-			(header) => header === 'Total Over H' || header === 'Over H',
-		);
-		const hasOverHoursCol = totalOverHoursColIndex !== -1;
-
-		if (totalFreeHoursColIndex === -1) {
-			Logger.log('CV sheet is missing Total Free H column');
-			return cvData;
+		for (let day = 1; day <= daysInMonth; day++) {
+			const col = dayColumns[day];
+			const range = cvSheet.getRange(sourceFirstDataRow, col, numRows, 1);
+			hoursData[day] = range.getValues().map((row) => row[0]);
+			backgroundData[day] = range
+				.getBackgrounds()
+				.map((row) => String(row[0] || '').toLowerCase());
 		}
 
-		Logger.log(`CV sheet has Total Over H column: ${hasOverHoursCol}`);
-
-		// Batch read ALL data at once (row 3 to lastRow, col 1 to lastCol)
-		const allData = cvSheet.getRange(3, 1, numRows, lastCol).getValues();
-
 		for (let i = 0; i < numRows; i++) {
-			const empId = String(allData[i][0] || '').trim(); // Column A = Employee ID
-			const empName = String(allData[i][1] || '').trim(); // Column B = Name
-			const teams = String(allData[i][2] || '').trim(); // Column C = Team(s)
+			const empId = String(employeeData[i][0] || '')
+				.trim()
+				.toUpperCase();
+			const empName = String(employeeData[i][1] || '').trim();
+			const team = String(employeeData[i][2] || '').trim();
+			const project = String(employeeData[i][3] || '').trim();
+			const empNameLower = empName.toLowerCase();
 
 			if (!empId && !empName) continue;
 
-			// Read Total Free H and Total Over H based on CV sheet layout
-			let totalFreeHours = 0;
-			let totalOverHours = 0;
-			const totalFreeH = allData[i][totalFreeHoursColIndex];
-			totalFreeHours = typeof totalFreeH === 'number' ? totalFreeH : 0;
-			if (hasOverHoursCol) {
-				const totalOverH = allData[i][totalOverHoursColIndex];
-				totalOverHours = typeof totalOverH === 'number' ? totalOverH : 0;
-			}
+			let entry = cvData.get(empId) || cvData.get(empNameLower);
+			if (!entry) {
+				const perDayRegularHours = {};
+				for (let day = 1; day <= daysInMonth; day++) {
+					perDayRegularHours[day] = 0;
+				}
 
-			// Parse teams/projects from Column C (comma-separated)
-			const projects = new Set(
-				teams
-					.split(',')
-					.map((t) => t.trim())
-					.filter(Boolean),
-			);
-
-			// Key by employee ID (primary) and name (fallback)
-			const key = empId || empName.toLowerCase();
-			cvData.set(key, {
-				empId: empId,
-				empName: empName,
-				projects: projects,
-				totalFreeHours: totalFreeHours,
-				totalOverHours: totalOverHours,
-			});
-
-			// Also set by lowercase name for matching with API data
-			if (empName) {
-				cvData.set(empName.toLowerCase(), {
+				entry = {
 					empId: empId,
 					empName: empName,
-					projects: projects,
-					totalFreeHours: totalFreeHours,
-					totalOverHours: totalOverHours,
-				});
+					projects: new Set(),
+					totalFreeHours: 0,
+					totalOverHours: 0,
+					perDayRegularHours: perDayRegularHours,
+					perDaySourceLeave: new Map(),
+				};
+				uniqueEntries.push(entry);
+			}
+
+			if (!entry.empId && empId) {
+				entry.empId = empId;
+			}
+			if (!entry.empName && empName) {
+				entry.empName = empName;
+			}
+			if (project) {
+				entry.projects.add(project);
+			}
+
+			if (empId) {
+				cvData.set(empId, entry);
+			}
+			if (empName) {
+				cvData.set(empNameLower, entry);
+			}
+
+			const isFloaterAssignment = hasFloaterTag(team) || hasFloaterTag(project);
+
+			for (let day = 1; day <= daysInMonth; day++) {
+				const date = new Date(year, month, day);
+				const dayOfWeek = date.getDay();
+				if (
+					dayOfWeek === 0 ||
+					dayOfWeek === 6 ||
+					normalizedHolidayDays.has(day)
+				) {
+					continue;
+				}
+
+				const background = backgroundData[day][i];
+				if (
+					background === fullDayLeaveColor ||
+					background === halfDayLeaveColor
+				) {
+					const existingLeaveInfo = entry.perDaySourceLeave.get(day);
+					if (
+						!existingLeaveInfo ||
+						(existingLeaveInfo.is_half_day && background === fullDayLeaveColor)
+					) {
+						entry.perDaySourceLeave.set(day, {
+							is_half_day: background === halfDayLeaveColor,
+						});
+					}
+					continue;
+				}
+
+				if (isFloaterAssignment) {
+					continue;
+				}
+
+				const rawHours = hoursData[day][i];
+				const validHours = typeof rawHours === 'number' ? rawHours : 0;
+				entry.perDayRegularHours[day] += validHours;
+			}
+		}
+
+		for (const entry of uniqueEntries) {
+			const entryLeaveDays =
+				(leaveData &&
+					(entry.empId
+						? leaveData.get(entry.empId)
+						: leaveData.get(String(entry.empName || '').toLowerCase()))) ||
+				(leaveData && leaveData.get(String(entry.empName || '').toLowerCase()));
+
+			for (let day = 1; day <= daysInMonth; day++) {
+				const date = new Date(year, month, day);
+				const dayOfWeek = date.getDay();
+				if (
+					dayOfWeek === 0 ||
+					dayOfWeek === 6 ||
+					normalizedHolidayDays.has(day)
+				) {
+					continue;
+				}
+
+				const sourceLeaveInfo = entry.perDaySourceLeave.get(day);
+				const apiLeaveInfo = entryLeaveDays && entryLeaveDays.get(day);
+				const leaveInfo = sourceLeaveInfo || apiLeaveInfo;
+				const standardHours = leaveInfo ? (leaveInfo.is_half_day ? 4 : 0) : 8;
+				const assignedHours = entry.perDayRegularHours[day] || 0;
+
+				entry.totalFreeHours += Math.max(0, standardHours - assignedHours);
+				entry.totalOverHours += Math.max(0, assignedHours - standardHours);
 			}
 		}
 	} catch (e) {
