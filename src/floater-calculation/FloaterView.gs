@@ -536,13 +536,15 @@ function readCapacityViewData(month, year, employees, leaveData, holidayDays) {
 					continue;
 				}
 
-				entry.maxHours += 8;
-
 				const sourceLeaveInfo = entry.perDaySourceLeave.get(day);
 				const apiLeaveInfo = entryLeaveDays && entryLeaveDays.get(day);
 				const leaveInfo = mergeLeaveInfo(sourceLeaveInfo, apiLeaveInfo);
-				const standardHours = leaveInfo ? (leaveInfo.is_half_day ? 4 : 0) : 8;
+				if (leaveInfo) {
+					continue;
+				}
+				const standardHours = 8;
 				const assignedHours = entry.perDayRegularHours[day] || 0;
+				entry.maxHours += standardHours;
 
 				entry.totalFreeHours += Math.max(0, standardHours - assignedHours);
 				entry.totalOverHours += Math.max(0, assignedHours - standardHours);
