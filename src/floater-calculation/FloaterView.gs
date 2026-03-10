@@ -466,10 +466,12 @@ function readCapacityViewData(month, year, employees, leaveData, holidayDays) {
 				entry.projects.add(currentProject);
 			}
 
+			// Only treat as floater assignment if the project is EXACTLY "Floater"
+			// Mixed labels like "Atlas 2, Floater" should count their hours
 			const isFloaterAssignment =
-				hasFloaterTag(sourceColC) ||
-				hasFloaterTag(sourceColD) ||
-				hasFloaterTag(currentProject);
+				currentProject.toLowerCase() === 'floater' ||
+				sourceColC.toLowerCase() === 'floater' ||
+				sourceColD.toLowerCase() === 'floater';
 
 			for (let day = 1; day <= daysInMonth; day++) {
 				const date = new Date(year, month, day);
