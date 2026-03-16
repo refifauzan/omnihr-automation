@@ -73,8 +73,8 @@ function generateFloaterView(month, year) {
 		const workingDays = countWorkingDays(month, year, holidayDays);
 		Logger.log(`Working days in ${monthNames[month]} ${year}: ${workingDays}`);
 
-		// Read capacity view data from source spreadsheet (read-only)
-		// CV sheet already has aggregated free capacity per employee per day
+		// Read project attendance data from source spreadsheet (read-only)
+		// Uses "[Month] [Year]" sheet (e.g. "February 2026"), NOT "CV [Month] [Year]"
 		const cvData = readCapacityViewData(
 			month,
 			year,
@@ -82,9 +82,9 @@ function generateFloaterView(month, year) {
 			leaveData,
 			holidayDays,
 		);
-		Logger.log(`Read CV data for ${cvData.size} employees`);
+		Logger.log(`Read project data for ${cvData.size} employees`);
 
-		// Build floater data by merging API data (department, termination) with CV data (free hours, projects)
+		// Build floater data by merging API data (department, termination) with project sheet data (free hours, projects)
 		const floaterData = buildFloaterData(
 			employeesWithDetails,
 			cvData,
@@ -311,16 +311,16 @@ function findMonthlyProjectColumn(sheet, firstDayCol) {
 }
 
 /**
- * Read capacity view data from the source spreadsheet (read-only)
- * Opens the project attendance spreadsheet and reads the "CV [Month] [Year]" sheet.
+ * Read project attendance data from the source spreadsheet (read-only)
+ * Opens the spreadsheet and reads the "[Month] [Year]" sheet (e.g. "February 2026").
+ * Does NOT use "CV [Month] [Year]" sheets.
  *
- * CV sheet structure (from CapacityView.gs):
+ * Sheet structure (project attendance):
  *   Row 1: Day names (S, M, T, W, T, F, S)
- *   Row 2: Headers - ID | Name | Team | 1 | 2 | ... | 31 | Total Free D | Total Free H
+ *   Row 2: Headers - ID | Name | Team | 1 | 2 | ... | 31 | Validated | etc.
  *   Row 3+: Data rows
  *
- * Each day cell = free capacity (8 - allocated hours). Empty = weekend/holiday.
- * Total Free H = sum of all unallocated hours across working days.
+ * Each day cell = hours allocated. Column C = Team/Project.
  *
  * @param {number} month - Month (0-11)
  * @param {number} year - Year
@@ -360,23 +360,24 @@ function readCapacityViewData(month, year, employees, leaveData, holidayDays) {
 		return cvData;
 	}
 
-	const cvSheetName = `${monthNames[month]} ${year}`;
-	const cvSheet = sourceSS.getSheetByName(cvSheetName);
+	// Read from "[Month] [Year]" sheet only (e.g. "February 2026"), NOT "CV [Month] [Year]"
+	const sheetName = `${monthNames[month]} ${year}`;
+	const projectSheet = sourceSS.getSheetByName(sheetName);
 
-	if (!cvSheet) {
-		Logger.log(`No CV sheet found with name: ${cvSheetName}`);
+	if (!projectSheet) {
+		Logger.log(`No sheet found with name: "${sheetName}"`);
 		return cvData;
 	}
 
-	Logger.log(`Reading CV sheet: ${cvSheetName} (read-only)`);
+	Logger.log(`Reading project sheet: ${projectSheet.getName()} (read-only)`);
 
 	try {
-		const lastRow = cvSheet.getLastRow();
+		const lastRow = projectSheet.getLastRow();
 		if (
 			lastRow < sourceFirstDataRow ||
-			cvSheet.getLastColumn() < sourceFirstDayCol
+			projectSheet.getLastColumn() < sourceFirstDayCol
 		) {
-			Logger.log('CV sheet has insufficient data');
+			Logger.log('Project sheet has insufficient data');
 			return cvData;
 		}
 
@@ -385,10 +386,10 @@ function readCapacityViewData(month, year, employees, leaveData, holidayDays) {
 		const normalizedHolidayDays = holidayDays || new Set();
 		const numRows = lastRow - sourceFirstDataRow + 1;
 		const sourceProjectColumn = findMonthlyProjectColumn(
-			cvSheet,
+			projectSheet,
 			sourceFirstDayCol,
 		);
-		const employeeData = cvSheet
+		const employeeData = projectSheet
 			.getRange(sourceFirstDataRow, 1, numRows, sourceFirstDayCol - 1)
 			.getValues();
 		const hoursData = {};
@@ -396,7 +397,7 @@ function readCapacityViewData(month, year, employees, leaveData, holidayDays) {
 
 		for (let day = 1; day <= daysInMonth; day++) {
 			const col = dayColumns[day];
-			const range = cvSheet.getRange(sourceFirstDataRow, col, numRows, 1);
+			const range = projectSheet.getRange(sourceFirstDataRow, col, numRows, 1);
 			hoursData[day] = range.getValues().map((row) => row[0]);
 			backgroundData[day] = range
 				.getBackgrounds()
@@ -408,11 +409,12 @@ function readCapacityViewData(month, year, employees, leaveData, holidayDays) {
 				.trim()
 				.toUpperCase();
 			const empName = String(employeeData[i][1] || '').trim();
+			// Column C = Team, Column D = Project Contribution (google-appscript structure)
 			const sourceColC = String(employeeData[i][2] || '').trim();
 			const sourceColD = String(employeeData[i][3] || '').trim();
 			const currentProject = sourceProjectColumn
 				? String(employeeData[i][sourceProjectColumn - 1] || '').trim()
-				: '';
+				: sourceColD || sourceColC || '';
 			const empNameLower = empName.toLowerCase();
 
 			if (!empId && !empName) continue;
@@ -553,21 +555,21 @@ function readCapacityViewData(month, year, employees, leaveData, holidayDays) {
 			}
 		}
 	} catch (e) {
-		Logger.log(`Error reading CV sheet: ${e.message}`);
+		Logger.log(`Error reading project sheet: ${e.message}`);
 	}
 
-	Logger.log(`Read CV data for ${cvData.size} employee keys`);
+	Logger.log(`Read project data for ${cvData.size} employee keys`);
 	return cvData;
 }
 
 /**
- * Build floater data by merging API employee details with CV sheet data
+ * Build floater data by merging API employee details with project sheet data
  *
- * Floater % = (Total Free Hours from CV) / (working days * 8) * 100
- * The CV already accounts for leave (leave days show 0 free capacity).
+ * Floater % = (Total Free Hours) / (working days * 8) * 100
+ * Free hours are computed from the [Month] [Year] project sheet (8 - allocated hours).
  *
  * @param {Array} employees - Employee details from API (department, termination)
- * @param {Map} cvData - Capacity view data from CV sheet (totalFreeHours, projects)
+ * @param {Map} cvData - Project sheet data (totalFreeHours, projects from "[Month] [Year]")
  * @param {number} month - Month (0-11)
  * @param {number} year - Year
  * @param {number} workingDays - Total working days in the month
@@ -585,11 +587,31 @@ function buildFloaterData(
 	const floaterData = [];
 
 	for (const emp of employees) {
+		// Exclude Operations team and other excluded teams from floater list
+		const team = String(emp.team || '').trim().toLowerCase();
+		const isExcludedTeam = CONFIG.EXCLUDED_TEAMS.some((excluded) =>
+			team.includes(excluded.toLowerCase()),
+		);
+		if (isExcludedTeam) {
+			Logger.log(`Excluding from floater list (team): ${emp.full_name} - ${team}`);
+			continue;
+		}
+
 		const empName = (emp.full_name || '').trim();
 		const empNameLower = empName.toLowerCase();
-		const empId = String(emp.employee_id || '')
-			.trim()
-			.toUpperCase();
+		const cvEntry =
+			cvData.get(String(emp.employee_id || '').trim().toUpperCase()) ||
+			cvData.get(empNameLower);
+
+		// Only include employees that exist in the attendance sheet (source of truth)
+		if (!cvEntry) {
+			continue;
+		}
+
+		// Employee ID: ONLY from attendance sheet
+		const empId = cvEntry.empId
+			? String(cvEntry.empId).trim().toUpperCase()
+			: '';
 
 		// Check if leaver (has termination date in this month or before)
 		let isLeaver = false;
@@ -603,17 +625,10 @@ function buildFloaterData(
 			}
 		}
 
-		// Look up CV data by employee ID first, then by name
-		const cvEntry = cvData.get(empId) || cvData.get(empNameLower);
-		const employeeMaxHours = cvEntry
-			? cvEntry.maxHours
-			: countEmployeeWorkingDays(emp, month, year, holidayDays || new Set()) *
-				8;
-		const totalFreeHours = cvEntry ? cvEntry.totalFreeHours : employeeMaxHours;
-		const totalOverHours = cvEntry ? cvEntry.totalOverHours : 0;
+		const employeeMaxHours = cvEntry.maxHours;
+		const totalFreeHours = cvEntry.totalFreeHours;
+		const totalOverHours = cvEntry.totalOverHours || 0;
 
-		// Calculate floater percentage from CV's Total Free H, offset by Total Over H
-		// Over hours reduce the effective free hours (employee worked beyond 100% capacity)
 		// Floater % = max(0, (free hours - over hours) / max hours) * 100
 		let floaterPct = 0;
 		if (employeeMaxHours > 0) {
@@ -621,21 +636,15 @@ function buildFloaterData(
 			floaterPct = (adjustedFreeHours / employeeMaxHours) * 100;
 		}
 
-		// If employee not found in CV, they're 100% floater (not allocated anywhere)
-		if (!cvEntry && employeeMaxHours > 0) {
-			floaterPct = 100;
-		}
-
-		// Calculate floater cost
 		const floaterCost = (floaterPct / 100) * CONFIG.AVERAGE_SALARY;
 
-		// Get department from API (e.g., Engineering, Finance, HR)
 		const department = emp.department || '';
 
-		// Get current project/team assignments from CV Column C
 		let currentProject = '';
-		if (cvEntry && cvEntry.projects && cvEntry.projects.size > 0) {
+		if (cvEntry.projects && cvEntry.projects.size > 0) {
 			currentProject = [...cvEntry.projects].join(', ');
+		} else if (floaterPct >= 100) {
+			currentProject = 'Floater';
 		}
 
 		floaterData.push({
