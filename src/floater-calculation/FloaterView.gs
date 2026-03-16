@@ -97,15 +97,25 @@ function generateFloaterView(month, year) {
 		// Only include employees with floater % > 0
 		const floatersOnly = floaterData.filter((emp) => emp.floaterPct > 0);
 
-		// Sort: leavers at bottom, then by floater % descending
+		// Sort: leavers at bottom, new joiners above leavers, then by floater % descending
 		floatersOnly.sort((a, b) => {
-			if (a.isLeaver && !b.isLeaver) return 1;
-			if (!a.isLeaver && b.isLeaver) return -1;
+			const groupOrder = (emp) => {
+				if (emp.isLeaver) return 2;
+				if (emp.isNewJoiner) return 1;
+				return 0;
+			};
+			const aGroup = groupOrder(a);
+			const bGroup = groupOrder(b);
+			if (aGroup !== bGroup) return aGroup - bGroup;
 			return b.floaterPct - a.floaterPct;
 		});
 
 		// Write to sheet (update only columns A-E if sheet already existed)
 		writeFloaterSheet(sheet, floatersOnly, monthNames[month], year, isUpdate);
+
+		if (!isUpdate) {
+			writeLegend(sheet);
+		}
 
 		SpreadsheetApp.flush();
 
@@ -625,6 +635,19 @@ function buildFloaterData(
 			}
 		}
 
+		// Check if new joiner (hired within this month)
+		let isNewJoiner = false;
+		if (emp.hired_date) {
+			const hireDate = parseDateDMY(emp.hired_date);
+			if (hireDate) {
+				const monthStart = new Date(year, month, 1);
+				const monthEnd = new Date(year, month + 1, 0);
+				if (hireDate >= monthStart && hireDate <= monthEnd) {
+					isNewJoiner = true;
+				}
+			}
+		}
+
 		const employeeMaxHours = cvEntry.maxHours;
 		const totalFreeHours = cvEntry.totalFreeHours;
 		const totalOverHours = cvEntry.totalOverHours || 0;
@@ -655,6 +678,7 @@ function buildFloaterData(
 			floaterCost: Math.round(floaterCost),
 			currentProject: currentProject,
 			isLeaver: isLeaver,
+			isNewJoiner: isNewJoiner,
 			totalFreeHours: totalFreeHours,
 			totalOverHours: totalOverHours,
 			maxHours: employeeMaxHours,
@@ -769,6 +793,19 @@ function writeFloaterSheet(sheet, floaterData, monthName, year, isUpdate) {
 				'#000000',
 				SpreadsheetApp.BorderStyle.SOLID,
 			);
+
+		// Apply row colors: leavers (grey), new joiners (green)
+		for (let i = 0; i < floaterData.length; i++) {
+			const row = CONFIG.FIRST_DATA_ROW + i;
+			const emp = floaterData[i];
+			const rowRange = sheet.getRange(row, 1, 1, CONFIG.DATA_COLS);
+
+			if (emp.isLeaver) {
+				rowRange.setBackground(CONFIG.SCALES.LEAVERS.color);
+			} else if (emp.isNewJoiner) {
+				rowRange.setBackground(CONFIG.SCALES.NEW_JOINERS.color);
+			}
+		}
 	}
 
 	if (!isUpdate) {
@@ -797,17 +834,14 @@ function writeLegend(sheet) {
 	sheet.getRange(legendStartRow, labelCol, 1, 2).merge();
 	sheet
 		.getRange(legendStartRow, labelCol)
-		.setValue('Conditional Scales')
+		.setValue('Legend')
 		.setFontWeight('bold')
 		.setFontSize(11);
 
 	// Legend items
 	const scales = [
-		CONFIG.SCALES.ABOVE_10K,
-		CONFIG.SCALES.FROM_7K_TO_10K,
-		CONFIG.SCALES.FROM_4K_TO_7K,
-		CONFIG.SCALES.BELOW_4K,
 		CONFIG.SCALES.LEAVERS,
+		CONFIG.SCALES.NEW_JOINERS,
 	];
 
 	for (let i = 0; i < scales.length; i++) {

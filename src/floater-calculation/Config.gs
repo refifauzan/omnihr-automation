@@ -23,21 +23,10 @@ const CONFIG = {
 	LEGEND_LABEL_COL: 7, // Column G = Label
 	LEGEND_COLOR_COL: 8, // Column H = Color swatch
 
-	// Conditional Scale colors (row background based on floater cost)
+	// Row highlight colors
 	SCALES: {
-		ABOVE_10K: { label: 'Above RM10k', color: '#E06666', fontColor: '#000000' },
-		FROM_7K_TO_10K: {
-			label: '7k to 10k',
-			color: '#EA9999',
-			fontColor: '#000000',
-		},
-		FROM_4K_TO_7K: {
-			label: '4k to 7k',
-			color: '#F4CCCC',
-			fontColor: '#000000',
-		},
-		BELOW_4K: { label: 'Below 4k', color: '#FFFFFF', fontColor: '#000000' },
 		LEAVERS: { label: 'Leavers', color: '#D9D9D9', fontColor: '#000000' },
+		NEW_JOINERS: { label: 'New Joiners', color: '#D9EAD3', fontColor: '#000000' },
 	},
 
 	// Header styling
