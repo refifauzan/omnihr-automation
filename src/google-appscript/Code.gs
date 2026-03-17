@@ -16,17 +16,34 @@
  */
 
 /**
- * WHY: Quick sync for current month without user input
- * This function exists because managers frequently need to update the current
- * month's data and shouldn't have to manually enter dates each time.
+ * WHY: Quick sync without user input - detects month/year from the active sheet name.
+ * Falls back to the current calendar month only when the sheet name cannot be parsed.
  */
 function syncCurrentMonth() {
-	const now = new Date();
 	const ss = SpreadsheetApp.getActiveSpreadsheet();
 	const sheet = ss.getActiveSheet();
+	const sheetName = sheet.getName();
 
-	Logger.log(`Syncing current month to active sheet: ${sheet.getName()}`);
-	syncLeaveDataToSheet(sheet, now.getMonth(), now.getFullYear());
+	const parsed = parseMonthYearFromSheetName(sheetName);
+	let month, year;
+
+	if (parsed) {
+		month = parsed.month;
+		year = parsed.year;
+		Logger.log(
+			`Detected month/year from sheet name "${sheetName}": ${month + 1}/${year}`,
+		);
+	} else {
+		const now = new Date();
+		month = now.getMonth();
+		year = now.getFullYear();
+		Logger.log(
+			`Could not parse month/year from sheet name "${sheetName}", using current: ${month + 1}/${year}`,
+		);
+	}
+
+	Logger.log(`Syncing ${month + 1}/${year} to active sheet: ${sheetName}`);
+	syncLeaveDataToSheet(sheet, month, year);
 }
 
 /**
@@ -80,7 +97,9 @@ function syncLeaveData() {
 }
 
 /**
- * Sync leave only - applies leave colors/values for current month
+ * Sync leave only - applies leave colors/values for the active sheet's month
+ * Detects month/year from the sheet name (e.g. "February 2026") so it always
+ * syncs the correct month even when the current calendar month differs.
  */
 function syncLeaveOnly() {
 	const ui = SpreadsheetApp.getUi();
@@ -88,13 +107,28 @@ function syncLeaveOnly() {
 	const sheet = ss.getActiveSheet();
 	const sheetName = sheet.getName();
 
-	// Use current month/year automatically
-	const now = new Date();
-	const month = now.getMonth();
-	const year = now.getFullYear();
+	// Try to detect month/year from the sheet name first
+	const parsed = parseMonthYearFromSheetName(sheetName);
+	let month, year;
+
+	if (parsed) {
+		month = parsed.month;
+		year = parsed.year;
+		Logger.log(
+			`Detected month/year from sheet name "${sheetName}": ${month + 1}/${year}`,
+		);
+	} else {
+		// Fallback to current month/year if sheet name doesn't match pattern
+		const now = new Date();
+		month = now.getMonth();
+		year = now.getFullYear();
+		Logger.log(
+			`Could not parse month/year from sheet name "${sheetName}", using current: ${month + 1}/${year}`,
+		);
+	}
 
 	Logger.log(
-		`Syncing leave only for current month ${
+		`Syncing leave only for ${
 			month + 1
 		}/${year} to sheet "${sheetName}"`,
 	);

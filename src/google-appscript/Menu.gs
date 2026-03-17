@@ -336,11 +336,19 @@ function removeDailySyncTriggerOnly() {
  * Remove all triggers (disable automation)
  */
 function removeTriggers() {
+	const props = PropertiesService.getScriptProperties();
+
+	// Clear all automation-related script properties
+	props.deleteProperty('DAILY_SYNC_CONFIGS');
+	props.deleteProperty('HOURLY_CAPACITY_TRIGGER_ENABLED');
+
+	// Delete all project triggers
 	const triggers = ScriptApp.getProjectTriggers();
+	const count = triggers.length;
 	triggers.forEach((trigger) => ScriptApp.deleteTrigger(trigger));
-	Logger.log('All triggers removed');
+	Logger.log(`All ${count} triggers removed and configs cleared`);
 	SpreadsheetApp.getUi().alert(
-		'Automation disabled.\n\nAll scheduled syncs have been removed.',
+		`Automation disabled.\n\nRemoved ${count} trigger(s) and cleared all scheduled sync configurations.`,
 	);
 }
 

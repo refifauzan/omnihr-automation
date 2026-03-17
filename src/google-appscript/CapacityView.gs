@@ -113,7 +113,14 @@ function generateCapacityView() {
  */
 function createCapacityViewSheet(month, year, projectSheetNames) {
 	const ss = SpreadsheetApp.getActiveSpreadsheet();
-	const ui = SpreadsheetApp.getUi();
+
+	// ui may not be available when called from a time-based trigger
+	let ui = null;
+	try {
+		ui = SpreadsheetApp.getUi();
+	} catch (e) {
+		Logger.log('UI not available (running from trigger context)');
+	}
 
 	Logger.log(`Creating Capacity View for ${month + 1}/${year}`);
 	Logger.log(`Including sheets: ${projectSheetNames.join(', ')}`);
@@ -359,7 +366,8 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 		}
 
 		if (employeeMap.size === 0) {
-			ui.alert('No employees found in the selected sheets.');
+			Logger.log('No employees found in the selected sheets.');
+			if (ui) ui.alert('No employees found in the selected sheets.');
 			return;
 		}
 
@@ -559,18 +567,19 @@ function createCapacityViewSheet(month, year, projectSheetNames) {
 
 		SpreadsheetApp.flush();
 
-		ui.alert(
+		const successMsg =
 			`Capacity View generated successfully!\n\n` +
-				`• Month: ${month + 1}/${year}\n` +
-				`• Employees: ${sortedEmployees.length}\n` +
-				`• Project sheets included: ${projectSheetNames.length}\n` +
-				`• Sheets: ${projectSheetNames.join(', ')}\n\n` +
-				`Sheet: "${capacitySheetName}"`,
-		);
+			`• Month: ${month + 1}/${year}\n` +
+			`• Employees: ${sortedEmployees.length}\n` +
+			`• Project sheets included: ${projectSheetNames.length}\n` +
+			`• Sheets: ${projectSheetNames.join(', ')}\n\n` +
+			`Sheet: "${capacitySheetName}"`;
+		Logger.log(successMsg);
+		if (ui) ui.alert(successMsg);
 	} catch (error) {
 		Logger.log('Error creating Capacity View: ' + error.message);
 		Logger.log('Stack: ' + error.stack);
-		ui.alert('Error: ' + error.message);
+		if (ui) ui.alert('Error: ' + error.message);
 	}
 }
 
