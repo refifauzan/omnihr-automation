@@ -3,75 +3,158 @@
  */
 
 /**
- * Get access token from OmniHR using username/password
+ * Get access token from the remote Token Service.
+ * The Token Service handles Google SSO login automatically.
  * @returns {string} Access token
  */
 function getAccessToken() {
-	const props = PropertiesService.getScriptProperties();
-	const baseUrl = props.getProperty('OMNIHR_BASE_URL');
-	const subdomain = props.getProperty('OMNIHR_SUBDOMAIN');
-	const username = props.getProperty('OMNIHR_USERNAME');
-	const password = props.getProperty('OMNIHR_PASSWORD');
+	var props = PropertiesService.getScriptProperties();
+	var tokenServiceUrl = props.getProperty('TOKEN_SERVICE_URL');
+	var tokenServiceKey = props.getProperty('TOKEN_SERVICE_API_KEY');
 
-	if (!baseUrl || !subdomain || !username || !password) {
+	if (!tokenServiceUrl || !tokenServiceKey) {
 		throw new Error(
-			'API credentials not configured. Use OmniHR > Setup API Credentials',
+			'Token Service not configured. Use OmniHR > Setup Token Service',
 		);
 	}
 
-	const response = UrlFetchApp.fetch(`${baseUrl}/auth/token/`, {
-		method: 'post',
-		contentType: 'application/x-www-form-urlencoded',
-		payload: `username=${encodeURIComponent(
-			username,
-		)}&password=${encodeURIComponent(password)}`,
+	var url = tokenServiceUrl.replace(/\/+$/, '') + '/api/token';
+
+	var response = UrlFetchApp.fetch(url, {
+		method: 'get',
 		headers: {
-			'x-subdomain': subdomain,
+			'X-API-Key': tokenServiceKey,
 		},
 		muteHttpExceptions: true,
 	});
 
-	const responseText = response.getContentText();
-	const data = JSON.parse(responseText);
+	var code = response.getResponseCode();
+	var text = response.getContentText();
 
-	const token = data.access || data.token || data.access_token;
-	if (token) {
-		return token;
+	if (code < 200 || code >= 300) {
+		throw new Error('Token Service returned ' + code + ': ' + text);
 	}
 
-	throw new Error('Failed to get access token: ' + responseText);
+	var data = JSON.parse(text);
+	var token = data.access_token;
+	if (!token) {
+		throw new Error('Token Service response missing access_token: ' + text);
+	}
+
+	Logger.log('Access token obtained from Token Service');
+	return token;
 }
 
 /**
- * Make authenticated API request
+ * Ask the Token Service to force-refresh the token.
+ * Called when an OmniHR API request returns 401.
+ * @private
+ * @returns {string} A guaranteed-fresh access token
+ */
+function forceRefreshTokenFromService_() {
+	var props = PropertiesService.getScriptProperties();
+	var tokenServiceUrl = props.getProperty('TOKEN_SERVICE_URL');
+	var tokenServiceKey = props.getProperty('TOKEN_SERVICE_API_KEY');
+
+	if (!tokenServiceUrl || !tokenServiceKey) return null;
+
+	var url = tokenServiceUrl.replace(/\/+$/, '') + '/api/force-fresh-token';
+
+	var response = UrlFetchApp.fetch(url, {
+		method: 'post',
+		headers: {
+			'X-API-Key': tokenServiceKey,
+		},
+		muteHttpExceptions: true,
+	});
+
+	var code = response.getResponseCode();
+	var text = response.getContentText();
+
+	if (code < 200 || code >= 300) {
+		throw new Error(
+			'Token Service force-refresh failed (' + code + '): ' + text,
+		);
+	}
+
+	var data = JSON.parse(text);
+	var token = data.access_token;
+	if (!token) {
+		throw new Error('Token Service force-refresh returned no token: ' + text);
+	}
+
+	Logger.log('Obtained force-refreshed token from Token Service');
+	return token;
+}
+
+/**
+ * Make authenticated API request with automatic token retry on 401.
+ * If the request fails with 401 (token expired), it asks the Token Service
+ * for a force-refreshed token and retries the request once.
  * @param {string} token - Access token
  * @param {string} endpoint - API endpoint
  * @param {Object} params - Query parameters
  * @returns {Object} Parsed JSON response
  */
 function apiRequest(token, endpoint, params = {}) {
-	const props = PropertiesService.getScriptProperties();
-	const baseUrl = props.getProperty('OMNIHR_BASE_URL');
-	const subdomain = props.getProperty('OMNIHR_SUBDOMAIN');
+	var props = PropertiesService.getScriptProperties();
+	var baseUrl = props.getProperty('OMNIHR_BASE_URL');
+	var subdomain = props.getProperty('OMNIHR_SUBDOMAIN');
 
-	let url = `${baseUrl}${endpoint}`;
+	var url = baseUrl + endpoint;
 
 	if (Object.keys(params).length > 0) {
-		const queryString = Object.entries(params)
-			.map(([k, v]) => `${encodeURIComponent(k)}=${encodeURIComponent(v)}`)
+		var queryString = Object.entries(params)
+			.map(function (entry) {
+				return (
+					encodeURIComponent(entry[0]) + '=' + encodeURIComponent(entry[1])
+				);
+			})
 			.join('&');
 		url += '?' + queryString;
 	}
 
-	const response = UrlFetchApp.fetch(url, {
+	var response = UrlFetchApp.fetch(url, {
 		method: 'get',
 		headers: {
-			Authorization: `Bearer ${token}`,
+			Authorization: 'Bearer ' + token,
 			'x-subdomain': subdomain,
 			'Content-Type': 'application/json',
 		},
 		muteHttpExceptions: true,
 	});
+
+	var code = response.getResponseCode();
+
+	// ── Auto-retry on 401 (token expired) ────────────────────────
+	if (code === 401) {
+		Logger.log(
+			'apiRequest 401 on ' + endpoint + ' — attempting token refresh...',
+		);
+		try {
+			var freshToken = forceRefreshTokenFromService_();
+			if (freshToken) {
+				Logger.log('Retrying ' + endpoint + ' with fresh token...');
+				var retryResponse = UrlFetchApp.fetch(url, {
+					method: 'get',
+					headers: {
+						Authorization: 'Bearer ' + freshToken,
+						'x-subdomain': subdomain,
+						'Content-Type': 'application/json',
+					},
+					muteHttpExceptions: true,
+				});
+				var retryCode = retryResponse.getResponseCode();
+				if (retryCode === 200) {
+					Logger.log('Retry succeeded for ' + endpoint);
+					return JSON.parse(retryResponse.getContentText());
+				}
+				Logger.log('Retry also failed (' + retryCode + ') for ' + endpoint);
+			}
+		} catch (e) {
+			Logger.log('Token force-refresh failed: ' + e.message);
+		}
+	}
 
 	return JSON.parse(response.getContentText());
 }

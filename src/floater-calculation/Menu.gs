@@ -20,7 +20,7 @@ function onOpen() {
 				.addItem('View Current Schedule', 'viewTriggers'),
 		)
 		.addSeparator()
-		.addItem('Setup API Credentials', 'setupCredentials')
+		.addItem('Setup Token Service', 'showTokenServiceDialog')
 		.addToUi();
 }
 
@@ -58,62 +58,129 @@ function generateFloaterViewMenu() {
 }
 
 /**
- * Setup API credentials in Script Properties
+ * Show dialog to configure the remote Token Service
  */
-function setupCredentials() {
-	const ui = SpreadsheetApp.getUi();
-	const props = PropertiesService.getScriptProperties();
+function showTokenServiceDialog() {
+	var props = PropertiesService.getScriptProperties();
+	var currentUrl = props.getProperty('TOKEN_SERVICE_URL') || '';
+	var currentKey = props.getProperty('TOKEN_SERVICE_API_KEY') || '';
 
-	const baseUrlResponse = ui.prompt(
-		'API Base URL',
-		'Enter OmniHR API base URL (default: https://api.omnihr.co/api/v1):',
-		ui.ButtonSet.OK_CANCEL,
+	var html = HtmlService.createHtmlOutput(
+		'<style>' +
+			'  body { font-family: Arial, sans-serif; padding: 16px; max-width: 420px; }' +
+			'  label { display: block; margin-top: 12px; font-weight: bold; }' +
+			'  input { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }' +
+			'  .hint { font-size: 12px; color: #666; margin-top: 4px; }' +
+			'  button { margin-top: 16px; padding: 10px 24px; background: #1a73e8; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }' +
+			'  button:hover { background: #1557b0; }' +
+			'  .status { margin-top: 12px; padding: 8px; border-radius: 4px; display: none; }' +
+			'  .status.ok { display: block; background: #e6f4ea; color: #137333; }' +
+			'  .status.err { display: block; background: #fce8e6; color: #c5221f; }' +
+			'</style>' +
+			'<p class="hint">Connect to the OmniHR Token Service running on your VPS.</p>' +
+			'<label>Token Service URL</label>' +
+			'<input type="text" id="serviceUrl" placeholder="https://snappy-omnihr.djebreds.com" value="' +
+			currentUrl +
+			'">' +
+			'<label>API Secret Key</label>' +
+			'<input type="password" id="apiKey" placeholder="Shared secret from Token Service .env" value="' +
+			currentKey +
+			'">' +
+			'<label>OmniHR Base URL</label>' +
+			'<input type="text" id="baseUrl" value="' +
+			(props.getProperty('OMNIHR_BASE_URL') || 'https://api.omnihr.co/api/v1') +
+			'">' +
+			'<label>OmniHR Subdomain</label>' +
+			'<input type="text" id="subdomain" value="' +
+			(props.getProperty('OMNIHR_SUBDOMAIN') || '') +
+			'">' +
+			'<button onclick="save()">Save & Test Connection</button>' +
+			'<div id="status" class="status"></div>' +
+			'<script>' +
+			'  function save() {' +
+			'    var url = document.getElementById("serviceUrl").value.trim();' +
+			'    var key = document.getElementById("apiKey").value.trim();' +
+			'    var baseUrl = document.getElementById("baseUrl").value.trim();' +
+			'    var subdomain = document.getElementById("subdomain").value.trim();' +
+			'    if (!url || !key || !baseUrl || !subdomain) { showStatus("Fill in all fields.", true); return; }' +
+			'    document.getElementById("status").style.display = "block";' +
+			'    document.getElementById("status").innerText = "Testing connection...";' +
+			'    google.script.run' +
+			'      .withSuccessHandler(function(msg) { showStatus(msg, false); })' +
+			'      .withFailureHandler(function(err) { showStatus(err.message || String(err), true); })' +
+			'      .saveTokenServiceConfig(url, key, baseUrl, subdomain);' +
+			'  }' +
+			'  function showStatus(msg, isError) {' +
+			'    var el = document.getElementById("status");' +
+			'    el.className = "status " + (isError ? "err" : "ok");' +
+			'    el.innerText = msg;' +
+			'  }' +
+			'</script>',
+	)
+		.setWidth(460)
+		.setHeight(480);
+
+	SpreadsheetApp.getUi().showModalDialog(
+		html,
+		'Floater \u2014 Token Service Setup',
 	);
+}
 
-	if (baseUrlResponse.getSelectedButton() !== ui.Button.OK) return;
+/**
+ * Save Token Service configuration and test the connection.
+ */
+function saveTokenServiceConfig(serviceUrl, apiKey, baseUrl, subdomain) {
+	var testUrl = serviceUrl.replace(/\/+$/, '') + '/api/health';
+	try {
+		var healthResponse = UrlFetchApp.fetch(testUrl, {
+			method: 'get',
+			muteHttpExceptions: true,
+		});
+		if (healthResponse.getResponseCode() !== 200) {
+			throw new Error(
+				'Health check returned ' + healthResponse.getResponseCode(),
+			);
+		}
+	} catch (e) {
+		throw new Error('Cannot reach Token Service: ' + e.message);
+	}
 
-	const subdomainResponse = ui.prompt(
-		'Subdomain',
-		'Enter OmniHR subdomain (e.g., snappymob):',
-		ui.ButtonSet.OK_CANCEL,
-	);
+	var statusUrl = serviceUrl.replace(/\/+$/, '') + '/api/status';
+	try {
+		var statusResponse = UrlFetchApp.fetch(statusUrl, {
+			method: 'get',
+			headers: { 'X-API-Key': apiKey },
+			muteHttpExceptions: true,
+		});
+		if (statusResponse.getResponseCode() === 403) {
+			throw new Error('API key is invalid (403 Forbidden)');
+		}
+		if (statusResponse.getResponseCode() !== 200) {
+			throw new Error(
+				'Status endpoint returned ' + statusResponse.getResponseCode(),
+			);
+		}
+	} catch (e) {
+		throw new Error('Authentication failed: ' + e.message);
+	}
 
-	if (subdomainResponse.getSelectedButton() !== ui.Button.OK) return;
-
-	const usernameResponse = ui.prompt(
-		'Username',
-		'Enter OmniHR username (email):',
-		ui.ButtonSet.OK_CANCEL,
-	);
-
-	if (usernameResponse.getSelectedButton() !== ui.Button.OK) return;
-
-	const passwordResponse = ui.prompt(
-		'Password',
-		'Enter OmniHR password:',
-		ui.ButtonSet.OK_CANCEL,
-	);
-
-	if (passwordResponse.getSelectedButton() !== ui.Button.OK) return;
-
-	const baseUrl =
-		baseUrlResponse.getResponseText().trim() || 'https://api.omnihr.co/api/v1';
-
+	var props = PropertiesService.getScriptProperties();
+	props.setProperty('TOKEN_SERVICE_URL', serviceUrl.replace(/\/+$/, ''));
+	props.setProperty('TOKEN_SERVICE_API_KEY', apiKey);
 	props.setProperty('OMNIHR_BASE_URL', baseUrl);
-	props.setProperty(
-		'OMNIHR_SUBDOMAIN',
-		subdomainResponse.getResponseText().trim(),
-	);
-	props.setProperty(
-		'OMNIHR_USERNAME',
-		usernameResponse.getResponseText().trim(),
-	);
-	props.setProperty(
-		'OMNIHR_PASSWORD',
-		passwordResponse.getResponseText().trim(),
-	);
+	props.setProperty('OMNIHR_SUBDOMAIN', subdomain);
 
-	ui.alert('API credentials saved successfully!');
+	var statusData = JSON.parse(statusResponse.getContentText());
+	var msg = 'Connected successfully!';
+	if (statusData.has_access_token) {
+		msg +=
+			' Token available (age: ' +
+			Math.round(statusData.access_token_age_seconds) +
+			's).';
+	} else {
+		msg += ' Service is running but no token cached yet.';
+	}
+	return msg;
 }
 
 /**
