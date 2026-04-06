@@ -440,11 +440,11 @@ function viewTriggers() {
  * Show dialog to configure the remote Token Service
  */
 function showTokenServiceDialog() {
-	var props = PropertiesService.getScriptProperties();
-	var currentUrl = props.getProperty('TOKEN_SERVICE_URL') || '';
-	var currentKey = props.getProperty('TOKEN_SERVICE_API_KEY') || '';
+	const props = PropertiesService.getScriptProperties();
+	const currentUrl = props.getProperty('TOKEN_SERVICE_URL') || '';
+	const currentKey = props.getProperty('TOKEN_SERVICE_API_KEY') || '';
 
-	var html = HtmlService.createHtmlOutput(
+	const html = HtmlService.createHtmlOutput(
 		'<style>' +
 			'  body { font-family: Arial, sans-serif; padding: 16px; max-width: 420px; }' +
 			'  label { display: block; margin-top: 12px; font-weight: bold; }' +
@@ -480,10 +480,10 @@ function showTokenServiceDialog() {
 			'<div id="status" class="status"></div>' +
 			'<script>' +
 			'  function save() {' +
-			'    var url = document.getElementById("serviceUrl").value.trim();' +
-			'    var key = document.getElementById("apiKey").value.trim();' +
-			'    var baseUrl = document.getElementById("baseUrl").value.trim();' +
-			'    var subdomain = document.getElementById("subdomain").value.trim();' +
+			'    const url = document.getElementById("serviceUrl").value.trim();' +
+			'    const key = document.getElementById("apiKey").value.trim();' +
+			'    const baseUrl = document.getElementById("baseUrl").value.trim();' +
+			'    const subdomain = document.getElementById("subdomain").value.trim();' +
 			'    if (!url || !key || !baseUrl || !subdomain) { showStatus("Fill in all fields.", true); return; }' +
 			'    document.getElementById("status").className = "status";' +
 			'    document.getElementById("status").style.display = "block";' +
@@ -494,7 +494,7 @@ function showTokenServiceDialog() {
 			'      .saveTokenServiceConfig(url, key, baseUrl, subdomain);' +
 			'  }' +
 			'  function showStatus(msg, isError) {' +
-			'    var el = document.getElementById("status");' +
+			'    const el = document.getElementById("status");' +
 			'    el.className = "status " + (isError ? "err" : "ok");' +
 			'    el.innerText = msg;' +
 			'  }' +
@@ -511,9 +511,9 @@ function showTokenServiceDialog() {
  */
 function saveTokenServiceConfig(serviceUrl, apiKey, baseUrl, subdomain) {
 	// Test health endpoint
-	var testUrl = serviceUrl.replace(/\/+$/, '') + '/api/health';
+	const testUrl = serviceUrl.replace(/\/+$/, '') + '/api/health';
 	try {
-		var healthResponse = UrlFetchApp.fetch(testUrl, {
+		const healthResponse = UrlFetchApp.fetch(testUrl, {
 			method: 'get',
 			muteHttpExceptions: true,
 		});
@@ -529,9 +529,10 @@ function saveTokenServiceConfig(serviceUrl, apiKey, baseUrl, subdomain) {
 	}
 
 	// Test authenticated endpoint
-	var statusUrl = serviceUrl.replace(/\/+$/, '') + '/api/status';
+	const statusUrl = serviceUrl.replace(/\/+$/, '') + '/api/status';
+	let statusResponse;
 	try {
-		var statusResponse = UrlFetchApp.fetch(statusUrl, {
+		statusResponse = UrlFetchApp.fetch(statusUrl, {
 			method: 'get',
 			headers: { 'X-API-Key': apiKey },
 			muteHttpExceptions: true,
@@ -549,14 +550,14 @@ function saveTokenServiceConfig(serviceUrl, apiKey, baseUrl, subdomain) {
 	}
 
 	// Save to Script Properties
-	var props = PropertiesService.getScriptProperties();
+	const props = PropertiesService.getScriptProperties();
 	props.setProperty('TOKEN_SERVICE_URL', serviceUrl.replace(/\/+$/, ''));
 	props.setProperty('TOKEN_SERVICE_API_KEY', apiKey);
 	props.setProperty('OMNIHR_BASE_URL', baseUrl);
 	props.setProperty('OMNIHR_SUBDOMAIN', subdomain);
 
-	var statusData = JSON.parse(statusResponse.getContentText());
-	var msg = 'Connected successfully!';
+	const statusData = JSON.parse(statusResponse.getContentText());
+	let msg = 'Connected successfully!';
 	if (statusData.has_access_token) {
 		msg +=
 			' Token available (age: ' +

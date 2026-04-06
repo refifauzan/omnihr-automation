@@ -8,9 +8,9 @@
  * @returns {string} Access token
  */
 function getAccessToken() {
-	var props = PropertiesService.getScriptProperties();
-	var tokenServiceUrl = props.getProperty('TOKEN_SERVICE_URL');
-	var tokenServiceKey = props.getProperty('TOKEN_SERVICE_API_KEY');
+	const props = PropertiesService.getScriptProperties();
+	const tokenServiceUrl = props.getProperty('TOKEN_SERVICE_URL');
+	const tokenServiceKey = props.getProperty('TOKEN_SERVICE_API_KEY');
 
 	if (!tokenServiceUrl || !tokenServiceKey) {
 		throw new Error(
@@ -18,9 +18,9 @@ function getAccessToken() {
 		);
 	}
 
-	var url = tokenServiceUrl.replace(/\/+$/, '') + '/api/token';
+	const url = tokenServiceUrl.replace(/\/+$/, '') + '/api/token';
 
-	var response = UrlFetchApp.fetch(url, {
+	const response = UrlFetchApp.fetch(url, {
 		method: 'get',
 		headers: {
 			'X-API-Key': tokenServiceKey,
@@ -28,15 +28,15 @@ function getAccessToken() {
 		muteHttpExceptions: true,
 	});
 
-	var code = response.getResponseCode();
-	var text = response.getContentText();
+	const code = response.getResponseCode();
+	const text = response.getContentText();
 
 	if (code < 200 || code >= 300) {
 		throw new Error('Token Service returned ' + code + ': ' + text);
 	}
 
-	var data = JSON.parse(text);
-	var token = data.access_token;
+	const data = JSON.parse(text);
+	const token = data.access_token;
 	if (!token) {
 		throw new Error('Token Service response missing access_token: ' + text);
 	}
@@ -52,15 +52,15 @@ function getAccessToken() {
  * @returns {string} A guaranteed-fresh access token
  */
 function forceRefreshTokenFromService_() {
-	var props = PropertiesService.getScriptProperties();
-	var tokenServiceUrl = props.getProperty('TOKEN_SERVICE_URL');
-	var tokenServiceKey = props.getProperty('TOKEN_SERVICE_API_KEY');
+	const props = PropertiesService.getScriptProperties();
+	const tokenServiceUrl = props.getProperty('TOKEN_SERVICE_URL');
+	const tokenServiceKey = props.getProperty('TOKEN_SERVICE_API_KEY');
 
 	if (!tokenServiceUrl || !tokenServiceKey) return null;
 
-	var url = tokenServiceUrl.replace(/\/+$/, '') + '/api/force-fresh-token';
+	const url = tokenServiceUrl.replace(/\/+$/, '') + '/api/force-fresh-token';
 
-	var response = UrlFetchApp.fetch(url, {
+	const response = UrlFetchApp.fetch(url, {
 		method: 'post',
 		headers: {
 			'X-API-Key': tokenServiceKey,
@@ -68,8 +68,8 @@ function forceRefreshTokenFromService_() {
 		muteHttpExceptions: true,
 	});
 
-	var code = response.getResponseCode();
-	var text = response.getContentText();
+	const code = response.getResponseCode();
+	const text = response.getContentText();
 
 	if (code < 200 || code >= 300) {
 		throw new Error(
@@ -77,8 +77,8 @@ function forceRefreshTokenFromService_() {
 		);
 	}
 
-	var data = JSON.parse(text);
-	var token = data.access_token;
+	const data = JSON.parse(text);
+	const token = data.access_token;
 	if (!token) {
 		throw new Error('Token Service force-refresh returned no token: ' + text);
 	}
@@ -97,14 +97,14 @@ function forceRefreshTokenFromService_() {
  * @returns {Object} Parsed JSON response
  */
 function apiRequest(token, endpoint, params = {}) {
-	var props = PropertiesService.getScriptProperties();
-	var baseUrl = props.getProperty('OMNIHR_BASE_URL');
-	var subdomain = props.getProperty('OMNIHR_SUBDOMAIN');
+	const props = PropertiesService.getScriptProperties();
+	const baseUrl = props.getProperty('OMNIHR_BASE_URL');
+	const subdomain = props.getProperty('OMNIHR_SUBDOMAIN');
 
-	var url = baseUrl + endpoint;
+	let url = baseUrl + endpoint;
 
 	if (Object.keys(params).length > 0) {
-		var queryString = Object.entries(params)
+		const queryString = Object.entries(params)
 			.map(function (entry) {
 				return (
 					encodeURIComponent(entry[0]) + '=' + encodeURIComponent(entry[1])
@@ -114,7 +114,7 @@ function apiRequest(token, endpoint, params = {}) {
 		url += '?' + queryString;
 	}
 
-	var response = UrlFetchApp.fetch(url, {
+	const response = UrlFetchApp.fetch(url, {
 		method: 'get',
 		headers: {
 			Authorization: 'Bearer ' + token,
@@ -124,7 +124,7 @@ function apiRequest(token, endpoint, params = {}) {
 		muteHttpExceptions: true,
 	});
 
-	var code = response.getResponseCode();
+	const code = response.getResponseCode();
 
 	// ── Auto-retry on 401 (token expired) ────────────────────────
 	if (code === 401) {
@@ -132,10 +132,10 @@ function apiRequest(token, endpoint, params = {}) {
 			'apiRequest 401 on ' + endpoint + ' — attempting token refresh...',
 		);
 		try {
-			var freshToken = forceRefreshTokenFromService_();
+			const freshToken = forceRefreshTokenFromService_();
 			if (freshToken) {
 				Logger.log('Retrying ' + endpoint + ' with fresh token...');
-				var retryResponse = UrlFetchApp.fetch(url, {
+				const retryResponse = UrlFetchApp.fetch(url, {
 					method: 'get',
 					headers: {
 						Authorization: 'Bearer ' + freshToken,
@@ -144,7 +144,7 @@ function apiRequest(token, endpoint, params = {}) {
 					},
 					muteHttpExceptions: true,
 				});
-				var retryCode = retryResponse.getResponseCode();
+				const retryCode = retryResponse.getResponseCode();
 				if (retryCode === 200) {
 					Logger.log('Retry succeeded for ' + endpoint);
 					return JSON.parse(retryResponse.getContentText());
@@ -358,9 +358,14 @@ const EXCLUDED_EMPLOYEES = ['Omni Support', 'People Culture'];
  * Uses employee/list endpoint for hired_date, base-data for employee_id,
  * job endpoint for team, and onboarding/workflow-dashboard for termination_date
  * @param {string} token - Access token
+ * @param {Object} [options] - Optional; set includeMergedTerminatedNotInList: false for Sync Employee List (active only, no workflow-only terminated rows)
  * @returns {Array} Array of employee objects with full details
  */
-function fetchAllEmployeesWithDetails(token) {
+function fetchAllEmployeesWithDetails(token, options) {
+	options = options || {};
+	const includeMergedTerminated =
+		options.includeMergedTerminatedNotInList !== false;
+
 	const allEmployees = fetchAllEmployees(token);
 
 	// Filter out excluded employees
@@ -462,29 +467,31 @@ function fetchAllEmployeesWithDetails(token) {
 	Logger.log(`Fetched details for ${employeeDetails.length} employees`);
 
 	// Merge terminated employees from workflow-dashboard that are no longer in /employee/list/
-	// This preserves their data in the sheet (leave markings, grey-out) during sync
+	// (Used for hire/termination grey-out — not for Sync Employee List; omit when includeMergedTerminatedNotInList is false.)
 	let mergedCount = 0;
-	for (const termEmp of terminatedEmployees) {
-		const termUserId = termEmp.id || termEmp.user_id;
-		if (!activeUserIds.has(termUserId)) {
-			employeeDetails.push({
-				user_id: termUserId,
-				employee_id: termEmp.employee_id || '',
-				full_name: termEmp.full_name || termEmp.name || `User ${termUserId}`,
-				hired_date: termEmp.hired_date || null,
-				termination_date: terminationDates[termUserId] || null,
-				team: teamData[termUserId] || '',
-				project_contribution: projectContribution[termUserId] || '',
-				employment_status: termEmp.employment_status || null,
-				employment_status_display: termEmp.employment_status_display || null,
-			});
-			mergedCount++;
+	if (includeMergedTerminated) {
+		for (const termEmp of terminatedEmployees) {
+			const termUserId = termEmp.id || termEmp.user_id;
+			if (!activeUserIds.has(termUserId)) {
+				employeeDetails.push({
+					user_id: termUserId,
+					employee_id: termEmp.employee_id || '',
+					full_name: termEmp.full_name || termEmp.name || `User ${termUserId}`,
+					hired_date: termEmp.hired_date || null,
+					termination_date: terminationDates[termUserId] || null,
+					team: teamData[termUserId] || '',
+					project_contribution: projectContribution[termUserId] || '',
+					employment_status: termEmp.employment_status || null,
+					employment_status_display: termEmp.employment_status_display || null,
+				});
+				mergedCount++;
+			}
 		}
-	}
-	if (mergedCount > 0) {
-		Logger.log(
-			`Merged ${mergedCount} terminated employees not in /employee/list/`,
-		);
+		if (mergedCount > 0) {
+			Logger.log(
+				`Merged ${mergedCount} terminated employees not in /employee/list/`,
+			);
+		}
 	}
 
 	return employeeDetails;

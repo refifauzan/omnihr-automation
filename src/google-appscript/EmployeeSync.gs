@@ -16,7 +16,8 @@ function syncEmployeeList() {
 	const response = ui.alert(
 		'Sync Employee List',
 		'This will overwrite the existing employee list in columns A, B, C, and D.\n\n' +
-			'Excluded employees: Omni Support, People Culture\n\n' +
+			'Only active employees: terminated and inactive are excluded.\n' +
+			'Excluded names: Omni Support, People Culture\n\n' +
 			'Are you sure you want to continue?',
 		ui.ButtonSet.YES_NO,
 	);
@@ -33,17 +34,23 @@ function syncEmployeeList() {
 		}
 
 		Logger.log('Fetching all employees from OmniHR...');
-		const allEmployees = fetchAllEmployeesWithDetails(token);
+		// Active roster only: no workflow-only terminated rows; then filter by status/date
+		const allEmployees = fetchAllEmployeesWithDetails(token, {
+			includeMergedTerminatedNotInList: false,
+		});
 
-		// Filter to active employees only (exclude terminated)
+		// Filter to active employees only (termination_date + employment status)
 		const employees = allEmployees.filter(function (emp) {
-			if (emp.termination_date) {
+			if (shouldExcludeFromActiveEmployeeList_(emp)) {
 				Logger.log(
-					'Excluding terminated employee: ' +
-						emp.full_name +
-						' (terminated: ' +
-						emp.termination_date +
-						')',
+					'Excluding from list: ' +
+						(emp.full_name || '') +
+						' | status=' +
+						(emp.employment_status_display ||
+							emp.employment_status ||
+							'') +
+						' | term=' +
+						(emp.termination_date || ''),
 				);
 				return false;
 			}
@@ -55,7 +62,7 @@ function syncEmployeeList() {
 				employees.length +
 				' (excluded ' +
 				(allEmployees.length - employees.length) +
-				' terminated)',
+				' terminated / inactive)',
 		);
 
 		if (!employees || employees.length === 0) {
@@ -96,7 +103,7 @@ function syncEmployeeList() {
 		ui.alert(
 			`Employee list synced successfully!\n\n` +
 				`• ${employeeData.length} active employees loaded from OmniHR\n` +
-				`• ${allEmployees.length - employees.length} terminated employees excluded\n` +
+				`• ${allEmployees.length - employees.length} terminated/inactive excluded\n` +
 				`• Columns A (ID), B (Name), C (Team), D (Project Contribution) updated`,
 		);
 	} catch (error) {
@@ -145,10 +152,15 @@ function addNewEmployees() {
 		}
 
 		Logger.log('Fetching all employees from OmniHR...');
-		const employees = fetchAllEmployeesWithDetails(token);
+		const allEmployees = fetchAllEmployeesWithDetails(token, {
+			includeMergedTerminatedNotInList: false,
+		});
+		const employees = allEmployees.filter(function (emp) {
+			return !shouldExcludeFromActiveEmployeeList_(emp);
+		});
 
 		if (!employees || employees.length === 0) {
-			ui.alert('No employees found in OmniHR');
+			ui.alert('No active employees found in OmniHR');
 			return;
 		}
 

@@ -1021,3 +1021,32 @@ function buildNonLeaveRanges(sheet, col, colLetter, lastRow, leaveCellSet) {
 
 	return ranges;
 }
+
+/**
+ * True if this person must not appear on the active employee list (full sync / add new).
+ * Uses termination_date plus employment_status / employment_status_display from OmniHR.
+ * @param {Object} emp - Row from fetchAllEmployeesWithDetails
+ * @returns {boolean}
+ */
+function shouldExcludeFromActiveEmployeeList_(emp) {
+	if (!emp) return true;
+	if (emp.termination_date) {
+		const t = String(emp.termination_date).trim();
+		if (t !== '' && t !== 'null' && t !== 'undefined') return true;
+	}
+	const status = String(emp.employment_status || '').toLowerCase();
+	const display = String(emp.employment_status_display || '').toLowerCase();
+	if (status === 'terminated' || display === 'terminated') return true;
+	const hay = status + ' ' + display;
+	if (
+		hay.indexOf('terminat') !== -1 ||
+		hay.indexOf('separat') !== -1 ||
+		hay.indexOf('resign') !== -1 ||
+		hay.indexOf('offboard') !== -1 ||
+		hay.indexOf('former') !== -1 ||
+		hay.indexOf('inactive') !== -1
+	) {
+		return true;
+	}
+	return false;
+}
