@@ -392,7 +392,7 @@ function applyEmployeeDateGreyOut(month, year) {
 				emp.employee_id,
 				emp.full_name,
 				true,
-				true,
+				false,
 			);
 			for (const r of empRows) {
 				activeRows.add(r);
@@ -412,10 +412,15 @@ function applyEmployeeDateGreyOut(month, year) {
 		const holidayDays = new Set(holidays.map((h) => h.date));
 		let clearedCount = 0;
 		let skippedCount = 0;
+    	let skippedEmployees = [];
 		if (lastRow >= CONFIG.FIRST_DATA_ROW) {
 			for (let row = CONFIG.FIRST_DATA_ROW; row <= lastRow; row++) {
 				// Only clear rows belonging to active employees
 				if (!activeRows.has(row)) {
+
+          const employeeName = sheet.getRange(row, 1).getValue(); 
+          skippedEmployees.push(employeeName || `Row ${row}`);
+
 					skippedCount++;
 					continue;
 				}
@@ -444,7 +449,8 @@ function applyEmployeeDateGreyOut(month, year) {
 			}
 			if (skippedCount > 0) {
 				Logger.log(
-					`Skipped ${skippedCount} rows (inactive/terminated employees - grey-out preserved)`,
+					// `Skipped ${skippedCount} rows (inactive/terminated employees - grey-out preserved)`,
+          `Skipped ${skippedCount} rows (inactive/terminated employees - grey-out preserved): ${skippedEmployees.join(', ')}`
 				);
 			}
 			if (clearedCount > 0) {
@@ -463,7 +469,7 @@ function applyEmployeeDateGreyOut(month, year) {
 				emp.employee_id,
 				emp.full_name,
 				true,
-				true,
+				false,
 			);
 			if (rows.length === 0) continue;
 
