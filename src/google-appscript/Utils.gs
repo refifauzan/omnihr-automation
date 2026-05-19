@@ -1032,7 +1032,16 @@ function shouldExcludeFromActiveEmployeeList_(emp) {
 	if (!emp) return true;
 	if (emp.termination_date) {
 		const t = String(emp.termination_date).trim();
-		if (t !== '' && t !== 'null' && t !== 'undefined') return true;
+		if (t !== '' && t !== 'null' && t !== 'undefined') {
+			// Parse the termination date and get today's date
+			const termDate = new Date(t);
+			const today = new Date();
+			
+			// If the termination date is valid and is in the past or is today, exclude them
+			if (!isNaN(termDate.getTime()) && termDate <= today) {
+				return true;
+			}
+		}
 	}
 	const status = String(emp.employment_status || '').toLowerCase();
 	const display = String(emp.employment_status_display || '').toLowerCase();
